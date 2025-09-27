@@ -7,4 +7,6 @@ urlpatterns = [
     path('groups/', include('groups.urls')),
     path('coins/', include('coins.urls')),
     path('auctions/', include('auctions.urls')),
+    path('notifications/', include('notifications.urls')),  # ← nuevo
+    path('reports/', include('reports.urls')),              # ← nuevo
 ]

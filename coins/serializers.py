@@ -8,23 +8,26 @@ class EducoinWalletSerializer(serializers.ModelSerializer):
     student_name = serializers.CharField(source='student.get_full_name', read_only=True)
     student_email = serializers.CharField(source='student.email', read_only=True)
     group_name = serializers.CharField(source='group.name', read_only=True)
+    user_email = serializers.CharField(source='user.email', read_only=True)
     
     class Meta:
         model = EducoinWallet
         fields = ['id', 'student', 'group', 'balance', 'student_name', 
-                 'student_email', 'group_name', 'created_at', 'updated_at']
+                 'student_email', 'group_name', 'user_email', 'created_at', 'updated_at']
         read_only_fields = ['id', 'created_at', 'updated_at']
 
 class EducoinTransactionSerializer(serializers.ModelSerializer):
     """Serializer para transacciones de Educoins"""
     wallet_owner = serializers.CharField(source='wallet.student.get_full_name', read_only=True)
     wallet_group = serializers.CharField(source='wallet.group.name', read_only=True)
+    wallet_user_email = serializers.CharField(source='wallet.user.email', read_only=True)
+    performed_by_email = serializers.CharField(source='performed_by.email', read_only=True)
     
     class Meta:
         model = EducoinTransaction
         fields = ['id', 'wallet', 'amount', 'transaction_type', 'description',
-                 'wallet_owner', 'wallet_group', 'created_at']
-        read_only_fields = ['id', 'created_at']
+                 'wallet_owner', 'wallet_group', 'wallet_user_email', 'created_at', 'performed_by', 'performed_by_email']
+        read_only_fields = ['id', 'created_at', 'wallet_user_email', 'performed_by_email']
 
 class AwardEducoinsSerializer(serializers.Serializer):
     """Serializer para otorgar Educoins"""

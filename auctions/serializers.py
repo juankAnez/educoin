@@ -6,47 +6,29 @@ from users.models import User
 class AuctionSerializer(serializers.ModelSerializer):
     """Serializer para subastas"""
     group_name = serializers.CharField(source='group.name', read_only=True)
-    winner_name = serializers.CharField(source='winner.get_full_name', read_only=True)
-    current_highest_bid = serializers.SerializerMethodField()
-    total_bids = serializers.SerializerMethodField()
-    time_left = serializers.SerializerMethodField()
-    
+    docente_email = serializers.CharField(source='docente.email', read_only=True)
+    ganador_email = serializers.CharField(source='ganador.email', read_only=True)
+
     class Meta:
         model = Auction
-        fields = ['id', 'title', 'description', 'starting_bid', 'group', 'group_name',
-                 'winner', 'winner_name', 'status', 'current_highest_bid', 'total_bids',
-                 'time_left', 'created_at', 'updated_at']
-        read_only_fields = ['id', 'winner', 'status', 'created_at', 'updated_at']
-    
-    def get_current_highest_bid(self, obj):
-        """Obtener la puja más alta actual"""
-        highest_bid = obj.auctionbid_set.order_by('-amount').first()
-        return highest_bid.amount if highest_bid else obj.starting_bid
-    
-    def get_total_bids(self, obj):
-        """Contar total de pujas"""
-        return obj.auctionbid_set.count()
-    
-    def get_time_left(self, obj):
-        """Calcular tiempo restante (placeholder - puedes agregar fecha límite al modelo)"""
-        if obj.status == 'closed':
-            return "Subasta cerrada"
-        elif obj.status == 'active':
-            return "Activa"
-        else:
-            return "Pendiente"
+        fields = [
+            'id', 'group', 'group_name', 'docente', 'docente_email', 'titulo', 'descripcion',
+            'premio', 'fecha_inicio', 'fecha_fin', 'activa', 'ganador', 'ganador_email'
+        ]
+        read_only_fields = ['id', 'group_name', 'docente_email', 'ganador_email']
 
 class AuctionBidSerializer(serializers.ModelSerializer):
     """Serializer para pujas de subasta"""
-    student_name = serializers.CharField(source='student.get_full_name', read_only=True)
-    student_email = serializers.CharField(source='student.email', read_only=True)
-    auction_title = serializers.CharField(source='auction.title', read_only=True)
-    
+    auction_title = serializers.CharField(source='auction.titulo', read_only=True)
+    estudiante_email = serializers.CharField(source='estudiante.email', read_only=True)
+
     class Meta:
         model = AuctionBid
-        fields = ['id', 'auction', 'student', 'amount', 'student_name', 
-                 'student_email', 'auction_title', 'created_at']
-        read_only_fields = ['id', 'student', 'created_at']
+        fields = [
+            'id', 'auction', 'auction_title', 'estudiante', 'estudiante_email',
+            'cantidad', 'fecha'
+        ]
+        read_only_fields = ['id', 'auction_title', 'estudiante_email', 'fecha']
 
 class CreateAuctionSerializer(serializers.Serializer):
     """Serializer para crear subastas"""

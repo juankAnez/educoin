@@ -1,4 +1,4 @@
-from rest_framework import status
+from rest_framework import status, viewsets, permissions
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
@@ -12,6 +12,44 @@ from .serializers import (
     CreateAuctionSerializer,
     PlaceBidSerializer
 )
+
+class AuctionViewSet(viewsets.ModelViewSet):
+    queryset = Auction.objects.all()
+    serializer_class = AuctionSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        user = self.request.user
+        if user.role == 'admin':
+            return Auction.objects.all()
+        elif user.role == 'docente':
+            return Auction.objects.filter(docente=user)
+        elif user.role == 'estudiante':
+            return Auction.objects.filter(group__student_groups__student=user)
+        return Auction.objects.none()
+
+    def perform_create(self, serializer):
+        if self.request.user.role == 'docente':
+            serializer.save(docente=self.request.user)
+
+class AuctionBidViewSet(viewsets.ModelViewSet):
+    queryset = AuctionBid.objects.all()
+    serializer_class = AuctionBidSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        user = self.request.user
+        if user.role == 'admin':
+            return AuctionBid.objects.all()
+        elif user.role == 'docente':
+            return AuctionBid.objects.filter(auction__docente=user)
+        elif user.role == 'estudiante':
+            return AuctionBid.objects.filter(estudiante=user)
+        return AuctionBid.objects.none()
+
+    def perform_create(self, serializer):
+        if self.request.user.role == 'estudiante':
+            serializer.save(estudiante=self.request.user)
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])

@@ -28,6 +28,8 @@ INSTALLED_APPS = [
     'groups', 
     'coins',
     'auctions',
+    'notifications',
+    'reports',
 ]
 
 

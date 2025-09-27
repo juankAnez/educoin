@@ -1,4 +1,4 @@
-from rest_framework import status
+from rest_framework import status, viewsets, permissions
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
@@ -115,3 +115,38 @@ def api_group_students_drf(request, group_id):
             'message': 'Grupo no encontrado o no autorizado',
             'error': 'not_found'
         }, status=status.HTTP_404_NOT_FOUND)
+
+class GroupViewSet(viewsets.ModelViewSet):
+    queryset = Group.objects.all()
+    serializer_class = GroupSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        user = self.request.user
+        if user.role == 'admin':
+            return Group.objects.all()
+        elif user.role == 'docente':
+            return Group.objects.filter(teacher=user)
+        elif user.role == 'estudiante':
+            return Group.objects.filter(student_groups__student=user)
+        return Group.objects.none()
+
+    def perform_create(self, serializer):
+        # Solo docentes pueden crear grupos y se asignan como teacher
+        if self.request.user.role == 'docente':
+            serializer.save(teacher=self.request.user)
+
+class StudentGroupViewSet(viewsets.ModelViewSet):
+    queryset = StudentGroup.objects.all()
+    serializer_class = StudentGroupSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        user = self.request.user
+        if user.role == 'admin':
+            return StudentGroup.objects.all()
+        elif user.role == 'docente':
+            return StudentGroup.objects.filter(group__teacher=user)
+        elif user.role == 'estudiante':
+            return StudentGroup.objects.filter(student=user)
+        return StudentGroup.objects.none()

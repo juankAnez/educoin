@@ -1,15 +1,14 @@
 from django.db import models
 from users.models import User
 
-# Los modelos se moverán aquí desde users/models.py
 class Group(models.Model):
     name = models.CharField(max_length=100, help_text="Ej: 10-A Matemáticas")
     teacher = models.ForeignKey(
-    User,
-    on_delete=models.SET_NULL,  # ← cambio
-    null=True, 
-    limit_choices_to={'role': 'teacher'},
-    related_name='teacher_groups'  # ← nombre único
+        User,
+        on_delete=models.SET_NULL,
+        null=True,
+        limit_choices_to={'role': 'docente'},  # ← corregido a 'docente'
+        related_name='teacher_groups'
     )
     max_students = models.PositiveSmallIntegerField(default=30)
     coin_limit = models.PositiveIntegerField(help_text="Total de monedas a repartir en el periodo")
@@ -24,12 +23,12 @@ class Group(models.Model):
 
     def __str__(self):
         return f"{self.name} ({self.start_date} - {self.end_date})"
-    
+
 class StudentGroup(models.Model):
     student = models.ForeignKey(
         User,
         on_delete=models.PROTECT,
-        limit_choices_to={'role': 'student'},
+        limit_choices_to={'role': 'estudiante'},  # ← corregido a 'estudiante'
         related_name='student_groups'
     )
     group = models.ForeignKey(
@@ -40,9 +39,9 @@ class StudentGroup(models.Model):
     active = models.BooleanField(default=True)
 
     class Meta:
-        unique_together = ('student', 'group')  # no repetir inscripción
+        unique_together = ('student', 'group')
         verbose_name = 'Inscripción'
         verbose_name_plural = 'Inscripciones'
 
     def __str__(self):
-        return f"{self.student.email} → {self.group.name}"    
+        return f"{self.student.email} → {self.group.name}"

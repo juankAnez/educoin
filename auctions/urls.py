@@ -1,9 +1,14 @@
-from django.urls import path
-from . import api_views
+from django.urls import path, include
+from rest_framework.routers import DefaultRouter
+from .api_views import AuctionViewSet, AuctionBidViewSet
+import auctions.api_views as api_views
 
-app_name = 'auctions'
+router = DefaultRouter()
+router.register(r'api/v2/auctions', AuctionViewSet)
+router.register(r'api/v2/bids', AuctionBidViewSet)
 
 urlpatterns = [
+    path('', include(router.urls)),
     # Crear subasta (POST)
     path('api/create/', api_views.api_create_auction_drf, name='api_create_auction'),
     

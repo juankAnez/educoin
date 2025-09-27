@@ -21,6 +21,9 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
         """Crear usuario con contraseña encriptada"""
         validated_data.pop('password_confirm')  # Remover confirmación
         password = validated_data.pop('password')
+        # Si no se envía username, lo generamos a partir del email
+        if not validated_data.get('username'):
+            validated_data['username'] = validated_data['email'].split('@')[0]
         user = User.objects.create(**validated_data)
         user.set_password(password)  # Encriptar contraseña
         user.save()

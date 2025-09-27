@@ -1,7 +1,13 @@
-from django.urls import path
-from . import api_views
+from django.urls import path, include
+from rest_framework.routers import DefaultRouter
+from .api_views import GroupViewSet, StudentGroupViewSet
+import groups.api_views as api_views
+router = DefaultRouter()
+router.register(r'api/v2/groups', GroupViewSet)
+router.register(r'api/v2/student-groups', StudentGroupViewSet)
 
 urlpatterns = [
+    path('', include(router.urls)),
     # APIs DRF v2 para grupos
     path('api/v2/create/', api_views.api_create_group_drf, name='api_create_group_drf'),
     path('api/v2/teacher-groups/', api_views.api_teacher_groups_drf, name='api_teacher_groups_drf'),

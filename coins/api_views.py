@@ -1,4 +1,4 @@
-from rest_framework import status
+from rest_framework import status, viewsets, permissions
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
@@ -11,6 +11,42 @@ from .serializers import (
     EducoinTransactionSerializer, 
     AwardEducoinsSerializer
 )
+
+class EducoinWalletViewSet(viewsets.ModelViewSet):
+    queryset = EducoinWallet.objects.all()
+    serializer_class = EducoinWalletSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        user = self.request.user
+        if user.role == 'admin':
+            return EducoinWallet.objects.all()
+        elif user.role == 'docente':
+            # Docente puede ver wallets de sus estudiantes (opcional, aquí solo la suya)
+            return EducoinWallet.objects.filter(user=user)
+        elif user.role == 'estudiante':
+            return EducoinWallet.objects.filter(user=user)
+        return EducoinWallet.objects.none()
+
+class EducoinTransactionViewSet(viewsets.ModelViewSet):
+    queryset = EducoinTransaction.objects.all()
+    serializer_class = EducoinTransactionSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        user = self.request.user
+        if user.role == 'admin':
+            return EducoinTransaction.objects.all()
+        elif user.role == 'docente':
+            # Docente puede ver transacciones que realizó o de sus estudiantes (opcional, aquí solo las que realizó)
+            return EducoinTransaction.objects.filter(performed_by=user)
+        elif user.role == 'estudiante':
+            return EducoinTransaction.objects.filter(wallet__user=user)
+        return EducoinTransaction.objects.none()
+
+    def perform_create(self, serializer):
+        # Asigna automáticamente el usuario que realiza la transacción
+        serializer.save(performed_by=self.request.user)
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
