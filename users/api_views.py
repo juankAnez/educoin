@@ -4,6 +4,61 @@ from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import RefreshToken
 from .serializers import UserRegistrationSerializer, UserLoginSerializer, UserProfileSerializer
+from rest_framework import serializers, viewsets
+from rest_framework.permissions import IsAuthenticated
+from .models import Classroom, Activity, CoinTransaction, Auction, Bid
+
+# Serializers
+class ClassroomSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Classroom
+        fields = '__all__'
+
+class ActivitySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Activity
+        fields = '__all__'
+
+class CoinTransactionSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = CoinTransaction
+        fields = '__all__'
+
+class AuctionSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Auction
+        fields = '__all__'
+
+class BidSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Bid
+        fields = '__all__'
+
+# ViewSets
+class ClassroomViewSet(viewsets.ModelViewSet):
+    queryset = Classroom.objects.all()
+    serializer_class = ClassroomSerializer
+    permission_classes = [IsAuthenticated]
+
+class ActivityViewSet(viewsets.ModelViewSet):
+    queryset = Activity.objects.all()
+    serializer_class = ActivitySerializer
+    permission_classes = [IsAuthenticated]
+
+class CoinTransactionViewSet(viewsets.ModelViewSet):
+    queryset = CoinTransaction.objects.all()
+    serializer_class = CoinTransactionSerializer
+    permission_classes = [IsAuthenticated]
+
+class AuctionViewSet(viewsets.ModelViewSet):
+    queryset = Auction.objects.all()
+    serializer_class = AuctionSerializer
+    permission_classes = [IsAuthenticated]
+
+class BidViewSet(viewsets.ModelViewSet):
+    queryset = Bid.objects.all()
+    serializer_class = BidSerializer
+    permission_classes = [IsAuthenticated]
 
 @api_view(['POST'])
 @permission_classes([AllowAny])

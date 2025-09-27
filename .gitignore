@@ -1,0 +1,60 @@
+# Entornos virtuales
+.env
+venv/
+env/
+.Python
+
+# Archivos de Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Archivos de base de datos
+db.sqlite3
+
+# Archivos de compilación
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Archivos de logs
+*.log
+
+# Archivos de configuración de IDEs/editores
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# Archivos de sistema
+.DS_Store
+Thumbs.db
+
+# Archivos de migraciones de Django (opcional, si quieres ignorar migraciones)
+# */migrations/*.py
+# */migrations/*.pyc
+
+# Archivos de cobertura de pruebas
+htmlcov/
+.coverage
+.tox/
+.nox/
+.pytest_cache/
+.cache
+
+# Otros
+*.bak
+*.swp
+*.tmp
