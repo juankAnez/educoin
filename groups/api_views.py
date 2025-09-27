@@ -4,7 +4,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from .models import Group, StudentGroup
 from users.models import User
-from .serializers import GroupSerializer, StudentGroupSerializer, AddStudentToGroupSerializer
+from .serializers import GroupSerializer, StudentGroupSerializer
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])

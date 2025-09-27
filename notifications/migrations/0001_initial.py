@@ -12,19 +12,17 @@ class Migration(migrations.Migration):
 
     operations = [
         migrations.CreateModel(
-            name='EducoinTransaction',
+            name='Notification',
             fields=[
                 ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('amount', models.IntegerField()),
-                ('reason', models.CharField(max_length=255)),
+                ('title', models.CharField(max_length=100)),
+                ('message', models.TextField()),
                 ('created_at', models.DateTimeField(auto_now_add=True)),
+                ('read', models.BooleanField(default=False)),
+                ('type', models.CharField(default='info', max_length=30)),
             ],
-        ),
-        migrations.CreateModel(
-            name='EducoinWallet',
-            fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('balance', models.IntegerField(default=0)),
-            ],
+            options={
+                'ordering': ['-created_at'],
+            },
         ),
     ]

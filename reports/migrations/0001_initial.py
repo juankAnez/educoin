@@ -12,19 +12,16 @@ class Migration(migrations.Migration):
 
     operations = [
         migrations.CreateModel(
-            name='EducoinTransaction',
+            name='Report',
             fields=[
                 ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('amount', models.IntegerField()),
-                ('reason', models.CharField(max_length=255)),
+                ('report_type', models.CharField(choices=[('desempeño', 'Desempeño'), ('monedas', 'Movimientos de Educoins'), ('participación', 'Participación')], max_length=30)),
+                ('description', models.TextField(blank=True)),
                 ('created_at', models.DateTimeField(auto_now_add=True)),
+                ('file', models.FileField(blank=True, null=True, upload_to='reports/')),
             ],
-        ),
-        migrations.CreateModel(
-            name='EducoinWallet',
-            fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('balance', models.IntegerField(default=0)),
-            ],
+            options={
+                'ordering': ['-created_at'],
+            },
         ),
     ]
