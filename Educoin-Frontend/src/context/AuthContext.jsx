@@ -1,41 +1,30 @@
 "use client"
 
 import { createContext, useContext, useReducer, useEffect } from "react"
+import { useNavigate } from "react-router-dom"
 import { authService } from "../services/auth"
-import { USER_ROLES } from "../utils/constants"
+import api from "../services/api"
+import { API_ENDPOINTS, USER_ROLES } from "../utils/constants"
 
 const AuthContext = createContext()
 
 const initialState = {
-  user: null,
-  isAuthenticated: false,
-  isLoading: true,
+  user: JSON.parse(localStorage.getItem("user")) || null,
+  isAuthenticated: !!localStorage.getItem("access_token"),
+  isLoading: false,
   error: null,
 }
 
-const authReducer = (state, action) => {
+function authReducer(state, action) {
   switch (action.type) {
     case "SET_LOADING":
       return { ...state, isLoading: action.payload }
     case "SET_USER":
-      return {
-        ...state,
-        user: action.payload,
-        isAuthenticated: !!action.payload,
-        isLoading: false,
-        error: null,
-      }
+      return { ...state, user: action.payload, isAuthenticated: true, isLoading: false, error: null }
     case "SET_ERROR":
-      return {
-        ...state,
-        error: action.payload,
-        isLoading: false,
-      }
+      return { ...state, error: action.payload, isLoading: false }
     case "LOGOUT":
-      return {
-        ...initialState,
-        isLoading: false,
-      }
+      return { ...state, user: null, isAuthenticated: false, isLoading: false }
     default:
       return state
   }
@@ -43,90 +32,99 @@ const authReducer = (state, action) => {
 
 export const AuthProvider = ({ children }) => {
   const [state, dispatch] = useReducer(authReducer, initialState)
+  const navigate = useNavigate()
 
+  // Cargar perfil si ya hay token
   useEffect(() => {
-    const initializeAuth = async () => {
-      try {
-        const user = authService.getCurrentUser()
-        const token = authService.getAccessToken()
-
-        if (user && token) {
-          // Verify token is still valid by fetching profile
-          try {
-            const updatedUser = await authService.getProfile()
-            dispatch({ type: "SET_USER", payload: updatedUser })
-          } catch (error) {
-            // Token is invalid, clear auth data
-            authService.logout()
-            dispatch({ type: "LOGOUT" })
-          }
-        } else {
-          dispatch({ type: "SET_LOADING", payload: false })
+    const loadUserProfile = async () => {
+      const token = localStorage.getItem("access_token")
+      if (token) {
+        try {
+          const response = await api.get(API_ENDPOINTS.PROFILE)
+          dispatch({ type: "SET_USER", payload: response.data.user })
+        } catch (error) {
+          console.error("Error cargando perfil:", error)
+          handleLogout()
         }
-      } catch (error) {
-        dispatch({ type: "SET_ERROR", payload: error.message })
       }
     }
-
-    initializeAuth()
+    loadUserProfile()
   }, [])
 
   const login = async (credentials) => {
     try {
       dispatch({ type: "SET_LOADING", payload: true })
-      const { user } = await authService.login(credentials)
+
+      const response = await api.post(API_ENDPOINTS.LOGIN, credentials)
+      const { user, tokens } = response.data
+
+      // Guardar tokens y usuario
+      localStorage.setItem("access_token", tokens.access)
+      localStorage.setItem("refresh_token", tokens.refresh)
+      localStorage.setItem("user", JSON.stringify(user))
+
       dispatch({ type: "SET_USER", payload: user })
+
+      // Redirección según rol
+      if (user.role === USER_ROLES.ADMIN) {
+        window.location.href = "/admin" // Django admin
+      } else if (user.role === USER_ROLES.TEACHER) {
+        navigate("/dashboard/teacher")
+      } else if (user.role === USER_ROLES.STUDENT) {
+        navigate("/dashboard/student")
+      }
+
       return user
     } catch (error) {
-      dispatch({ type: "SET_ERROR", payload: error.message })
-      throw error
-    }
-  }
-
-  const register = async (userData) => {
-    try {
-      dispatch({ type: "SET_LOADING", payload: true })
-      const result = await authService.register(userData)
-      dispatch({ type: "SET_LOADING", payload: false })
-      return result
-    } catch (error) {
-      dispatch({ type: "SET_ERROR", payload: error.message })
+      dispatch({ type: "SET_ERROR", payload: error.response?.data?.message || "Error en login" })
       throw error
     }
   }
 
   const logout = () => {
-    authService.logout()
+    handleLogout()
+    navigate("/login")
+  }
+
+  const handleLogout = () => {
+    localStorage.removeItem("access_token")
+    localStorage.removeItem("refresh_token")
+    localStorage.removeItem("user")
     dispatch({ type: "LOGOUT" })
   }
 
-  const updateUser = (userData) => {
-    const updatedUser = { ...state.user, ...userData }
+  const updateUser = (updatedUser) => {
     localStorage.setItem("user", JSON.stringify(updatedUser))
     dispatch({ type: "SET_USER", payload: updatedUser })
   }
 
-  const hasRole = (role) => {
-    return state.user?.role === role
+  const registerUser = async (userData) => {
+  try {
+    dispatch({ type: "SET_LOADING", payload: true })
+    const response = await authService.register(userData)
+    dispatch({ type: "SET_LOADING", payload: false })
+    return response
+  } catch (error) {
+    dispatch({ type: "SET_ERROR", payload: error.message })
+    dispatch({ type: "SET_LOADING", payload: false })
+    throw error
+  }
   }
 
-  const isTeacher = () => hasRole(USER_ROLES.TEACHER)
-  const isStudent = () => hasRole(USER_ROLES.STUDENT)
-  const isAdmin = () => hasRole(USER_ROLES.ADMIN)
-
-  const value = {
-    ...state,
-    login,
-    register,
-    logout,
-    updateUser,
-    hasRole,
-    isTeacher,
-    isStudent,
-    isAdmin,
-  }
-
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
+  return (
+    <AuthContext.Provider
+      value={{
+        ...state,
+        login,
+        logout,
+        updateUser,
+        dispatch,
+        register: registerUser,
+      }}
+    >
+      {children}
+    </AuthContext.Provider>
+  )
 }
 
 export const useAuthContext = () => {

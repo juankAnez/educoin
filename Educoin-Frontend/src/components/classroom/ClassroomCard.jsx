@@ -25,12 +25,17 @@ const ClassroomCard = ({ classroom, onEdit, onDelete }) => {
             <AcademicCapIcon className="h-6 w-6 text-educoin-600" />
           </div>
           <div>
-            <h3 className="text-lg font-semibold text-gray-900">{classroom.name}</h3>
-            <p className="text-sm text-gray-500">Código: {classroom.code}</p>
+            <h3 className="text-lg font-semibold text-foreground">
+              {classroom?.nombre}
+            </h3>
+            {/* Ajusta si tu backend tiene 'codigo' */}
+            <p className="text-sm text-muted-foreground">
+              Código: {classroom?.codigo || classroom?.code || ""}
+            </p>
           </div>
         </div>
 
-        {isTeacher() && (
+        {isTeacher && (
           <Menu as="div" className="relative">
             <Menu.Button className="p-1 text-gray-400 hover:text-gray-600">
               <EllipsisVerticalIcon className="h-5 w-5" />
@@ -44,13 +49,13 @@ const ClassroomCard = ({ classroom, onEdit, onDelete }) => {
               leaveFrom="transform opacity-100 scale-100"
               leaveTo="transform opacity-0 scale-95"
             >
-              <Menu.Items className="absolute right-0 z-10 mt-2 w-48 origin-top-right rounded-md bg-white py-1 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
+              <Menu.Items className="absolute right-0 z-10 mt-2 w-48 origin-top-right rounded-md bg-card py-1 shadow-lg ring-1 ring-border">
                 <Menu.Item>
                   {({ active }) => (
                     <button
                       onClick={() => onEdit(classroom)}
                       className={`group flex w-full items-center px-4 py-2 text-sm ${
-                        active ? "bg-gray-100 text-gray-900" : "text-gray-700"
+                        active ? "bg-muted text-foreground" : "text-gray-700"
                       }`}
                     >
                       <PencilIcon className="mr-3 h-4 w-4" />
@@ -63,7 +68,7 @@ const ClassroomCard = ({ classroom, onEdit, onDelete }) => {
                     <button
                       onClick={() => onDelete(classroom)}
                       className={`group flex w-full items-center px-4 py-2 text-sm ${
-                        active ? "bg-gray-100 text-red-900" : "text-red-700"
+                        active ? "bg-muted text-red-900" : "text-red-700"
                       }`}
                     >
                       <TrashIcon className="mr-3 h-4 w-4" />
@@ -77,21 +82,32 @@ const ClassroomCard = ({ classroom, onEdit, onDelete }) => {
         )}
       </div>
 
-      <p className="text-gray-600 mb-4">{truncateText(classroom.description, 120)}</p>
+      <p className="text-muted-foreground mb-4">
+        {truncateText(classroom?.descripcion || "", 120)}
+      </p>
 
-      <div className="flex items-center justify-between text-sm text-gray-500 mb-4">
+      <div className="flex items-center justify-between text-sm text-muted-foreground mb-4">
         <div className="flex items-center space-x-4">
           <div className="flex items-center">
             <UserGroupIcon className="h-4 w-4 mr-1" />
-            <span>{classroom.student_count || 0} estudiantes</span>
+            <span>
+              {(classroom?.estudiantes?.length || classroom?.student_count) ?? 0}{" "}
+              estudiantes
+            </span>
           </div>
           <div className="flex items-center">
             <CalendarIcon className="h-4 w-4 mr-1" />
-            <span>{formatDate(classroom.created_at)}</span>
+            <span>
+              {formatDate(classroom?.creado || classroom?.created_at)}
+            </span>
           </div>
         </div>
-        <span className={`badge ${classroom.is_active ? "badge-success" : "badge-error"}`}>
-          {classroom.is_active ? "Activa" : "Inactiva"}
+        <span
+          className={`badge ${
+            classroom?.is_active ? "badge-success" : "badge-error"
+          }`}
+        >
+          {classroom?.is_active ? "Activa" : "Inactiva"}
         </span>
       </div>
 

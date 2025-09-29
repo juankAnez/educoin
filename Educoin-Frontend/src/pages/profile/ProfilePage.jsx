@@ -65,7 +65,7 @@ const ProfilePage = () => {
               {user?.first_name} {user?.last_name}
             </h1>
             <p className="text-gray-500 capitalize">{user?.role}</p>
-            <p className="text-sm text-gray-400">Miembro desde {formatDate(user?.created_at)}</p>
+            <p className="text-sm text-gray-400">Miembro desde {formatDate(user?.date_joined)}</p>
           </div>
         </div>
       </div>

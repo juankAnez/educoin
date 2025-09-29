@@ -11,8 +11,8 @@ const CreateClassroom = ({ classroom, onClose }) => {
   const isEditing = !!classroom
 
   const [formData, setFormData] = useState({
-    name: "",
-    description: "",
+    nombre: "",
+    descripcion: "",
     is_active: true,
   })
   const [errors, setErrors] = useState({})
@@ -20,9 +20,9 @@ const CreateClassroom = ({ classroom, onClose }) => {
   useEffect(() => {
     if (classroom) {
       setFormData({
-        name: classroom.name || "",
-        description: classroom.description || "",
-        is_active: classroom.is_active ?? true,
+        nombre: classroom?.nombre || "",
+        descripcion: classroom?.descripcion || "",
+        is_active: classroom?.is_active ?? true,
       })
     }
   }, [classroom])
@@ -33,8 +33,6 @@ const CreateClassroom = ({ classroom, onClose }) => {
       ...prev,
       [name]: type === "checkbox" ? checked : value,
     }))
-
-    // Clear error when user starts typing
     if (errors[name]) {
       setErrors((prev) => ({ ...prev, [name]: "" }))
     }
@@ -57,7 +55,7 @@ const CreateClassroom = ({ classroom, onClose }) => {
       }
       onClose()
     } catch (error) {
-      // Error is handled by the mutation
+      // handled by mutation
     }
   }
 
@@ -66,37 +64,36 @@ const CreateClassroom = ({ classroom, onClose }) => {
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <div>
-        <label htmlFor="name" className="label">
+        <label htmlFor="nombre" className="label">
           Nombre de la Clase
         </label>
         <input
           type="text"
-          id="name"
-          name="name"
-          value={formData.name}
+          id="nombre"
+          name="nombre"
+          value={formData.nombre}
           onChange={handleChange}
-          className={`input ${errors.name ? "border-red-500 focus:border-red-500 focus:ring-red-500" : ""}`}
+          className={`input ${errors.nombre ? "border-red-500 focus:border-red-500 focus:ring-red-500" : ""}`}
           placeholder="Ej: Matemáticas 10A"
           required
         />
-        {errors.name && <p className="mt-1 text-sm text-red-600">{errors.name}</p>}
+        {errors.nombre && <p className="mt-1 text-sm text-destructive">{errors.nombre}</p>}
       </div>
 
       <div>
-        <label htmlFor="description" className="label">
+        <label htmlFor="descripcion" className="label">
           Descripción
         </label>
         <textarea
-          id="description"
-          name="description"
+          id="descripcion"
+          name="descripcion"
           rows={4}
-          value={formData.description}
+          value={formData.descripcion}
           onChange={handleChange}
-          className={`input ${errors.description ? "border-red-500 focus:border-red-500 focus:ring-red-500" : ""}`}
+          className={`input ${errors.descripcion ? "border-red-500 focus:border-red-500 focus:ring-red-500" : ""}`}
           placeholder="Describe el contenido y objetivos de la clase..."
-          required
         />
-        {errors.description && <p className="mt-1 text-sm text-red-600">{errors.description}</p>}
+        {errors.descripcion && <p className="mt-1 text-sm text-destructive">{errors.descripcion}</p>}
       </div>
 
       <div className="flex items-center">
@@ -106,9 +103,9 @@ const CreateClassroom = ({ classroom, onClose }) => {
           name="is_active"
           checked={formData.is_active}
           onChange={handleChange}
-          className="h-4 w-4 text-educoin-600 focus:ring-educoin-500 border-gray-300 rounded"
+          className="h-4 w-4 text-educoin-600 focus:ring-educoin-500 border-border rounded"
         />
-        <label htmlFor="is_active" className="ml-2 block text-sm text-gray-900">
+        <label htmlFor="is_active" className="ml-2 block text-sm text-foreground">
           Clase activa
         </label>
       </div>

@@ -1,5 +1,6 @@
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
+from rest_framework_simplejwt.views import TokenRefreshView
 from . import api_views, views
 
 router = DefaultRouter()
@@ -19,10 +20,14 @@ urlpatterns = [
     path('api/award-educoins/', views.api_award_educoins, name='api_award_educoins'),
     path('api/create-auction/', views.api_create_auction, name='api_create_auction'),
     path('api/close-auction/', views.api_close_auction, name='api_close_auction'),
-    
-    # ← NUEVAS APIs con DRF
+
+    # Nuevas APIs con DRF
     path('api/v2/register/', api_views.api_register_drf, name='api_register_drf'),
     path('api/v2/login/', api_views.api_login_drf, name='api_login_drf'),
     path('api/v2/profile/', api_views.api_profile, name='api_profile'),
+
+    # Refresh token
+    path('api/v2/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
+
     path('', include(router.urls)),
 ]

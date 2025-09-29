@@ -63,7 +63,7 @@ const AuctionCard = ({ auction, onEdit, onDelete }) => {
           </div>
         </div>
 
-        {isTeacher() && (
+        {isTeacher && (
           <Menu as="div" className="relative">
             <Menu.Button className="p-1 text-gray-400 hover:text-gray-600">
               <EllipsisVerticalIcon className="h-5 w-5" />

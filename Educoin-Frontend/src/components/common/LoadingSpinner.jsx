@@ -8,7 +8,7 @@ const LoadingSpinner = ({ size = "md", className = "" }) => {
 
   return (
     <div
-      className={`animate-spin rounded-full border-2 border-gray-300 border-t-educoin-500 ${sizeClasses[size]} ${className}`}
+      className={`animate-spin rounded-full border-2 border-border border-t-educoin-500 ${sizeClasses[size]} ${className}`}
     />
   )
 }

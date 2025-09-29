@@ -79,10 +79,10 @@ const ActivityList = () => {
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Actividades</h1>
           <p className="text-gray-600">
-            {isTeacher() ? "Gestiona las actividades de tus grupos" : "Completa actividades y gana Educoins"}
+            {isTeacher ? "Gestiona las actividades de tus grupos" : "Completa actividades y gana Educoins"}
           </p>
         </div>
-        {isTeacher() && (
+        {isTeacher && (
           <button onClick={() => setShowCreateModal(true)} className="btn-primary">
             <PlusIcon className="h-5 w-5 mr-2" />
             Nueva Actividad
@@ -139,11 +139,11 @@ const ActivityList = () => {
           <ClipboardDocumentListIcon className="h-12 w-12 text-gray-400 mx-auto mb-4" />
           <h3 className="text-lg font-medium text-gray-900 mb-2">No se encontraron actividades</h3>
           <p className="text-gray-500 mb-4">
-            {isTeacher()
+            {isTeacher
               ? "Crea tu primera actividad para comenzar a motivar a tus estudiantes"
               : "No hay actividades disponibles en este momento"}
           </p>
-          {isTeacher() && (
+          {isTeacher && (
             <button onClick={() => setShowCreateModal(true)} className="btn-primary">
               <PlusIcon className="h-5 w-5 mr-2" />
               Nueva Actividad

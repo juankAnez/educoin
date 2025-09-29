@@ -136,8 +136,8 @@ const ActivityDetail = () => {
     )
   }
 
-  const canComplete = isStudent() && activity.status === ACTIVITY_STATUS.ACTIVE
-  const canEdit = isTeacher()
+  const canComplete = isStudent && activity.status === ACTIVITY_STATUS.ACTIVE
+  const canEdit = isTeacher
 
   return (
     <div className="space-y-6">
@@ -192,7 +192,7 @@ const ActivityDetail = () => {
                     {completeActivity.isPending ? "Completando..." : "Completar Actividad"}
                   </button>
                 )}
-                {isTeacher() && (
+                {isTeacher && (
                   <button onClick={() => setShowAssignModal(true)} className="btn-outline flex-1">
                     <CurrencyDollarIcon className="h-5 w-5 mr-2" />
                     Asignar Educoins

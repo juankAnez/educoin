@@ -22,10 +22,20 @@ export const classroomService = {
 
   async createClassroom(classroomData) {
     try {
-      const response = await api.post(API_ENDPOINTS.CLASSROOMS, classroomData)
+      const payload = {
+        nombre: classroomData.name,                    // ← back espera "nombre"
+        descripcion: classroomData.description || "",  // opcional
+        // NO envíes docente ni estudiantes
+      }
+
+      const response = await api.post(API_ENDPOINTS.CLASSROOMS, payload)
       return response.data
     } catch (error) {
-      const errorMessage = error.response?.data?.detail || error.response?.data?.name?.[0] || "Error al crear la clase"
+      const errorMessage =
+        error.response?.data?.detail ||
+        error.response?.data?.nombre?.[0] ||
+        error.response?.data?.estudiantes?.[0] ||
+        "Error al crear la clase"
       throw new Error(errorMessage)
     }
   },
@@ -52,7 +62,8 @@ export const classroomService = {
 
   async joinClassroom(code) {
     try {
-      const response = await api.post(`${API_ENDPOINTS.CLASSROOMS}join/`, { code })
+      // si tu endpoint real es /users/api/v2/classrooms/join/
+      const response = await api.post("/users/api/v2/classrooms/join/", { code })
       return response.data
     } catch (error) {
       throw new Error(error.response?.data?.detail || "Error al unirse a la clase")
@@ -66,5 +77,11 @@ export const classroomService = {
     } catch (error) {
       throw new Error(error.response?.data?.detail || "Error al obtener los estudiantes")
     }
+  },
+
+  async addStudentsToClassroom(classroomId, studentIds) {
+    const payload = { estudiantes: studentIds }
+    const response = await api.patch(API_ENDPOINTS.CLASSROOM_DETAIL(classroomId), payload)
+    return response.data
   },
 }

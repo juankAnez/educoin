@@ -64,7 +64,7 @@ const ActivityCard = ({ activity, onEdit, onDelete }) => {
     }
   }
 
-  const canComplete = isStudent() && activity.status === ACTIVITY_STATUS.ACTIVE
+  const canComplete = isStudent && activity.status === ACTIVITY_STATUS.ACTIVE
 
   return (
     <div className="card hover:shadow-md transition-shadow">
@@ -79,7 +79,7 @@ const ActivityCard = ({ activity, onEdit, onDelete }) => {
           </div>
         </div>
 
-        {isTeacher() && (
+        {isTeacher && (
           <Menu as="div" className="relative">
             <Menu.Button className="p-1 text-gray-400 hover:text-gray-600">
               <EllipsisVerticalIcon className="h-5 w-5" />

@@ -40,9 +40,9 @@ export const API_ENDPOINTS = {
 }
 
 export const USER_ROLES = {
+  ADMIN: "admin",
   TEACHER: "docente",
   STUDENT: "estudiante",
-  ADMIN: "admin",
 }
 
 export const ACTIVITY_STATUS = {

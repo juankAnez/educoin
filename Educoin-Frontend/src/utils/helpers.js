@@ -1,4 +1,5 @@
 export const formatCurrency = (amount) => {
+  if (amount == null || isNaN(amount)) return "0 COP"
   return new Intl.NumberFormat("es-CO", {
     style: "currency",
     currency: "COP",
@@ -8,28 +9,36 @@ export const formatCurrency = (amount) => {
 }
 
 export const formatDate = (dateString) => {
+  if (!dateString) return "Fecha no disponible"
+  const date = new Date(dateString)
+  if (isNaN(date.getTime())) return "Fecha inválida"
   return new Intl.DateTimeFormat("es-CO", {
     year: "numeric",
     month: "long",
     day: "numeric",
-  }).format(new Date(dateString))
+  }).format(date)
 }
 
 export const formatDateTime = (dateString) => {
+  if (!dateString) return "Fecha no disponible"
+  const date = new Date(dateString)
+  if (isNaN(date.getTime())) return "Fecha inválida"
   return new Intl.DateTimeFormat("es-CO", {
     year: "numeric",
     month: "short",
     day: "numeric",
     hour: "2-digit",
     minute: "2-digit",
-  }).format(new Date(dateString))
+  }).format(date)
 }
 
 export const formatCoins = (amount) => {
+  if (amount == null || isNaN(amount)) return "0 Educoins"
   return `${amount.toLocaleString("es-CO")} Educoins`
 }
 
 export const truncateText = (text, maxLength = 100) => {
+  if (!text) return ""
   if (text.length <= maxLength) return text
   return text.substring(0, maxLength) + "..."
 }

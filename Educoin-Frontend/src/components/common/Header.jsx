@@ -13,9 +13,15 @@ import {
 import { Link } from "react-router-dom"
 import { useAuth } from "../../hooks/useAuth"
 import { formatCoins } from "../../utils/helpers"
+import { USER_ROLES } from "../../utils/constants"
 
 const Header = ({ onMenuClick }) => {
-  const { user, logout, isStudent } = useAuth()
+  const { user, logout } = useAuth()
+
+  // Definir roles directamente en el Header
+  const isStudent = user?.role === USER_ROLES.STUDENT
+  const isTeacher = user?.role === USER_ROLES.TEACHER
+  const isAdmin = user?.role === USER_ROLES.ADMIN
 
   const userNavigation = [
     { name: "Tu Perfil", href: "/profile", icon: UserIcon },
@@ -40,11 +46,11 @@ const Header = ({ onMenuClick }) => {
 
         <div className="flex items-center gap-x-4 lg:gap-x-6">
           {/* Student coin balance */}
-          {isStudent() && (
-            <div className="flex items-center gap-x-2 px-3 py-1 bg-educoin-50 rounded-full">
-              <CurrencyDollarIcon className="h-5 w-5 text-educoin-500" />
-              <span className="text-sm font-medium text-educoin-700">
-                {formatCoins(0)} {/* This will be connected to actual balance later */}
+          {isStudent && (
+            <div className="flex items-center gap-x-2 px-3 py-1 bg-midnight-700 rounded-full">
+              <CurrencyDollarIcon className="h-5 w-5 text-educoin-400" />
+              <span className="text-sm font-medium text-educoin-400">
+                {formatCoins(user?.wallet?.balance || 0)}
               </span>
             </div>
           )}

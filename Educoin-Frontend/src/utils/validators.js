@@ -20,13 +20,8 @@ export const validateLoginForm = (data) => {
 export const validateRegisterForm = (data) => {
   const errors = {}
 
-  if (!data.first_name) {
-    errors.first_name = "El nombre es requerido"
-  }
-
-  if (!data.last_name) {
-    errors.last_name = "El apellido es requerido"
-  }
+  if (!data.first_name) errors.first_name = "El nombre es requerido"
+  if (!data.last_name) errors.last_name = "El apellido es requerido"
 
   if (!data.email) {
     errors.email = "El email es requerido"
@@ -40,11 +35,18 @@ export const validateRegisterForm = (data) => {
     errors.password = "La contraseña debe tener al menos 6 caracteres"
   }
 
+  if (!data.password_confirm) {
+    errors.password_confirm = "Debes confirmar tu contraseña"
+  } else if (data.password !== data.password_confirm) {
+    errors.password_confirm = "Las contraseñas no coinciden"
+  }
+
   return {
     isValid: Object.keys(errors).length === 0,
     errors,
   }
 }
+
 
 export const validateClassroomForm = (data) => {
   const errors = {}

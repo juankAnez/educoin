@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from django.contrib.auth import authenticate
-from .models import User
+from .models import User, Classroom
 
 class UserRegistrationSerializer(serializers.ModelSerializer):
     """Serializer para registro de nuevos usuarios"""
@@ -55,3 +55,18 @@ class UserProfileSerializer(serializers.ModelSerializer):
         model = User
         fields = ['id', 'email', 'first_name', 'last_name', 'role', 'date_joined']
         read_only_fields = ['id', 'date_joined']
+
+class ClassroomSerializer(serializers.ModelSerializer):
+    estudiantes = serializers.PrimaryKeyRelatedField(
+        queryset=User.objects.filter(role='estudiante'),
+        many=True,
+        required=False,
+        allow_null=True
+    )
+
+    class Meta:
+        model = Classroom
+        fields = '__all__'
+        extra_kwargs = {
+            'descripcion': {'required': False, 'allow_blank': True},
+        }

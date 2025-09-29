@@ -6,64 +6,64 @@ import { Dialog, Transition } from "@headlessui/react"
 import {
   XMarkIcon,
   HomeIcon,
-  AcademicCapIcon,
   ClipboardDocumentListIcon,
-  ShoppingBagIcon,
   UserIcon,
+  BookOpenIcon,
+  CurrencyDollarIcon,
 } from "@heroicons/react/24/outline"
 import { useAuth } from "../../hooks/useAuth"
 
 const Sidebar = ({ isOpen, onClose }) => {
-  const { user, isTeacher, isStudent } = useAuth()
+  const { user, isTeacher } = useAuth()
   const location = useLocation()
 
   const teacherNavigation = [
     { name: "Dashboard", href: "/dashboard", icon: HomeIcon },
-    { name: "Mis Clases", href: "/classrooms", icon: AcademicCapIcon },
+    { name: "Mis Clases", href: "/classrooms", icon: BookOpenIcon },
     { name: "Actividades", href: "/activities", icon: ClipboardDocumentListIcon },
-    { name: "Subastas", href: "/auctions", icon: ShoppingBagIcon },
+    { name: "Subastas", href: "/auctions", icon: CurrencyDollarIcon },
     { name: "Perfil", href: "/profile", icon: UserIcon },
   ]
 
   const studentNavigation = [
     { name: "Dashboard", href: "/dashboard", icon: HomeIcon },
-    { name: "Mis Clases", href: "/classrooms", icon: AcademicCapIcon },
-    { name: "Subastas", href: "/auctions", icon: ShoppingBagIcon },
+    { name: "Mis Clases", href: "/classrooms", icon: BookOpenIcon },
+    { name: "Subastas", href: "/auctions", icon: CurrencyDollarIcon },
     { name: "Perfil", href: "/profile", icon: UserIcon },
   ]
 
-  const navigation = isTeacher() ? teacherNavigation : studentNavigation
+  const navigation = isTeacher ? teacherNavigation : studentNavigation
 
   const isCurrentPath = (href) => {
     return location.pathname === href || location.pathname.startsWith(href + "/")
   }
 
   const SidebarContent = () => (
-    <div className="flex h-full flex-col">
+    <div className="flex grow flex-col gap-y-5 overflow-y-auto bg-card border-r border-border">
       {/* Logo */}
-      <div className="flex h-16 shrink-0 items-center px-6 border-b border-gray-200">
+      <div className="flex h-16 shrink-0 items-center px-6 border-b border-midnight-700">
         <div className="flex items-center">
-          <div className="h-8 w-8 flex items-center justify-center rounded-lg bg-educoin-500">
-            <span className="text-lg font-bold text-white">E</span>
-          </div>
-          <span className="ml-3 text-xl font-bold text-gray-900">Educoin</span>
+         <div className="h-8 w-8 flex items-center justify-center rounded-lg bg-educoin-500">
+          <span className="text-lg font-bold text-orange-500">E</span>
+        </div>
+        <span className="ml-3 text-xl font-bold text-foreground">Educoin</span>
         </div>
       </div>
 
       {/* User info */}
-      <div className="px-6 py-4 border-b border-gray-200">
+      <div className="px-6 py-4 border-b border-midnight-700">
         <div className="flex items-center">
-          <div className="h-10 w-10 rounded-full bg-educoin-100 flex items-center justify-center">
-            <span className="text-sm font-medium text-educoin-600">
+          <div className="h-10 w-10 rounded-full bg-midnight-600 flex items-center justify-center">
+            <span className="text-sm font-medium text-educoin-300">
               {user?.first_name?.charAt(0)}
               {user?.last_name?.charAt(0)}
             </span>
           </div>
           <div className="ml-3">
-            <p className="text-sm font-medium text-gray-900">
+            <p className="text-sm font-medium text-orange-500">
               {user?.first_name} {user?.last_name}
             </p>
-            <p className="text-xs text-gray-500 capitalize">{user?.role}</p>
+            <p className="text-xs text-midnight-300 capitalize">{user?.role}</p>
           </div>
         </div>
       </div>
@@ -77,13 +77,13 @@ const Sidebar = ({ isOpen, onClose }) => {
               key={item.name}
               to={item.href}
               className={`group flex items-center px-2 py-2 text-sm font-medium rounded-lg transition-colors ${
-                current ? "bg-educoin-100 text-educoin-700" : "text-gray-600 hover:bg-gray-100 hover:text-gray-900"
+                current ? "bg-midnight-600 text-educoin-300" : "text-midnight-200 hover:bg-midnight-700 hover:text-orange-400"
               }`}
               onClick={onClose}
             >
               <item.icon
                 className={`mr-3 h-5 w-5 flex-shrink-0 ${
-                  current ? "text-educoin-500" : "text-gray-400 group-hover:text-gray-500"
+                  current ? "text-educoin-300" : "text-midnight-400 group-hover:text-midnight-200"
                 }`}
               />
               {item.name}
@@ -93,8 +93,8 @@ const Sidebar = ({ isOpen, onClose }) => {
       </nav>
 
       {/* Footer */}
-      <div className="px-4 py-4 border-t border-gray-200">
-        <p className="text-xs text-gray-500 text-center">© 2025 Educoin Platform</p>
+      <div className="px-4 py-4 border-t border-midnight-700">
+        <p className="text-xs text-midnight-400 text-center">© 2025 Plataforma Educoin</p>
       </div>
     </div>
   )
@@ -113,7 +113,7 @@ const Sidebar = ({ isOpen, onClose }) => {
             leaveFrom="opacity-100"
             leaveTo="opacity-0"
           >
-            <div className="fixed inset-0 bg-gray-900/80" />
+            <div className="fixed inset-0 bg-black/80" />
           </Transition.Child>
 
           <div className="fixed inset-0 flex">
@@ -143,7 +143,7 @@ const Sidebar = ({ isOpen, onClose }) => {
                     </button>
                   </div>
                 </Transition.Child>
-                <div className="flex grow flex-col gap-y-5 overflow-y-auto bg-white">
+                <div className="flex grow flex-col gap-y-5 overflow-y-auto bg-midnight-900">
                   <SidebarContent />
                 </div>
               </Dialog.Panel>
@@ -154,7 +154,7 @@ const Sidebar = ({ isOpen, onClose }) => {
 
       {/* Desktop sidebar */}
       <div className="hidden lg:fixed lg:inset-y-0 lg:z-50 lg:flex lg:w-64 lg:flex-col">
-        <div className="flex grow flex-col gap-y-5 overflow-y-auto bg-white border-r border-gray-200">
+        <div className="flex grow flex-col gap-y-5 overflow-y-auto bg-midnight-900 border-r border-midnight-700">
           <SidebarContent />
         </div>
       </div>

@@ -3,7 +3,7 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import RefreshToken
-from .serializers import UserRegistrationSerializer, UserLoginSerializer, UserProfileSerializer
+from .serializers import UserRegistrationSerializer, UserLoginSerializer, UserProfileSerializer, ClassroomSerializer
 from rest_framework import serializers, viewsets, permissions
 from rest_framework.permissions import IsAuthenticated, BasePermission, SAFE_METHODS
 from .models import Classroom, Activity, CoinTransaction, Auction, Bid, User
@@ -83,6 +83,9 @@ class ClassroomViewSet(viewsets.ModelViewSet):
         elif user.is_authenticated and user.role == 'estudiante':
             return Classroom.objects.filter(estudiantes=user)
         return Classroom.objects.none()
+    
+    def perform_create(self, serializer):
+        serializer.save(docente=self.request.user) # Asignar docente automáticamente
 
 class ActivityViewSet(viewsets.ModelViewSet):
     queryset = Activity.objects.all()

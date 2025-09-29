@@ -2,88 +2,73 @@
 @import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap");
 
 :root {
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.145 0 0);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.145 0 0);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.205 0 0);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.97 0 0);
-  --secondary-foreground: oklch(0.205 0 0);
-  --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.556 0 0);
-  --accent: oklch(0.97 0 0);
-  --accent-foreground: oklch(0.205 0 0);
-  --destructive: oklch(0.577 0.245 27.325);
-  --destructive-foreground: oklch(0.577 0.245 27.325);
-  --border: oklch(0.922 0 0);
-  --input: oklch(0.922 0 0);
-  --ring: oklch(0.708 0 0);
-  --chart-1: oklch(0.646 0.222 41.116);
-  --chart-2: oklch(0.6 0.118 184.704);
-  --chart-3: oklch(0.398 0.07 227.392);
-  --chart-4: oklch(0.828 0.189 84.429);
-  --chart-5: oklch(0.769 0.188 70.08);
-  --radius: 0.625rem;
-  --sidebar: oklch(0.985 0 0);
-  --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: oklch(0.205 0 0);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.97 0 0);
-  --sidebar-accent-foreground: oklch(0.205 0 0);
-  --sidebar-border: oklch(0.922 0 0);
-  --sidebar-ring: oklch(0.708 0 0);
+  --background: #f9fafb;        /* fondo claro */
+  --foreground: #111827;        /* texto oscuro */
+  --card: #ffffff;              /* cards blancas */
+  --card-foreground: #111827;
 
-  /* Added Educoin color variables */
+  --popover: #ffffff;
+  --popover-foreground: #111827;
+
+  --primary: #f97316;           /* naranja Educoin */
+  --primary-foreground: #ffffff;
+
+  --secondary: #f3f4f6;         /* gris claro */
+  --secondary-foreground: #111827;
+
+  --muted: #e5e7eb;
+  --muted-foreground: #6b7280;
+
+  --accent: #f97316;            /* naranja como acento */
+  --accent-foreground: #ffffff;
+
+  --destructive: #dc2626;
+  --destructive-foreground: #fee2e2;
+
+  --border: #e5e7eb;
+  --input: #e5e7eb;
+  --ring: #f97316;
+
+  --radius: 0.625rem;
+
+  /* Educoin colors */
   --educoin-50: #fff7ed;
   --educoin-500: #f97316;
   --educoin-600: #ea580c;
   --educoin-700: #c2410c;
-
-  --primary-blue-500: #3b82f6;
-  --primary-blue-600: #2563eb;
-  --primary-blue-700: #1d4ed8;
 }
 
 .dark {
-  --background: oklch(0.145 0 0);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.145 0 0);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.145 0 0);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.985 0 0);
-  --primary-foreground: oklch(0.205 0 0);
-  --secondary: oklch(0.269 0 0);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.269 0 0);
-  --accent-foreground: oklch(0.985 0 0);
-  --destructive: oklch(0.396 0.141 25.723);
-  --destructive-foreground: oklch(0.637 0.237 25.331);
-  --border: oklch(0.269 0 0);
-  --input: oklch(0.269 0 0);
-  --ring: oklch(0.439 0 0);
-  --chart-1: oklch(0.488 0.243 264.376);
-  --chart-2: oklch(0.696 0.17 162.48);
-  --chart-3: oklch(0.769 0.188 70.08);
-  --chart-4: oklch(0.627 0.265 303.9);
-  --chart-5: oklch(0.645 0.246 16.439);
-  --sidebar: oklch(0.205 0 0);
-  --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.269 0 0);
-  --sidebar-accent-foreground: oklch(0.985 0 0);
-  --sidebar-border: oklch(0.269 0 0);
-  --sidebar-ring: oklch(0.439 0 0);
+  --background: #0a1120; /* navy casi negro */
+  --foreground: #e2e8f0; /* text-slate-200 */
+  --card: #1e293b;
+  --card-foreground: #f1f5f9;
+  --popover: #1e293b;
+  --popover-foreground: #f1f5f9;
+  --primary: #3b82f6; /* blue-500 */
+  --primary-foreground: #f9fafb;
+  --secondary: #1e40af; /* blue-900 */
+  --secondary-foreground: #f9fafb;
+  --muted: #334155;
+  --muted-foreground: #cbd5e1;
+  --accent: #2563eb; /* blue-600 */
+  --accent-foreground: #f9fafb;
+  --destructive: #b91c1c;
+  --destructive-foreground: #fee2e2;
+  --border: #1e293b;
+  --input: #1e293b;
+  --ring: #3b82f6;
+  --sidebar: #1e293b; /* azul oscuro sidebar */
+  --sidebar-foreground: #f1f5f9;
+  --sidebar-primary: #2563eb;
+  --sidebar-primary-foreground: #f9fafb;
+  --sidebar-accent: #334155;
+  --sidebar-accent-foreground: #f1f5f9;
+  --sidebar-border: #1e293b;
+  --sidebar-ring: #3b82f6;
 }
 
 @theme inline {
-  /* optional: --font-sans, --font-serif, --font-mono if they are applied in the layout.tsx */
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-card: var(--card);
@@ -103,11 +88,6 @@
   --color-border: var(--border);
   --color-input: var(--input);
   --color-ring: var(--ring);
-  --color-chart-1: var(--chart-1);
-  --color-chart-2: var(--chart-2);
-  --color-chart-3: var(--chart-3);
-  --color-chart-4: var(--chart-4);
-  --color-chart-5: var(--chart-5);
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
@@ -128,6 +108,7 @@
   }
   body {
     @apply bg-background text-foreground;
+    font-family: "Inter", sans-serif;
   }
 }
 
@@ -147,7 +128,7 @@
 }
 
 .btn:focus {
-  outline: 2px solid var(--educoin-500);
+  outline: 2px solid var(--primary-blue-500);
   outline-offset: 2px;
 }
 
@@ -157,66 +138,69 @@
 }
 
 .btn-primary {
-  background-color: var(--educoin-500);
+  background-color: var(--primary);
   color: white;
 }
 
 .btn-primary:hover {
-  background-color: var(--educoin-600);
+  background-color: var(--primary-blue-600);
 }
 
 .btn-secondary {
-  background-color: rgb(229 231 235);
-  color: rgb(17 24 39);
+  background-color: var(--secondary);
+  color: var(--secondary-foreground);
 }
 
 .btn-secondary:hover {
-  background-color: rgb(209 213 219);
+  background-color: #1e3a8a; /* blue-800 */
 }
 
 .btn-outline {
-  border: 1px solid rgb(209 213 219);
-  background-color: white;
-  color: rgb(55 65 81);
+  border: 1px solid var(--border);
+  background-color: transparent;
+  color: var(--foreground);
 }
 
 .btn-outline:hover {
-  background-color: rgb(249 250 251);
+  background-color: #1e293b;
 }
 
 .card {
-  background-color: white;
+  background-color: var(--card);
+  border: 1px solid var(--border);
   border-radius: 0.5rem;
-  box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1);
-  border: 1px solid rgb(229 231 235);
+  box-shadow: 0 1px 3px rgb(0 0 0 / 0.3);
   padding: 1.5rem;
+  color: var(--card-foreground);
 }
 
 .input {
   display: block;
   width: 100%;
   border-radius: 0.5rem;
-  border: 1px solid rgb(209 213 219);
+  border: 1px solid var(--border);
   padding: 0.5rem 0.75rem;
   font-size: 0.875rem;
   transition: all 0.2s;
+  background-color: #0f172a;
+  color: var(--foreground);
 }
 
 .input:focus {
-  border-color: var(--educoin-500);
+  border-color: var(--primary);
   outline: none;
-  box-shadow: 0 0 0 1px var(--educoin-500);
+  box-shadow: 0 0 0 1px var(--primary);
 }
 
 .input::placeholder {
-  color: rgb(156 163 175);
+  color: rgb(148 163 184);
 }
 
 .label {
   display: block;
   font-size: 0.875rem;
   font-weight: 500;
-  color: rgb(55 65 81);
+  color: var(--foreground);
   margin-bottom: 0.25rem;
 }
 
@@ -230,23 +214,23 @@
 }
 
 .badge-success {
-  background-color: rgb(220 252 231);
-  color: rgb(22 101 52);
+  background-color: rgb(22 163 74 / 0.2);
+  color: rgb(34 197 94);
 }
 
 .badge-warning {
-  background-color: rgb(254 249 195);
-  color: rgb(133 77 14);
+  background-color: rgb(234 179 8 / 0.2);
+  color: rgb(250 204 21);
 }
 
 .badge-error {
-  background-color: rgb(254 226 226);
-  color: rgb(153 27 27);
+  background-color: rgb(220 38 38 / 0.2);
+  color: rgb(248 113 113);
 }
 
 .badge-info {
-  background-color: rgb(219 234 254);
-  color: rgb(30 64 175);
+  background-color: rgb(59 130 246 / 0.2);
+  color: rgb(96 165 250);
 }
 
 /* Custom scrollbar */
@@ -255,16 +239,16 @@
 }
 
 ::-webkit-scrollbar-track {
-  background: #f1f1f1;
+  background: #0f172a;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #c1c1c1;
+  background: #334155;
   border-radius: 3px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #a8a8a8;
+  background: #475569;
 }
 
 /* Animations */

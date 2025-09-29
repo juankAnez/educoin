@@ -24,7 +24,13 @@ class User(AbstractUser):
 class Classroom(models.Model):
     nombre = models.CharField(max_length=100)
     docente = models.ForeignKey('users.User', on_delete=models.CASCADE, related_name='clases')
-    estudiantes = models.ManyToManyField('users.User', related_name='clases_estudiante', limit_choices_to={'role': 'estudiante'})
+    descripcion = models.TextField(blank=True, null=True)  # ← nuevo
+    estudiantes = models.ManyToManyField(
+        'users.User',
+        related_name='clases_estudiante',
+        limit_choices_to={'role': 'estudiante'},
+        blank=True  # ← permite lista vacía
+    )
     creado = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):

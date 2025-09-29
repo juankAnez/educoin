@@ -10,32 +10,23 @@ import toast from "react-hot-toast"
 
 const LoginForm = () => {
   const { login, isLoading } = useAuth()
-  const [formData, setFormData] = useState({
-    email: "",
-    password: "",
-  })
+  const [formData, setFormData] = useState({ email: "", password: "" })
   const [errors, setErrors] = useState({})
   const [showPassword, setShowPassword] = useState(false)
 
   const handleChange = (e) => {
     const { name, value } = e.target
     setFormData((prev) => ({ ...prev, [name]: value }))
-
-    // Clear error when user starts typing
-    if (errors[name]) {
-      setErrors((prev) => ({ ...prev, [name]: "" }))
-    }
+    if (errors[name]) setErrors((prev) => ({ ...prev, [name]: "" }))
   }
 
   const handleSubmit = async (e) => {
     e.preventDefault()
-
     const validation = validateLoginForm(formData)
     if (!validation.isValid) {
       setErrors(validation.errors)
       return
     }
-
     try {
       await login(formData)
       toast.success("¡Bienvenido a Educoin!")
@@ -45,15 +36,11 @@ const LoginForm = () => {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-educoin-50 via-blue-50 to-purple-50 py-12 px-4 sm:px-6 lg:px-8 relative">
-      {/* Background blur overlay */}
-      <div className="absolute inset-0 bg-white/20 backdrop-blur-sm"></div>
-
-      {/* Floating modal container */}
-      <div className="relative z-10 max-w-md w-full">
-        <div className="bg-white/90 backdrop-blur-md shadow-2xl rounded-2xl border border-white/20 p-8 space-y-8">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-100 to-gray-200 py-12 px-4">
+      <div className="max-w-md w-full">
+        <div className="bg-white shadow-xl rounded-2xl border border-gray-200 p-8 space-y-8">
           <div>
-            <div className="mx-auto h-16 w-16 flex items-center justify-center rounded-full bg-gradient-to-br from-educoin-500 to-educoin-600 shadow-lg">
+            <div className="mx-auto h-16 w-16 flex items-center justify-center rounded-full bg-gradient-to-br from-orange-500 to-orange-600 shadow-lg">
               <span className="text-3xl font-bold text-white">E</span>
             </div>
             <h2 className="mt-6 text-center text-3xl font-bold text-gray-900">Iniciar Sesión</h2>
@@ -63,71 +50,61 @@ const LoginForm = () => {
           <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
             <div className="space-y-4">
               <div>
-                <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
-                  Correo Electrónico
-                </label>
+                <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">Correo Electrónico</label>
                 <input
                   id="email"
                   name="email"
                   type="email"
-                  autoComplete="email"
                   required
-                  className={`w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-educoin-500 focus:border-educoin-500 bg-white/50 backdrop-blur-sm transition-all duration-200 ${errors.email ? "border-red-500 focus:border-red-500 focus:ring-red-500" : ""}`}
+                  className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 bg-white text-gray-900 placeholder-gray-400 ${
+                    errors.email ? "border-red-500 focus:ring-red-500" : "border-gray-300"
+                  }`}
                   placeholder="tu@email.com"
                   value={formData.email}
                   onChange={handleChange}
                 />
-                {errors.email && <p className="mt-1 text-sm text-red-600">{errors.email}</p>}
+                {errors.email && <p className="mt-1 text-sm text-red-500">{errors.email}</p>}
               </div>
 
               <div>
-                <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
-                  Contraseña
-                </label>
+                <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">Contraseña</label>
                 <div className="relative">
                   <input
                     id="password"
                     name="password"
                     type={showPassword ? "text" : "password"}
-                    autoComplete="current-password"
                     required
-                    className={`w-full px-4 py-3 pr-12 border border-gray-300 rounded-lg focus:ring-2 focus:ring-educoin-500 focus:border-educoin-500 bg-white/50 backdrop-blur-sm transition-all duration-200 ${errors.password ? "border-red-500 focus:border-red-500 focus:ring-red-500" : ""}`}
+                    className={`w-full px-4 py-3 pr-12 border rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 bg-white text-gray-900 placeholder-gray-400 ${
+                      errors.password ? "border-red-500 focus:ring-red-500" : "border-gray-300"
+                    }`}
                     placeholder="Tu contraseña"
                     value={formData.password}
                     onChange={handleChange}
                   />
                   <button
                     type="button"
-                    className="absolute inset-y-0 right-0 pr-3 flex items-center hover:text-educoin-600 transition-colors"
+                    className="absolute inset-y-0 right-0 pr-3 flex items-center hover:text-orange-500"
                     onClick={() => setShowPassword(!showPassword)}
                   >
-                    {showPassword ? (
-                      <EyeSlashIcon className="h-5 w-5 text-gray-400" />
-                    ) : (
-                      <EyeIcon className="h-5 w-5 text-gray-400" />
-                    )}
+                    {showPassword ? <EyeSlashIcon className="h-5 w-5 text-gray-400" /> : <EyeIcon className="h-5 w-5 text-gray-400" />}
                   </button>
                 </div>
-                {errors.password && <p className="mt-1 text-sm text-red-600">{errors.password}</p>}
+                {errors.password && <p className="mt-1 text-sm text-red-500">{errors.password}</p>}
               </div>
             </div>
 
-            <div>
-              <button
-                type="submit"
-                disabled={isLoading}
-                className="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-gradient-to-r from-educoin-600 to-educoin-700 hover:from-educoin-700 hover:to-educoin-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-educoin-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
-              >
-                {isLoading ? <LoadingSpinner size="sm" /> : "Iniciar Sesión"}
-              </button>
-            </div>
+            <button
+              type="submit"
+              disabled={isLoading}
+              className="w-full flex justify-center py-3 px-4 rounded-lg font-medium text-white bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-400 disabled:opacity-50"
+            >
+              {isLoading ? <LoadingSpinner size="sm" /> : "Iniciar Sesión"}
+            </button>
 
             <div className="text-center">
               <p className="text-sm text-gray-600">
                 ¿No tienes una cuenta?{" "}
-                <Link to="/register" className="font-medium text-educoin-600 hover:text-educoin-500 transition-colors">
-                  Regístrate aquí
-                </Link>
+                <Link to="/register" className="font-medium text-orange-500 hover:text-orange-400">Regístrate aquí</Link>
               </p>
             </div>
           </form>

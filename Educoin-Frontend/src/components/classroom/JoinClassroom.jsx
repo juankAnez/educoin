@@ -49,8 +49,8 @@ const JoinClassroom = ({ onClose }) => {
           style={{ textTransform: "uppercase" }}
           required
         />
-        {error && <p className="mt-1 text-sm text-red-600">{error}</p>}
-        <p className="mt-1 text-sm text-gray-500">Ingresa el código de 6 caracteres proporcionado por tu profesor</p>
+        {error && <p className="mt-1 text-sm text-destructive">{error}</p>}
+        <p className="mt-1 text-sm text-muted-foreground">Ingresa el código de 6 caracteres proporcionado por tu profesor</p>
       </div>
 
       <div className="flex space-x-3 pt-4">

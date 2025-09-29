@@ -1,38 +1,42 @@
 "use client"
 
+import { useEffect } from "react"
 import { useAuth } from "../../hooks/useAuth"
 import TeacherDashboard from "../../components/dashboard/TeacherDashboard"
 import StudentDashboard from "../../components/dashboard/StudentDashboard"
-import LoadingSpinner from "../../components/common/LoadingSpinner"
+import { USER_ROLES } from "../../utils/constants"
 
 const DashboardPage = () => {
-  const { user, isTeacher, isStudent, isLoading } = useAuth()
+  const { user } = useAuth()
 
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-64">
-        <LoadingSpinner size="lg" />
-      </div>
-    )
-  }
+  useEffect(() => {
+    if (user?.role === USER_ROLES.ADMIN) {
+      // Redirigir al panel de Django admin
+      window.location.href = "http://localhost:8000/admin/"
+    }
+  }, [user])
 
   if (!user) {
     return (
-      <div className="text-center py-12">
-        <p className="text-gray-500">No se pudo cargar la información del usuario</p>
+      <div className="text-center py-20">
+        <h2 className="text-xl font-bold text-gray-900">Cargando usuario...</h2>
+        <p className="text-gray-600">Por favor espera.</p>
       </div>
     )
   }
 
+  if (user.role === USER_ROLES.TEACHER) {
+    return <TeacherDashboard />
+  }
+
+  if (user.role === USER_ROLES.STUDENT) {
+    return <StudentDashboard />
+  }
+
   return (
-    <div className="animate-fade-in">
-      {isTeacher() && <TeacherDashboard />}
-      {isStudent() && <StudentDashboard />}
-      {!isTeacher() && !isStudent() && (
-        <div className="text-center py-12">
-          <p className="text-gray-500">Rol de usuario no reconocido</p>
-        </div>
-      )}
+    <div className="text-center py-20">
+      <h2 className="text-xl font-bold text-gray-900">Rol de usuario no reconocido</h2>
+      <p className="text-gray-600">Ve a tu perfil para revisar tu rol o contacta al administrador.</p>
     </div>
   )
 }

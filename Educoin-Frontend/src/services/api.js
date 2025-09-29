@@ -9,7 +9,7 @@ const api = axios.create({
   },
 })
 
-// Request interceptor to add JWT token
+// Request interceptor → agrega JWT
 api.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem("access_token")
@@ -18,9 +18,7 @@ api.interceptors.request.use(
     }
     return config
   },
-  (error) => {
-    return Promise.reject(error)
-  },
+  (error) => Promise.reject(error),
 )
 
 // Response interceptor to handle token refresh
@@ -39,8 +37,11 @@ api.interceptors.response.use(
             refresh: refreshToken,
           })
 
-          const { access } = response.data
+          const { access, refresh } = response.data
           localStorage.setItem("access_token", access)
+          if (refresh) {
+            localStorage.setItem("refresh_token", refresh)
+          }
 
           // Retry original request with new token
           originalRequest.headers.Authorization = `Bearer ${access}`
@@ -54,15 +55,6 @@ api.interceptors.response.use(
         window.location.href = "/login"
         return Promise.reject(refreshError)
       }
-    }
-
-    // Handle other error statuses
-    if (error.response?.status === 403) {
-      console.error("Forbidden: You do not have permission to access this resource")
-    } else if (error.response?.status === 404) {
-      console.error("Not Found: The requested resource was not found")
-    } else if (error.response?.status >= 500) {
-      console.error("Server Error: Something went wrong on the server")
     }
 
     return Promise.reject(error)
