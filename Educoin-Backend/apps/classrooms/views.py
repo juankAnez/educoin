@@ -20,7 +20,7 @@ class ClassroomViewSet(viewsets.ModelViewSet):
             return Classroom.objects.filter(docente=user)
         elif user.role == 'estudiante':
             # Clases en las que el estudiante esté inscrito
-            return Classroom.objects.filter(groups__students=user).distinct()
+            return Classroom.objects.filter(groups__estudiantes=user).distinct()
         return Classroom.objects.none()
 
     def get_permissions(self):

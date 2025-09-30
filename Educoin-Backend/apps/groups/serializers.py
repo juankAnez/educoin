@@ -26,7 +26,7 @@ class GroupSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Group
-        fields = ['id', 'name', 'classroom', 'students', 'student_ids']
+        fields = ['id', 'nombre', 'descripcion', 'classroom', 'students', 'student_ids', 'creado']
 
     def create(self, validated_data):
         student_ids = validated_data.pop('student_ids', [])

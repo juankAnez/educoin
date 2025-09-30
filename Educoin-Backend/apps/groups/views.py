@@ -20,7 +20,7 @@ class GroupViewSet(viewsets.ModelViewSet):
             return Group.objects.filter(classroom__docente=user)
         elif user.role == 'estudiante':
             # Grupos en los que esté inscrito el estudiante
-            return Group.objects.filter(students=user)
+            return Group.objects.filter(estudiantes=user)
         return Group.objects.none()
 
     def get_permissions(self):
