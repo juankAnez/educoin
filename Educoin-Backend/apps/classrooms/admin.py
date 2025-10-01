@@ -11,7 +11,7 @@ class GroupInline(admin.TabularInline):
 
 @admin.register(Classroom)
 class ClassroomAdmin(admin.ModelAdmin):
-    list_display = ('nombre', 'docente', 'creado')
+    list_display = ('id', 'nombre', 'docente', 'creado')
     list_filter = ('docente',)
     search_fields = ('nombre', 'descripcion')
     ordering = ('-creado',)
