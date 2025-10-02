@@ -3,7 +3,12 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import RefreshToken
-from .serializers import UserRegistrationSerializer, UserLoginSerializer, UserProfileSerializer
+from .models import User
+from .serializers import (
+    UserRegistrationSerializer,
+    UserLoginSerializer,
+    UserProfileSerializer
+)
 
 @api_view(['POST'])
 @permission_classes([AllowAny])
@@ -38,6 +43,7 @@ def api_login(request):
             }
         }, status=status.HTTP_200_OK)
     return Response({'message': 'Error en el login', 'errors': serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
+
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])

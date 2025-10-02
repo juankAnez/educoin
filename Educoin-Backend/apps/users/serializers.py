@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from django.contrib.auth import authenticate
-from .models import User
+from .models import User, Profile
 
 class UserRegistrationSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True, min_length=6)
@@ -25,6 +25,7 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
         user.save()
         return user
 
+
 class UserLoginSerializer(serializers.Serializer):
     email = serializers.EmailField()
     password = serializers.CharField(write_only=True)
@@ -36,8 +37,17 @@ class UserLoginSerializer(serializers.Serializer):
             return data
         raise serializers.ValidationError("Credenciales inválidas")
 
+
+class ProfileSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Profile
+        fields = ['bio', 'telefono', 'direccion', 'fecha_nacimiento', 'institucion']
+
+
 class UserProfileSerializer(serializers.ModelSerializer):
+    profile = ProfileSerializer(read_only=True)
+
     class Meta:
         model = User
-        fields = ['id', 'email', 'first_name', 'last_name', 'role', 'avatar', 'date_joined']
+        fields = ['id', 'email', 'first_name', 'last_name', 'role', 'avatar', 'date_joined', 'profile']
         read_only_fields = ['id', 'date_joined']
