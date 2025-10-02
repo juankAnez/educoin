@@ -2,23 +2,22 @@ export const API_BASE_URL = "http://localhost:8000"
 
 export const API_ENDPOINTS = {
   // Auth
-  REGISTER: "/users/api/v2/register/",
-  LOGIN: "/users/api/v2/login/",
-  REFRESH_TOKEN: "/users/api/v2/token/refresh/",
-  PROFILE: "/users/api/v2/profile/",
+  REGISTER: "/api/users/register/",
+  LOGIN: "/api/users/login/",
+  PROFILE: "/api/users/profile/",
 
   // Groups (Classes)
-  GROUPS: "/groups/api/v2/groups/",
-  GROUP_DETAIL: (id) => `/groups/api/v2/groups/${id}/`,
-  STUDENT_GROUPS: "/groups/api/v2/student-groups/",
+  GROUPS: "/api/groups/",
+  GROUP_DETAIL: (id) => `/api/groups/${id}/`,
+  //STUDENT_GROUPS: "/api/student-groups/",
 
   // Classrooms
-  CLASSROOMS: "/users/api/v2/classrooms/",
-  CLASSROOM_DETAIL: (id) => `/users/api/v2/classrooms/${id}/`,
+  CLASSROOMS: "/api/classrooms/",
+  CLASSROOM_DETAIL: (id) => `/api/classrooms/${id}/`,
 
   // Activities
-  ACTIVITIES: "/users/api/v2/activities/",
-  ACTIVITY_DETAIL: (id) => `/users/api/v2/activities/${id}/`,
+  ACTIVITIES: "/api//activities/",
+  ACTIVITY_DETAIL: (id) => `/api/activities/${id}/`,
 
   // Coins
   WALLETS: "/coins/api/v2/wallets/",

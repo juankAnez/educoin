@@ -5,9 +5,9 @@ Permite a docentes premiar a estudiantes con monedas virtuales (Educoins) por su
 
 ## Tecnologías
 
-- **Backend:** Django, Django REST Framework, JWT, MySQL
-- **Frontend:** React, Vite, Tailwind CSS (no incluido en este repo)
-- **Otros:** django-cors-headers, drf-yasg (opcional para documentación)
+- **Backend:** Django, Django REST Framework, JWT, MySQL, (Allauth proximamente)
+- **Frontend:** React, Vite, Tailwind CSS
+- **Otros:** django-cors-headers, drf-yasg, axios, (más adelante se documentará más)
 
 ## Instalación
 
@@ -21,7 +21,7 @@ Permite a docentes premiar a estudiantes con monedas virtuales (Educoins) por su
    ```bash
    python -m venv venv
    # Windows:
-   venv\Scripts\activate
+   .\venv\Scripts\activate
    # Linux/Mac:
    source venv/bin/activate
    ```
@@ -70,33 +70,23 @@ Permite a docentes premiar a estudiantes con monedas virtuales (Educoins) por su
 ## Endpoints principales
 
 - **Autenticación y registro:**  
-  `/users/api/v2/register/`  
-  `/users/api/v2/login/`  
-  `/users/api/v2/profile/`
+  `/api/users/register/`  
+  `/api/users/login/`  
+  `/api/users/profile/`
 
 - **CRUD de entidades principales (requiere JWT):**
-  - `/users/api/v2/classrooms/`
-  - `/users/api/v2/activities/`
-  - `/users/api/v2/cointransactions/`
-  - `/users/api/v2/auctions/`
-  - `/users/api/v2/bids/`
-  - `/groups/api/v2/groups/`
-  - `/groups/api/v2/student-groups/`
-  - `/coins/api/v2/wallets/`
-  - `/coins/api/v2/transactions/`
-  - `/auctions/api/v2/auctions/`
-  - `/auctions/api/v2/bids/`
-  - `/notifications/api/v2/notifications/`
-  - `/reports/api/v2/reports/`
+  - `/api/classrooms/`
+  - `/api/groups/`
+  - `/api/activities/`
 
 ## Apps principales
 
-- **users:** Usuarios, roles, autenticación, clases, actividades, transacciones, subastas y pujas.
-- **groups:** Grupos de clase y relación estudiante-grupo.
+- **users:** Usuarios, roles, autenticación.
+- **classrooms** Clases asignadas a usuarios con rol de docente.
+- **groups:** Grupos de las clases asignadas a docentes y relación con estudiante.
 - **coins:** Billeteras y transacciones de Educoins.
 - **auctions:** Subastas y pujas de estudiantes.
-- **notifications:** Notificaciones a usuarios (avisos, alertas, novedades).
-- **reports:** Reportes y analíticas (desempeño, monedas, participación).
+- **...** más adelante, faltan pruebas.
 
 ## Roles
 
@@ -111,10 +101,9 @@ Recuerda enviar el token JWT en el header `Authorization: Bearer <token>` para e
 
 ## Notas
 
-- El frontend (React + Vite + Tailwind) se desarrolla en un repositorio aparte.
+- El frontend (React + Vite + Tailwind) se desarrolla en el mismo repositorio en la ruta *./Educoin-Frontend* .
 - Para documentación automática de la API, puedes instalar y configurar `drf-yasg` o `drf-spectacular`.
 
 ---
 
-**Licencia:** MIT  
-**Autores:** Equipo Educoin
+**Autores:** Equipo Educoin (Juan Añez e Ivan Martinez)
