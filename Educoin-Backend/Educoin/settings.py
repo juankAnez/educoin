@@ -27,7 +27,14 @@ INSTALLED_APPS = [
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
+    'django.contrib.sites',
     'django.contrib.staticfiles',
+    #"dj_rest_auth",
+    #"dj_rest_auth.registration",
+    'allauth',
+    'allauth.account',
+    'allauth.socialaccount',
+    'allauth.socialaccount.providers.google',
 
     'corsheaders',  # para CORS
 
@@ -44,9 +51,12 @@ INSTALLED_APPS = [
     'apps.grades',
     'apps.coins',
     'apps.auctions',
+    'apps.common',
     #'apps.notifications',
     #'apps.reports',
 ]
+
+SITE_ID = 1 # Necesario para django.contrib.sites
 
 # ─────────────────────────────────────────────
 # Middlewares
@@ -60,6 +70,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'allauth.account.middleware.AccountMiddleware',  # django-allauth
 ]
 
 # ─────────────────────────────────────────────
@@ -169,3 +180,23 @@ SIMPLE_JWT = {
     "AUTH_HEADER_TYPES": ("Bearer",),
     "AUTH_TOKEN_CLASSES": ("rest_framework_simplejwt.tokens.AccessToken",),
 }
+
+# Configuración de autenticación (incluye django-allauth)
+AUTHENTICATION_BACKENDS = [
+    "django.contrib.auth.backends.ModelBackend",
+    "allauth.account.auth_backends.AuthenticationBackend",  # django-allauth
+]
+
+# Allauth settings
+ACCOUNT_LOGIN_METHODS = {"email"}  # solo login por email
+ACCOUNT_SIGNUP_FIELDS = ["email*", "password1*", "password2*"]
+ACCOUNT_EMAIL_VERIFICATION = 'optional'  # Cambia a 'mandatory' en producción
+LOGIN_REDIRECT_URL = "/" # Redirige después de iniciar sesión
+LOGOUT_REDIRECT_URL = "/" # Redirige después de cerrar sesión
+
+# Mails en dev se muestran en consola
+EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+
+# Variables de Google - en .env
+GOOGLE_CLIENT_ID = config('GOOGLE_CLIENT_ID')
+GOOGLE_CLIENT_SECRET = config('GOOGLE_CLIENT_SECRET')

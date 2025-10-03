@@ -1,7 +1,9 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser
+from django.conf import settings
+from apps.common.models import BaseModel
 
-class User(AbstractUser):
+class User(AbstractUser, BaseModel):
     ROLE_CHOICES = [
         ('admin', 'Administrador'),
         ('docente', 'Docente'),
@@ -13,22 +15,19 @@ class User(AbstractUser):
     avatar = models.ImageField(upload_to='avatars/', blank=True, null=True)
 
     USERNAME_FIELD = 'email'
-    REQUIRED_FIELDS = ['username']  # Django aún pide username para AbstractUser
+    REQUIRED_FIELDS = ['username']  
 
     def __str__(self):
         return f'{self.email} ({self.get_role_display()})'
 
 
-class Profile(models.Model):
-    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="profile")
-    bio = models.TextField(blank=True, null=True)
-    telefono = models.CharField(max_length=20, blank=True, null=True)
-    direccion = models.CharField(max_length=255, blank=True, null=True)
-    fecha_nacimiento = models.DateField(blank=True, null=True)
-    institucion = models.CharField(max_length=255, blank=True, null=True)
-
-    creado = models.DateTimeField(auto_now_add=True)
-    actualizado = models.DateTimeField(auto_now=True)
+class Profile(BaseModel):
+    user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="profile")
+    bio = models.TextField(null=True, blank=True)
+    telefono = models.CharField(max_length=20, null=True, blank=True)
+    direccion = models.CharField(max_length=255, null=True, blank=True)
+    fecha_nacimiento = models.DateField(null=True, blank=True)
+    institucion = models.CharField(max_length=255, null=True, blank=True)
 
     def __str__(self):
         return f"Perfil de {self.user.email}"

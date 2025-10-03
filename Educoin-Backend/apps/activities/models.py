@@ -1,7 +1,8 @@
 from django.db import models
 from apps.groups.models import Group
+from apps.common.models import BaseModel
 
-class Activity(models.Model):
+class Activity(BaseModel):
     TIPOS = [
         ('tarea', 'Tarea'),
         ('examen', 'Examen'),
@@ -19,29 +20,28 @@ class Activity(models.Model):
     valor_notas = models.PositiveIntegerField(default=0)
     fecha_entrega = models.DateField()
     habilitada = models.BooleanField(default=False)
-    creada = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
         return f"{self.nombre} - {self.group.nombre}"
 
     class Meta:
-        ordering = ['-creada']
-        verbose_name = 'Actividad'
-        verbose_name_plural = 'Actividades'
+        ordering = ['-fecha_entrega']
+        verbose_name = 'Activity'
+        verbose_name_plural = 'Activities'
         
-class Submission(models.Model):
+
+class Submission(BaseModel):
     activity = models.ForeignKey(Activity, on_delete=models.CASCADE, related_name='submissions')
     estudiante = models.ForeignKey('users.User', on_delete=models.CASCADE, related_name='submissions')
     contenido = models.TextField()
-    fecha_envio = models.DateTimeField(auto_now_add=True)
     calificacion = models.DecimalField(max_digits=5, decimal_places=2, null=True, blank=True)
     retroalimentacion = models.TextField(blank=True)
 
     def __str__(self):
-        return f"Submission by {self.estudiante.username} for {self.activity.nombre}"
+        return f"Submission by {self.estudiante.email} for {self.activity.nombre}"
 
     class Meta:
         unique_together = ('activity', 'estudiante')
-        ordering = ['-fecha_envio']
+        ordering = ['-creado']
         verbose_name = 'Submission'
         verbose_name_plural = 'Submissions'

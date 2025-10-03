@@ -70,9 +70,14 @@ Permite a docentes premiar a estudiantes con monedas virtuales (Educoins) por su
 ## Endpoints principales
 
 - **Autenticación y registro:**  
-  `/api/users/register/`  
-  `/api/users/login/`  
-  `/api/users/profile/`
+  - `/api/users/register/`  
+  - `/api/users/login/`  
+  - `/api/users/profile/`
+
+- **Login Allauth:**
+  - `/accounts/login/`
+  - `/accounts/logout/`
+  - `/accounts/google/login/`
 
 - **CRUD de entidades principales (requiere JWT):**
   - `/api/classrooms/`

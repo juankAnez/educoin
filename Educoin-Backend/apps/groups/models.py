@@ -3,17 +3,16 @@ from django.utils import timezone
 from django.utils.crypto import get_random_string
 from apps.classrooms.models import Classroom
 from apps.users.models import User
+from apps.common.models import BaseModel
 
 def generate_group_code(length=6):
-    # Letras mayúsculas y números, evita confusiones visuales si quieres
     alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890'
     return get_random_string(length=length, allowed_chars=alphabet)
 
-class Group(models.Model):
+class Group(BaseModel):
     nombre = models.CharField(max_length=100)
     descripcion = models.TextField(blank=True)
     classroom = models.ForeignKey(Classroom, on_delete=models.CASCADE, related_name="grupos_clases")
-    creado = models.DateTimeField(auto_now_add=True)
 
     codigo = models.CharField(max_length=10, unique=True, blank=True, null=True)
     codigo_generado_en = models.DateTimeField(null=True, blank=True)
@@ -29,14 +28,12 @@ class Group(models.Model):
     activo = models.BooleanField(default=True)
 
     class Meta:
-        ordering = ['-creado']
-        verbose_name = "Grupo"
-        verbose_name_plural = "Grupos"
+        verbose_name = 'Group'
+        verbose_name_plural = 'Groups'
+        ordering = ['nombre']
 
     def save(self, *args, **kwargs):
-        # Generar código único si no existe
         if not self.codigo:
-            # Intentar hasta 5 veces (evitar rare collisions)
             for _ in range(5):
                 code = generate_group_code(6)
                 if not Group.objects.filter(codigo=code).exists():
@@ -46,7 +43,6 @@ class Group(models.Model):
         super().save(*args, **kwargs)
 
     def codigo_valido(self):
-        """Comprueba expiración si existe"""
         if not self.codigo:
             return False
         if self.codigo_expira_en:

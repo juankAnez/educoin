@@ -2,7 +2,8 @@ from django.contrib import admin
 from django.urls import path, include
 
 urlpatterns = [ 
-    path('admin/', admin.site.urls), 
+    path('admin/', admin.site.urls),
+    path('accounts/', include('allauth.urls')),  # django-allauth
     path('api/users/', include('apps.users.urls')), 
     path('api/classrooms/', include('apps.classrooms.urls')),
     path('api/groups/', include('apps.groups.urls')), 
