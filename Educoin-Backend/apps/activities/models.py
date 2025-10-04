@@ -33,7 +33,8 @@ class Activity(BaseModel):
 class Submission(BaseModel):
     activity = models.ForeignKey(Activity, on_delete=models.CASCADE, related_name='submissions')
     estudiante = models.ForeignKey('users.User', on_delete=models.CASCADE, related_name='submissions')
-    contenido = models.TextField()
+    contenido = models.TextField(blank=True)  # ahora opcional
+    archivo = models.FileField(upload_to='submissions/', null=True, blank=True)  # NEW
     calificacion = models.DecimalField(max_digits=5, decimal_places=2, null=True, blank=True)
     retroalimentacion = models.TextField(blank=True)
 

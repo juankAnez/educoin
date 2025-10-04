@@ -71,3 +71,28 @@ class SubmissionViewSet(viewsets.ModelViewSet):
         if self.action in ['retrieve', 'list']:
             return SubmissionDetailSerializer
         return SubmissionSerializer
+
+    @action(detail=True, methods=['patch'], url_path='grade', permission_classes=[permissions.IsAuthenticated, IsDocente])
+    def grade_submission(self, request, pk=None):
+        submission = self.get_object()
+        user = request.user
+
+        if submission.activity.group.classroom.docente != user:
+            raise PermissionDenied("Solo el docente dueño de la clase puede calificar esta entrega.")
+
+        calificacion = request.data.get('calificacion')
+        retro = request.data.get('retroalimentacion', '')
+
+        if calificacion is None:
+            raise ValidationError({'calificacion': 'Campo requerido.'})
+
+        submission.calificacion = calificacion
+        submission.retroalimentacion = retro
+        submission.save()
+
+        return Response({
+            "mensaje": "Entrega calificada correctamente",
+            "id": submission.id,
+            "calificacion": submission.calificacion,
+            "retroalimentacion": submission.retroalimentacion,
+        }, status=status.HTTP_200_OK)

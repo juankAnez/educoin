@@ -200,3 +200,6 @@ EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 # Variables de Google - en .env
 GOOGLE_CLIENT_ID = config('GOOGLE_CLIENT_ID')
 GOOGLE_CLIENT_SECRET = config('GOOGLE_CLIENT_SECRET')
+
+MEDIA_URL = '/media/'
+MEDIA_ROOT = BASE_DIR / 'media'

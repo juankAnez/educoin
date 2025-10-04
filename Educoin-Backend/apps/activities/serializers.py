@@ -22,11 +22,13 @@ class SubmissionSerializer(serializers.ModelSerializer):
             'activity',
             'estudiante',
             'contenido',
-            'fecha_envio',
+            'archivo',
             'calificacion',
-            'retroalimentacion'
+            'retroalimentacion',
+            'creado',
+            'actualizado'
         ]
-        read_only_fields = ['id', 'fecha_envio', 'calificacion', 'retroalimentacion']
+        read_only_fields = ['id', 'calificacion', 'retroalimentacion', 'creado', 'actualizado']
 
     def validate(self, data):
         user = self.context['request'].user
