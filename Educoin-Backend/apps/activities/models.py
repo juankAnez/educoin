@@ -6,29 +6,25 @@ class Activity(BaseModel):
     TIPOS = [
         ('tarea', 'Tarea'),
         ('examen', 'Examen'),
-        ('parcial', 'Parcial'),
         ('proyecto', 'Proyecto'),
         ('quiz', 'Quiz'),
         ('exposicion', 'Exposición'),
     ]
 
-    group = models.ForeignKey(Group, on_delete=models.CASCADE, related_name='activities')
+    group = models.ForeignKey("groups.Group", on_delete=models.CASCADE, related_name='activities')
     tipo = models.CharField(max_length=20, choices=TIPOS)
     nombre = models.CharField(max_length=255)
     descripcion = models.TextField(blank=True)
-    valor_educoins = models.PositiveIntegerField(default=0)
-    valor_notas = models.PositiveIntegerField(default=0)
+    valor_educoins = models.PositiveIntegerField(default=100)
+    valor_notas = models.PositiveIntegerField(default=100)
     fecha_entrega = models.DateField()
-    habilitada = models.BooleanField(default=False)
-
-    def __str__(self):
-        return f"{self.nombre} - {self.group.nombre}"
+    habilitada = models.BooleanField(default=True)
 
     class Meta:
         ordering = ['-fecha_entrega']
-        verbose_name = 'Activity'
-        verbose_name_plural = 'Activities'
-        
+
+    def __str__(self):
+        return f"{self.nombre} ({self.group.nombre})"
 
 class Submission(BaseModel):
     activity = models.ForeignKey(Activity, on_delete=models.CASCADE, related_name='submissions')

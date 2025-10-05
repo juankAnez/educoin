@@ -1,16 +1,19 @@
-const LoadingSpinner = ({ size = "md", className = "" }) => {
-  const sizeClasses = {
-    sm: "w-4 h-4",
-    md: "w-6 h-6",
-    lg: "w-8 h-8",
-    xl: "w-12 h-12",
-  }
+import React from "react"
 
+export default function LoadingSpinner({ size = "md" }) {
+  const sizes = {
+    sm: "h-8 w-8",
+    md: "h-12 w-12",
+    lg: "h-20 w-20",
+  }
   return (
-    <div
-      className={`animate-spin rounded-full border-2 border-border border-t-educoin-500 ${sizeClasses[size]} ${className}`}
-    />
+    <div className="flex flex-col items-center justify-center">
+      <img
+        src="/educoin.ico"
+        alt="Educoin"
+        className={`loading-logo ${sizes[size]} rounded-full`}
+      />
+      <div className="mt-3 text-sm text-gray-500">Cargando Educoin…</div>
+    </div>
   )
 }
-
-export default LoadingSpinner

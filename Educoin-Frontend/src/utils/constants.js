@@ -1,63 +1,46 @@
-export const API_BASE_URL = "http://localhost:8000"
+export const API_BASE_URL = "http://localhost:8000";
 
 export const API_ENDPOINTS = {
-  // Auth
-  REGISTER: "/api/users/register/",
   LOGIN: "/api/users/login/",
+  REGISTER: "/api/users/register/",
   PROFILE: "/api/users/profile/",
-
-  // Groups (Classes)
-  GROUPS: "/api/groups/",
-  GROUP_DETAIL: (id) => `/api/groups/${id}/`,
-  //STUDENT_GROUPS: "/api/student-groups/",
-
-  // Classrooms
   CLASSROOMS: "/api/classrooms/",
-  CLASSROOM_DETAIL: (id) => `/api/classrooms/${id}/`,
-
-  // Activities
-  ACTIVITIES: "/api//activities/",
+  GROUPS: "/api/groups/",
+  GROUP_JOIN: (code) => `/api/groups/join/${code}/`,
+  ACTIVITIES: "/api/activities/",
   ACTIVITY_DETAIL: (id) => `/api/activities/${id}/`,
+  AUCTIONS: "/api/auctions/",
+  AUCTION_DETAIL: (id) => `/api/auctions/${id}/`,
+  COINS: "/api/coins/",
+  WALLET: "/api/coins/wallet/",
+  TRANSACTIONS: "/api/coins/transactions/",
+  SUBMISSIONS: "/api/submissions/",
+  SUBMISSION_GRADE: (id) => `/api/submissions/${id}/grade/`,
+};
 
-  // Coins
-  WALLETS: "/coins/api/v2/wallets/",
-  TRANSACTIONS: "/coins/api/v2/transactions/",
-
-  // Auctions
-  AUCTIONS: "/auctions/api/v2/auctions/",
-  AUCTION_DETAIL: (id) => `/auctions/api/v2/auctions/${id}/`,
-  BIDS: "/auctions/api/v2/bids/",
-  PLACE_BID: "/auctions/api/bid/",
-  CLOSE_AUCTION: (id) => `/auctions/api/${id}/close/`,
-  MY_BIDS: "/auctions/api/my-bids/",
-
-  // Notifications
-  NOTIFICATIONS: "/notifications/api/v2/notifications/",
-
-  // Reports
-  REPORTS: "/reports/api/v2/reports/",
-}
-
+// Roles de usuario
 export const USER_ROLES = {
   ADMIN: "admin",
   TEACHER: "docente",
   STUDENT: "estudiante",
 }
 
+// Estados de actividades
 export const ACTIVITY_STATUS = {
-  PENDING: "pendiente",
-  COMPLETED: "completado",
-  ACTIVE: "activo",
+  PENDING: "pending",
+  COMPLETED: "completed",
+  GRADED: "graded",
 }
 
+// Estados de subastas
 export const AUCTION_STATUS = {
-  ACTIVE: "activo",
-  FINISHED: "finalizado",
-  PENDING: "pendiente",
+  ACTIVE: "active",
+  FINISHED: "finished",
+  UPCOMING: "upcoming",
 }
 
-export const TRANSACTION_TYPES = {
-  EARNED: "ganado",
-  SPENT: "gastado",
-  ASSIGNED: "asignado",
+// Colores o temas base (opcional)
+export const THEME = {
+  PRIMARY: "#f97316", // naranja tipo educoin
+  BACKGROUND: "#f9fafb",
 }

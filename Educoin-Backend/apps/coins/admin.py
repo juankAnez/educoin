@@ -8,8 +8,7 @@ class PeriodAdmin(admin.ModelAdmin):
 
 @admin.register(Wallet)
 class WalletAdmin(admin.ModelAdmin):
-    list_display = ("usuario", "periodo", "saldo", "bloqueado", "creado")
-    search_fields = ("usuario__email",)
+    list_display = ("usuario", "grupo", "periodo", "saldo", "bloqueado")
 
 
 @admin.register(CoinTransaction)

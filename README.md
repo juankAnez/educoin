@@ -5,7 +5,7 @@ Permite a docentes premiar a estudiantes con monedas virtuales (Educoins) por su
 
 ## Tecnologías
 
-- **Backend:** Django, Django REST Framework, JWT, MySQL, (Allauth proximamente)
+- **Backend:** Django, Django REST Framework, JWT, MySQL, (Allauth próximamente)
 - **Frontend:** React, Vite, Tailwind CSS
 - **Otros:** django-cors-headers, drf-yasg, axios, (más adelante se documentará más)
 
@@ -73,6 +73,8 @@ Permite a docentes premiar a estudiantes con monedas virtuales (Educoins) por su
   - `/api/users/register/`  
   - `/api/users/login/`  
   - `/api/users/profile/`
+  - `/api/users/profile/update/`  
+  - `/api/users/password-reset/` 
 
 - **Login Allauth:**
   - `/accounts/login/`
@@ -82,16 +84,24 @@ Permite a docentes premiar a estudiantes con monedas virtuales (Educoins) por su
 - **CRUD de entidades principales (requiere JWT):**
   - `/api/classrooms/`
   - `/api/groups/`
+  - `/api/groups/join/`  
   - `/api/activities/`
+  - `/api/submissions/`
+  - `/api/submissions/<id>/grade/`
+  - `/api/coins/wallets/`
+  - `/api/coins/transactions/`
+  - `/api/grades/`
+  - `/api/auctions/`
 
 ## Apps principales
 
 - **users:** Usuarios, roles, autenticación.
-- **classrooms** Clases asignadas a usuarios con rol de docente.
+- **classrooms:** Clases asignadas a usuarios con rol de docente.
 - **groups:** Grupos de las clases asignadas a docentes y relación con estudiante.
+- **activities:** Actividades, envíos (submissions) y calificaciones.
 - **coins:** Billeteras y transacciones de Educoins.
+- **grades:** Registro oficial de calificaciones.
 - **auctions:** Subastas y pujas de estudiantes.
-- **...** más adelante, faltan pruebas.
 
 ## Roles
 

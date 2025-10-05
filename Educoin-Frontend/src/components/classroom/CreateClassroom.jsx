@@ -54,9 +54,7 @@ const CreateClassroom = ({ classroom, onClose }) => {
         await createClassroom.mutateAsync(formData)
       }
       onClose()
-    } catch (error) {
-      // handled by mutation
-    }
+    } catch {}
   }
 
   const isLoading = createClassroom.isPending || updateClassroom.isPending
@@ -73,11 +71,17 @@ const CreateClassroom = ({ classroom, onClose }) => {
           name="nombre"
           value={formData.nombre}
           onChange={handleChange}
-          className={`input ${errors.nombre ? "border-red-500 focus:border-red-500 focus:ring-red-500" : ""}`}
+          className={`input ${
+            errors.nombre
+              ? "border-red-500 focus:border-red-500 focus:ring-red-500"
+              : ""
+          }`}
           placeholder="Ej: Matemáticas 10A"
           required
         />
-        {errors.nombre && <p className="mt-1 text-sm text-destructive">{errors.nombre}</p>}
+        {errors.nombre && (
+          <p className="mt-1 text-sm text-destructive">{errors.nombre}</p>
+        )}
       </div>
 
       <div>
@@ -90,10 +94,18 @@ const CreateClassroom = ({ classroom, onClose }) => {
           rows={4}
           value={formData.descripcion}
           onChange={handleChange}
-          className={`input ${errors.descripcion ? "border-red-500 focus:border-red-500 focus:ring-red-500" : ""}`}
+          className={`input ${
+            errors.descripcion
+              ? "border-red-500 focus:border-red-500 focus:ring-red-500"
+              : ""
+          }`}
           placeholder="Describe el contenido y objetivos de la clase..."
         />
-        {errors.descripcion && <p className="mt-1 text-sm text-destructive">{errors.descripcion}</p>}
+        {errors.descripcion && (
+          <p className="mt-1 text-sm text-destructive">
+            {errors.descripcion}
+          </p>
+        )}
       </div>
 
       <div className="flex items-center">
@@ -111,11 +123,25 @@ const CreateClassroom = ({ classroom, onClose }) => {
       </div>
 
       <div className="flex space-x-3 pt-4">
-        <button type="button" onClick={onClose} className="btn-secondary flex-1">
+        <button
+          type="button"
+          onClick={onClose}
+          className="btn-secondary flex-1"
+        >
           Cancelar
         </button>
-        <button type="submit" disabled={isLoading} className="btn-primary flex-1">
-          {isLoading ? <LoadingSpinner size="sm" /> : isEditing ? "Actualizar" : "Crear Clase"}
+        <button
+          type="submit"
+          disabled={isLoading}
+          className="btn-primary flex-1"
+        >
+          {isLoading ? (
+            <LoadingSpinner size="sm" />
+          ) : isEditing ? (
+            "Actualizar"
+          ) : (
+            "Crear Clase"
+          )}
         </button>
       </div>
     </form>

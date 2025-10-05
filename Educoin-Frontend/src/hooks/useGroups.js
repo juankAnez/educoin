@@ -1,114 +1,55 @@
-"use client"
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { groupsService } from "../services/groups";
+import toast from "react-hot-toast";
 
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
-import { groupService } from "../services/groups"
-import { useToast } from "./useToast"
-
-export const useGroups = (params = {}) => {
+export const useGroups = () => {
   return useQuery({
-    queryKey: ["groups", params],
-    queryFn: () => groupService.getGroups(params),
-    staleTime: 5 * 60 * 1000, // 5 minutes
-  })
-}
-
-export const useGroup = (id) => {
-  return useQuery({
-    queryKey: ["groups", id],
-    queryFn: () => groupService.getGroup(id),
-    enabled: !!id,
-  })
-}
+    queryKey: ["groups"],
+    queryFn: groupsService.getGroups,
+  });
+};
 
 export const useCreateGroup = () => {
-  const queryClient = useQueryClient()
-  const { toast } = useToast()
-
+  const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: groupService.createGroup,
+    mutationFn: groupsService.createGroup,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["groups"] })
-      toast({
-        title: "Grupo creado",
-        description: "El grupo se ha creado exitosamente.",
-      })
+      queryClient.invalidateQueries(["groups"]);
+      toast.success("Grupo creado");
     },
-    onError: (error) => {
-      toast({
-        title: "Error",
-        description: error.message,
-        variant: "destructive",
-      })
-    },
-  })
-}
+  });
+};
 
 export const useUpdateGroup = () => {
-  const queryClient = useQueryClient()
-  const { toast } = useToast()
-
+  const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({ id, data }) => groupService.updateGroup(id, data),
-    onSuccess: (data, variables) => {
-      queryClient.invalidateQueries({ queryKey: ["groups"] })
-      queryClient.invalidateQueries({ queryKey: ["groups", variables.id] })
-      toast({
-        title: "Grupo actualizado",
-        description: "El grupo se ha actualizado exitosamente.",
-      })
+    mutationFn: ({ id, data }) => groupsService.updateGroup(id, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries(["groups"]);
+      toast.success("Grupo actualizado");
     },
-    onError: (error) => {
-      toast({
-        title: "Error",
-        description: error.message,
-        variant: "destructive",
-      })
-    },
-  })
-}
+  });
+};
 
 export const useDeleteGroup = () => {
-  const queryClient = useQueryClient()
-  const { toast } = useToast()
-
+  const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: groupService.deleteGroup,
+    mutationFn: groupsService.deleteGroup,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["groups"] })
-      toast({
-        title: "Grupo eliminado",
-        description: "El grupo se ha eliminado exitosamente.",
-      })
+      queryClient.invalidateQueries(["groups"]);
+      toast.success("Grupo eliminado");
     },
-    onError: (error) => {
-      toast({
-        title: "Error",
-        description: error.message,
-        variant: "destructive",
-      })
-    },
-  })
-}
+  });
+};
 
-export const useAddStudentToGroup = () => {
-  const queryClient = useQueryClient()
-  const { toast } = useToast()
-
+export const useJoinGroup = () => {
+  const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({ groupId, studentId }) => groupService.addStudentToGroup(groupId, studentId),
+    mutationFn: ({ code }) => groupsService.joinGroup(code),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["groups"] })
-      toast({
-        title: "Estudiante agregado",
-        description: "El estudiante se ha agregado al grupo exitosamente.",
-      })
+      queryClient.invalidateQueries(["groups"]);
+      toast.success("Te uniste al grupo");
     },
-    onError: (error) => {
-      toast({
-        title: "Error",
-        description: error.message,
-        variant: "destructive",
-      })
-    },
-  })
-}
+    onError: () => toast.error("Código inválido"),
+  });
+};

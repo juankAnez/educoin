@@ -5,7 +5,7 @@ import toast from "react-hot-toast"
 export const useCoins = () => {
   const queryClient = useQueryClient()
 
-  // Get wallet/balance
+  // Wallet / Balance
   const {
     data: wallet,
     isLoading: isLoadingWallet,
@@ -13,10 +13,10 @@ export const useCoins = () => {
   } = useQuery({
     queryKey: ["wallet"],
     queryFn: coinsService.getWallet,
-    staleTime: 1000 * 60 * 5, // 5 minutes
+    staleTime: 1000 * 60 * 5, // 5 min
   })
 
-  // Get transactions
+  // Transacciones
   const {
     data: transactions,
     isLoading: isLoadingTransactions,
@@ -24,13 +24,13 @@ export const useCoins = () => {
   } = useQuery({
     queryKey: ["transactions"],
     queryFn: coinsService.getTransactions,
-    staleTime: 1000 * 60 * 2, // 2 minutes
+    staleTime: 1000 * 60 * 2, // 2 min
   })
 
-  // Create transaction mutation
+  // Crear transacción
   const createTransactionMutation = useMutation({
     mutationFn: coinsService.createTransaction,
-    onSuccess: (data) => {
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["wallet"] })
       queryClient.invalidateQueries({ queryKey: ["transactions"] })
       toast.success("Transacción realizada exitosamente")

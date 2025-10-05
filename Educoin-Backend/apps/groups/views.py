@@ -1,12 +1,23 @@
 from rest_framework import viewsets, permissions, status
 from rest_framework.decorators import action
+from rest_framework.exceptions import NotFound, ValidationError, PermissionDenied
 from rest_framework.response import Response
-from rest_framework.exceptions import PermissionDenied, NotFound, ValidationError
-from .models import Group
-from .serializers import GroupSerializer
+from django.db import transaction
+from django.utils import timezone
+from datetime import timedelta
+from apps.groups.models import Group
+from apps.groups.serializers import GroupSerializer
+from apps.coins.models import Wallet, Period
 from apps.users.permissions import IsDocente
 
 class GroupViewSet(viewsets.ModelViewSet):
+    """
+    Gestiona los grupos de clase:
+    - Los docentes pueden crear grupos.
+    - Los estudiantes pueden unirse por código o por ID.
+    - Al crear el grupo se generan automáticamente los 3 periodos (cortes).
+    - Al unirse un estudiante, se le genera su wallet para el periodo activo.
+    """
     serializer_class = GroupSerializer
 
     def get_queryset(self):
@@ -18,36 +29,62 @@ class GroupViewSet(viewsets.ModelViewSet):
         return Group.objects.none()
 
     def get_permissions(self):
-        if self.action in ['create', 'update', 'partial_update', 'destroy', 'add_students']:
+        if self.action in ['create', 'update', 'partial_update', 'destroy']:
             permission_classes = [permissions.IsAuthenticated, IsDocente]
         else:
             permission_classes = [permissions.IsAuthenticated]
         return [permission() for permission in permission_classes]
 
+    @transaction.atomic
     def perform_create(self, serializer):
+        """
+        Al crear un grupo:
+        - Se valida que el usuario sea docente.
+        - Se generan automáticamente 3 periodos de 6 semanas cada uno.
+        """
         user = self.request.user
         classroom = serializer.validated_data.get('classroom')
+
         if user.role != 'docente':
             raise PermissionDenied("No tienes permiso para crear grupos en esta clase.")
-        serializer.save()
+        if classroom.docente != user:
+            raise PermissionDenied("No puedes crear grupos en clases de otros docentes.")
 
+        group = serializer.save()
+        fecha_inicio = timezone.now().date()
+        duracion_corte = 6  # semanas por periodo (ajustable)
+
+        for i in range(3):
+            Period.objects.create(
+                grupo=group,
+                nombre=f"Corte {i+1}",
+                descripcion=f"Periodo {i+1} del grupo {group.nombre}",
+                fecha_inicio=fecha_inicio + timedelta(weeks=i * duracion_corte),
+                fecha_fin=fecha_inicio + timedelta(weeks=(i + 1) * duracion_corte),
+                activo=(i == 0)  # solo el primer corte activo inicialmente
+            )
+
+    # -------------------------------
+    # JOIN POR CÓDIGO
+    # -------------------------------
     @action(detail=False, methods=['post'], url_path='join', permission_classes=[permissions.IsAuthenticated])
+    @transaction.atomic
     def join_by_code(self, request):
         """
         Endpoint: POST /api/groups/join/
         Body: { "code": "ABC123" }
-        Permite a estudiantes unirse a un grupo por código.
+        El estudiante se une a un grupo por código y se le crea una wallet
+        en el periodo activo del grupo.
         """
         code = request.data.get('code', '').strip().upper()
         if not code:
-            raise ValidationError({"code": "Código requerido"})
+            raise ValidationError({"code": "Código requerido."})
 
         try:
             group = Group.objects.get(codigo=code, activo=True)
         except Group.DoesNotExist:
             raise NotFound("Código inválido o grupo no disponible.")
 
-        # validar expiración
         if not group.codigo_valido():
             return Response({"detail": "Código expirado."}, status=status.HTTP_400_BAD_REQUEST)
 
@@ -58,26 +95,72 @@ class GroupViewSet(viewsets.ModelViewSet):
         if group.estudiantes.filter(id=user.id).exists():
             return Response({"detail": "Ya estás inscrito en este grupo."}, status=status.HTTP_200_OK)
 
-        # Añadir estudiante
+        # --- 1. Añadir estudiante al grupo ---
         group.estudiantes.add(user)
-        group.save()
+
+        # --- 2. Crear wallet para el periodo activo ---
+        periodo_activo = Period.objects.filter(grupo=group, activo=True).first()
+        wallet_creada = False
+
+        if periodo_activo:
+            Wallet.objects.get_or_create(
+                usuario=user,
+                grupo=group,
+                periodo=periodo_activo,
+                defaults={"saldo": 0, "bloqueado": 0}
+            )
+            wallet_creada = True
 
         serializer = self.get_serializer(group, context={'request': request})
-        return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response({
+            "mensaje": "Te has unido al grupo correctamente.",
+            "grupo": serializer.data,
+            "wallet_creada": wallet_creada,
+            "periodo_activo": periodo_activo.nombre if periodo_activo else None
+        }, status=status.HTTP_200_OK)
 
+    # -------------------------------
+    # JOIN POR ID DIRECTO
+    # -------------------------------
     @action(detail=True, methods=['post'], url_path='join', permission_classes=[permissions.IsAuthenticated])
+    @transaction.atomic
     def join_detail(self, request, pk=None):
-        """También soporta POST /api/groups/<pk>/join/ (opcional)."""
+        """
+        Endpoint: POST /api/groups/<id>/join/
+        Permite unirse directamente al grupo por su ID.
+        """
         try:
             group = self.get_object()
-        except:
+        except Group.DoesNotExist:
             raise NotFound("Grupo no encontrado.")
+
         user = request.user
         if user.role != 'estudiante':
-            return Response({"detail": "Solo estudiantes pueden unirse por código."}, status=status.HTTP_403_FORBIDDEN)
+            return Response({"detail": "Solo estudiantes pueden unirse a grupos."}, status=status.HTTP_403_FORBIDDEN)
         if not group.activo:
             return Response({"detail": "Inscripción deshabilitada para este grupo."}, status=status.HTTP_400_BAD_REQUEST)
         if group.estudiantes.filter(id=user.id).exists():
             return Response({"detail": "Ya estás inscrito en este grupo."}, status=status.HTTP_200_OK)
+
+        # --- 1. Añadir estudiante ---
         group.estudiantes.add(user)
-        return Response(self.get_serializer(group, context={'request': request}).data, status=status.HTTP_200_OK)
+
+        # --- 2. Crear wallet por grupo y periodo activo ---
+        periodo_activo = Period.objects.filter(grupo=group, activo=True).first()
+        wallet_creada = False
+
+        if periodo_activo:
+            Wallet.objects.get_or_create(
+                usuario=user,
+                grupo=group,
+                periodo=periodo_activo,
+                defaults={"saldo": 0, "bloqueado": 0}
+            )
+            wallet_creada = True
+
+        return Response({
+            "mensaje": "Te has unido correctamente al grupo.",
+            "grupo": self.get_serializer(group, context={'request': request}).data,
+            "wallet_creada": wallet_creada,
+            "periodo_activo": periodo_activo.nombre if periodo_activo else None
+        }, status=status.HTTP_200_OK)

@@ -2,14 +2,16 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { classroomService } from "../services/classrooms"
 import toast from "react-hot-toast"
 
+// Obtener todas las clases
 export const useClassrooms = () => {
   return useQuery({
     queryKey: ["classrooms"],
     queryFn: classroomService.getClassrooms,
-    staleTime: 5 * 60 * 1000, // 5 minutes
+    staleTime: 5 * 60 * 1000, // 5 min
   })
 }
 
+// Obtener una clase por ID
 export const useClassroom = (id) => {
   return useQuery({
     queryKey: ["classroom", id],
@@ -18,6 +20,7 @@ export const useClassroom = (id) => {
   })
 }
 
+// Crear clase
 export const useCreateClassroom = () => {
   const queryClient = useQueryClient()
 
@@ -28,11 +31,12 @@ export const useCreateClassroom = () => {
       toast.success("Clase creada exitosamente")
     },
     onError: (error) => {
-      toast.error(error.message)
+      toast.error(error.response?.data?.message || "Error al crear clase")
     },
   })
 }
 
+// Actualizar clase
 export const useUpdateClassroom = () => {
   const queryClient = useQueryClient()
 
@@ -44,11 +48,12 @@ export const useUpdateClassroom = () => {
       toast.success("Clase actualizada exitosamente")
     },
     onError: (error) => {
-      toast.error(error.message)
+      toast.error(error.response?.data?.message || "Error al actualizar clase")
     },
   })
 }
 
+// Eliminar clase
 export const useDeleteClassroom = () => {
   const queryClient = useQueryClient()
 
@@ -59,11 +64,12 @@ export const useDeleteClassroom = () => {
       toast.success("Clase eliminada exitosamente")
     },
     onError: (error) => {
-      toast.error(error.message)
+      toast.error(error.response?.data?.message || "Error al eliminar clase")
     },
   })
 }
 
+// Unirse a clase
 export const useJoinClassroom = () => {
   const queryClient = useQueryClient()
 
@@ -74,11 +80,12 @@ export const useJoinClassroom = () => {
       toast.success("Te has unido a la clase exitosamente")
     },
     onError: (error) => {
-      toast.error(error.message)
+      toast.error(error.response?.data?.message || "Error al unirse a la clase")
     },
   })
 }
 
+// Obtener estudiantes de una clase
 export const useClassroomStudents = (id) => {
   return useQuery({
     queryKey: ["classroom-students", id],

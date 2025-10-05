@@ -1,95 +1,52 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { activityService } from "../services/activities"
-import toast from "react-hot-toast"
 
-export const useActivities = (params = {}) => {
+export const useActivities = () => {
   return useQuery({
-    queryKey: ["activities", params],
-    queryFn: () => activityService.getActivities(params),
-    staleTime: 5 * 60 * 1000, // 5 minutes
+    queryKey: ["activities"],
+    queryFn: activityService.getAll,
   })
 }
 
 export const useActivity = (id) => {
   return useQuery({
     queryKey: ["activity", id],
-    queryFn: () => activityService.getActivity(id),
+    queryFn: () => activityService.getById(id),
     enabled: !!id,
   })
 }
 
 export const useCreateActivity = () => {
   const queryClient = useQueryClient()
-
   return useMutation({
-    mutationFn: activityService.createActivity,
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["activities"] })
-      toast.success("Actividad creada exitosamente")
-    },
-    onError: (error) => {
-      toast.error(error.message)
-    },
+    mutationFn: activityService.create,
+    onSuccess: () => queryClient.invalidateQueries(["activities"]),
   })
 }
 
 export const useUpdateActivity = () => {
   const queryClient = useQueryClient()
-
   return useMutation({
-    mutationFn: ({ id, data }) => activityService.updateActivity(id, data),
-    onSuccess: (data, variables) => {
-      queryClient.invalidateQueries({ queryKey: ["activities"] })
-      queryClient.invalidateQueries({ queryKey: ["activity", variables.id] })
-      toast.success("Actividad actualizada exitosamente")
-    },
-    onError: (error) => {
-      toast.error(error.message)
-    },
+    mutationFn: ({ id, data }) => activityService.update(id, data),
+    onSuccess: () => queryClient.invalidateQueries(["activities"]),
   })
 }
 
 export const useDeleteActivity = () => {
   const queryClient = useQueryClient()
-
   return useMutation({
-    mutationFn: activityService.deleteActivity,
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["activities"] })
-      toast.success("Actividad eliminada exitosamente")
-    },
-    onError: (error) => {
-      toast.error(error.message)
-    },
+    mutationFn: activityService.remove,
+    onSuccess: () => queryClient.invalidateQueries(["activities"]),
   })
+}
+
+// Si no usas esto aún, puedes dejarlo vacío o borrarlo del import
+export const useAssignCoins = () => {
+  console.warn("useAssignCoins aún no implementado.")
+  return {}
 }
 
 export const useCompleteActivity = () => {
-  const queryClient = useQueryClient()
-
-  return useMutation({
-    mutationFn: activityService.completeActivity,
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["activities"] })
-      toast.success("¡Actividad completada! Educoins asignados")
-    },
-    onError: (error) => {
-      toast.error(error.message)
-    },
-  })
-}
-
-export const useAssignCoins = () => {
-  const queryClient = useQueryClient()
-
-  return useMutation({
-    mutationFn: ({ activityId, studentId, coins }) => activityService.assignCoins(activityId, studentId, coins),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["activities"] })
-      toast.success("Educoins asignados exitosamente")
-    },
-    onError: (error) => {
-      toast.error(error.message)
-    },
-  })
+  console.warn("useCompleteActivity aún no implementado.")
+  return {}
 }

@@ -9,13 +9,13 @@ import {
   CogIcon,
 } from "@heroicons/react/24/outline"
 import { useClassroom, useClassroomStudents } from "../../hooks/useClassrooms"
-import { useAuth } from "../../hooks/useAuth"
+import { useAuthContext } from "../../context/AuthContext"
 import { formatDate } from "../../utils/helpers"
 import LoadingSpinner from "../../components/common/LoadingSpinner"
 
 const ClassroomDetailPage = () => {
   const { id } = useParams()
-  const { isTeacher } = useAuth()
+  const { isTeacher } = useAuthContext()
   const { data: classroom, isLoading: classroomLoading, error: classroomError } = useClassroom(id)
   const { data: students, isLoading: studentsLoading } = useClassroomStudents(id)
 
@@ -47,8 +47,8 @@ const ClassroomDetailPage = () => {
             <ArrowLeftIcon className="h-5 w-5 text-muted-foreground" />
           </Link>
           <div>
-            <h1 className="text-2xl font-bold text-foreground">{classroom.name}</h1>
-            <p className="text-muted-foreground">Código: {classroom.code}</p>
+            <h1 className="text-2xl font-bold text-foreground">{classroom.nombre}</h1>
+            <p className="text-muted-foreground">Código: {classroom.codigo}</p>
           </div>
         </div>
         {isTeacher && (
@@ -64,7 +64,7 @@ const ClassroomDetailPage = () => {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <div>
             <h3 className="text-lg font-semibold text-card-foreground mb-2">Descripción</h3>
-            <p className="text-muted-foreground">{classroom.description}</p>
+            <p className="text-muted-foreground">{classroom.descripcion}</p>
           </div>
           <div>
             <h3 className="text-lg font-semibold text-card-foreground mb-2">Información</h3>
@@ -75,7 +75,7 @@ const ClassroomDetailPage = () => {
               </div>
               <div className="flex items-center text-sm text-muted-foreground">
                 <CalendarIcon className="h-4 w-4 mr-2" />
-                <span>Creada el {formatDate(classroom.created_at)}</span>
+                <span>Creada el {formatDate(classroom.creado || classroom.created_at)}</span>
               </div>
               <div className="flex items-center text-sm text-muted-foreground">
                 <ClipboardDocumentListIcon className="h-4 w-4 mr-2" />
@@ -122,8 +122,8 @@ const ClassroomDetailPage = () => {
                   </div>
                 </div>
                 <div className="text-right">
-                  <p className="text-sm text-muted-foreground">0 Educoins</p>
-                  <p className="text-xs text-muted-foreground">0 actividades completadas</p>
+                  <p className="text-sm text-muted-foreground">{student.wallet?.balance || 0} Educoins</p>
+                  <p className="text-xs text-muted-foreground">{student.activities_completed || 0} actividades completadas</p>
                 </div>
               </div>
             ))}
@@ -134,36 +134,17 @@ const ClassroomDetailPage = () => {
             <h3 className="text-lg font-medium text-card-foreground mb-2">No hay estudiantes aún</h3>
             <p className="text-muted-foreground mb-4">
               {isTeacher
-                ? "Comparte el código de la clase para que los estudiantes se unan"
-                : "Sé el primero en unirte a esta clase"}
+                ? "Comparte el código de la clase o invita manualmente estudiantes"
+                : "Espera a que tu profesor te agregue o usa el código de clase"}
             </p>
             {isTeacher && (
               <div className="bg-secondary rounded-lg p-4 max-w-sm mx-auto">
                 <p className="text-sm text-muted-foreground mb-2">Código de la clase:</p>
-                <p className="text-2xl font-bold text-primary">{classroom.code}</p>
+                <p className="text-2xl font-bold text-primary">{classroom.codigo}</p>
               </div>
             )}
           </div>
         )}
-      </div>
-
-      {/* Activities Section */}
-      <div className="card">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-semibold text-card-foreground">Actividades</h2>
-          {isTeacher && (
-            <Link to={`/activities?classroom=${id}`} className="btn-primary text-sm">
-              Nueva Actividad
-            </Link>
-          )}
-        </div>
-        <div className="text-center py-8">
-          <ClipboardDocumentListIcon className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-          <h3 className="text-lg font-medium text-card-foreground mb-2">No hay actividades aún</h3>
-          <p className="text-muted-foreground">
-            {isTeacher ? "Crea la primera actividad para esta clase" : "El profesor aún no ha creado actividades"}
-          </p>
-        </div>
       </div>
     </div>
   )

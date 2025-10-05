@@ -12,6 +12,9 @@
 
   --primary: #f97316;           /* naranja Educoin */
   --primary-foreground: #ffffff;
+  
+  --educoin-500: var(--primary);
+  --font-sans: "Poppins", system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
 
   --secondary: #f3f4f6;         /* gris claro */
   --secondary-foreground: #111827;
@@ -108,8 +111,15 @@
   }
   body {
     @apply bg-background text-foreground;
-    font-family: "Inter", sans-serif;
+    font-family: var(--font-sans);
+    background: var(--background);
+    color: var(--foreground);
   }
+}
+
+/* Loading spinner centrado */
+.loading-logo {
+  animation: spin 1.3s linear infinite;
 }
 
 /* Component classes */
@@ -182,7 +192,7 @@
   padding: 0.5rem 0.75rem;
   font-size: 0.875rem;
   transition: all 0.2s;
-  background-color: #0f172a;
+  background-color: #f3f4f6;
   color: var(--foreground);
 }
 

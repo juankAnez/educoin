@@ -2,8 +2,8 @@ from rest_framework.routers import DefaultRouter
 from .views import PeriodViewSet, WalletViewSet, CoinTransactionViewSet
 
 router = DefaultRouter()
-router.register(r'periods', PeriodViewSet, basename="periods")
-router.register(r'wallets', WalletViewSet, basename="wallets")
-router.register(r'transactions', CoinTransactionViewSet, basename="transactions")
+router.register(r'periods', PeriodViewSet)
+router.register(r'wallets', WalletViewSet)
+router.register(r'transactions', CoinTransactionViewSet)
 
 urlpatterns = router.urls

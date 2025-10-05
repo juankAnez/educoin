@@ -8,33 +8,28 @@ import {
 } from "@heroicons/react/24/outline"
 import ClassroomCard from "./ClassroomCard"
 import CreateClassroom from "./CreateClassroom"
-import JoinClassroom from "./JoinClassroom"
-import { useAuth } from "../../hooks/useAuth"
+import { useAuthContext } from "../../context/AuthContext"
 import { useClassrooms, useDeleteClassroom } from "../../hooks/useClassrooms"
 import LoadingSpinner from "../common/LoadingSpinner"
 import Modal from "../common/Modal"
 import { debounce } from "../../utils/helpers"
 
 const ClassroomList = () => {
-  const { isTeacher } = useAuth()
+  const { isTeacher } = useAuthContext()
   const { data: classrooms = [], isLoading, error } = useClassrooms()
   const deleteClassroom = useDeleteClassroom()
 
   const [searchTerm, setSearchTerm] = useState("")
   const [showCreateModal, setShowCreateModal] = useState(false)
-  const [showJoinModal, setShowJoinModal] = useState(false)
   const [editingClassroom, setEditingClassroom] = useState(null)
   const [deletingClassroom, setDeletingClassroom] = useState(null)
 
-  const debouncedSearch = debounce((term) => {
-    setSearchTerm(term)
-  }, 300)
+  const debouncedSearch = debounce((term) => setSearchTerm(term), 300)
 
-  // Filtrado seguro usando nombre del backend
   const filteredClassrooms = classrooms.filter((classroom) =>
     (classroom?.nombre || "")
       .toLowerCase()
-      .includes((searchTerm || "").toLowerCase()),
+      .includes((searchTerm || "").toLowerCase())
   )
 
   const handleEdit = (classroom) => {
@@ -69,8 +64,8 @@ const ClassroomList = () => {
   if (error) {
     return (
       <div className="text-center py-12 bg-background">
-        <p className="text-destructive">
-          Error al cargar las clases: {error.message}
+        <p className="text-red-500 font-medium">
+          ❌ Error al cargar las clases: {error.message}
         </p>
       </div>
     )
@@ -81,40 +76,36 @@ const ClassroomList = () => {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-foreground">Mis Clases</h1>
-          <p className="text-muted-foreground">
+          <h1 className="text-2xl font-bold text-gray-900">Mis Clases</h1>
+          <p className="text-gray-500">
             {isTeacher
-              ? "Gestiona tus clases y estudiantes"
+              ? "Gestiona tus clases, grupos y estudiantes"
               : "Clases en las que estás inscrito"}
           </p>
         </div>
-        <div className="flex space-x-3">
-          {!isTeacher && (
-            <button onClick={() => setShowJoinModal(true)} className="btn-outline">
-              Unirse a Clase
-            </button>
-          )}
-          {isTeacher && (
-            <button onClick={() => setShowCreateModal(true)} className="btn-primary">
-              <PlusIcon className="h-5 w-5 mr-2" />
-              Nueva Clase
-            </button>
-          )}
-        </div>
+        {isTeacher && (
+          <button
+            onClick={() => setShowCreateModal(true)}
+            className="btn-primary flex items-center"
+          >
+            <PlusIcon className="h-5 w-5 mr-2" />
+            Nueva Clase
+          </button>
+        )}
       </div>
 
       {/* Search */}
       <div className="relative">
-        <MagnifyingGlassIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+        <MagnifyingGlassIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
         <input
           type="text"
           placeholder="Buscar clases..."
-          className="input pl-10 bg-input border-border text-foreground placeholder:text-muted-foreground focus:border-primary focus:ring-primary"
+          className="input pl-10 bg-white border border-gray-300 focus:border-orange-500 focus:ring-orange-500"
           onChange={(e) => debouncedSearch(e.target.value)}
         />
       </div>
 
-      {/* Classrooms Grid */}
+      {/* Grid */}
       {filteredClassrooms.length > 0 ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {filteredClassrooms.map((classroom) => (
@@ -128,56 +119,33 @@ const ClassroomList = () => {
         </div>
       ) : (
         <div className="text-center py-12">
-          <AcademicCapIcon className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-          <h3 className="text-lg font-medium text-foreground mb-2">
+          <AcademicCapIcon className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+          <h3 className="text-lg font-medium text-gray-700 mb-2">
             {searchTerm ? "No se encontraron clases" : "No tienes clases aún"}
           </h3>
-          <p className="text-muted-foreground mb-4">
+          <p className="text-gray-500">
             {searchTerm
               ? "Intenta con otros términos de búsqueda"
               : isTeacher
               ? "Crea tu primera clase para comenzar"
-              : "Únete a una clase usando el código proporcionado por tu profesor"}
+              : "Únete a una clase desde el panel de grupos"}
           </p>
-          {!searchTerm && (
-            <div className="flex justify-center space-x-3">
-              {!isTeacher && (
-                <button onClick={() => setShowJoinModal(true)} className="btn-outline">
-                  Unirse a Clase
-                </button>
-              )}
-              {isTeacher && (
-                <button onClick={() => setShowCreateModal(true)} className="btn-primary">
-                  <PlusIcon className="h-5 w-5 mr-2" />
-                  Nueva Clase
-                </button>
-              )}
-            </div>
-          )}
         </div>
       )}
 
-      {/* Create/Edit Modal */}
+      {/* Modals */}
       <Modal
         isOpen={showCreateModal}
         onClose={handleCloseModal}
         title={editingClassroom ? "Editar Clase" : "Nueva Clase"}
         size="md"
       >
-        <CreateClassroom classroom={editingClassroom} onClose={handleCloseModal} />
+        <CreateClassroom
+          classroom={editingClassroom}
+          onClose={handleCloseModal}
+        />
       </Modal>
 
-      {/* Join Modal */}
-      <Modal
-        isOpen={showJoinModal}
-        onClose={() => setShowJoinModal(false)}
-        title="Unirse a Clase"
-        size="sm"
-      >
-        <JoinClassroom onClose={() => setShowJoinModal(false)} />
-      </Modal>
-
-      {/* Delete Confirmation Modal */}
       <Modal
         isOpen={!!deletingClassroom}
         onClose={() => setDeletingClassroom(null)}
@@ -185,9 +153,9 @@ const ClassroomList = () => {
         size="sm"
       >
         <div className="space-y-4">
-          <p className="text-muted-foreground">
-            ¿Estás seguro de que deseas eliminar la clase "
-            {deletingClassroom?.nombre}"? Esta acción no se puede deshacer.
+          <p className="text-gray-600">
+            ¿Seguro que deseas eliminar la clase "
+            <span className="font-semibold">{deletingClassroom?.nombre}</span>"?
           </p>
           <div className="flex space-x-3 justify-end">
             <button
@@ -199,13 +167,9 @@ const ClassroomList = () => {
             <button
               onClick={confirmDelete}
               disabled={deleteClassroom.isPending}
-              className="btn bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              className="btn-danger"
             >
-              {deleteClassroom.isPending ? (
-                <LoadingSpinner size="sm" />
-              ) : (
-                "Eliminar"
-              )}
+              Eliminar
             </button>
           </div>
         </div>
