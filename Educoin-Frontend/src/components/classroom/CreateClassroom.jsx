@@ -1,150 +1,66 @@
 "use client"
 
-import { useState, useEffect } from "react"
-import { useCreateClassroom, useUpdateClassroom } from "../../hooks/useClassrooms"
-import { validateClassroomForm } from "../../utils/validators"
-import LoadingSpinner from "../common/LoadingSpinner"
+import { useState } from "react"
+import { useCreateClassroom } from "../../hooks/useClassrooms"
+import toast from "react-hot-toast"
 
-const CreateClassroom = ({ classroom, onClose }) => {
-  const createClassroom = useCreateClassroom()
-  const updateClassroom = useUpdateClassroom()
-  const isEditing = !!classroom
-
-  const [formData, setFormData] = useState({
-    nombre: "",
-    descripcion: "",
-    is_active: true,
-  })
-  const [errors, setErrors] = useState({})
-
-  useEffect(() => {
-    if (classroom) {
-      setFormData({
-        nombre: classroom?.nombre || "",
-        descripcion: classroom?.descripcion || "",
-        is_active: classroom?.is_active ?? true,
-      })
-    }
-  }, [classroom])
+const CreateClassroom = ({ onClose }) => {
+  const [form, setForm] = useState({ nombre: "", descripcion: "" })
+  const { mutate: createClassroom, isPending } = useCreateClassroom()
 
   const handleChange = (e) => {
-    const { name, value, type, checked } = e.target
-    setFormData((prev) => ({
-      ...prev,
-      [name]: type === "checkbox" ? checked : value,
-    }))
-    if (errors[name]) {
-      setErrors((prev) => ({ ...prev, [name]: "" }))
-    }
+    setForm({ ...form, [e.target.name]: e.target.value })
   }
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = (e) => {
     e.preventDefault()
-
-    const validation = validateClassroomForm(formData)
-    if (!validation.isValid) {
-      setErrors(validation.errors)
-      return
-    }
-
-    try {
-      if (isEditing) {
-        await updateClassroom.mutateAsync({ id: classroom.id, data: formData })
-      } else {
-        await createClassroom.mutateAsync(formData)
-      }
-      onClose()
-    } catch {}
+    if (!form.nombre) return toast.error("El nombre es obligatorio")
+    createClassroom(form, { onSuccess: onClose })
   }
-
-  const isLoading = createClassroom.isPending || updateClassroom.isPending
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
-      <div>
-        <label htmlFor="nombre" className="label">
-          Nombre de la Clase
-        </label>
-        <input
-          type="text"
-          id="nombre"
-          name="nombre"
-          value={formData.nombre}
-          onChange={handleChange}
-          className={`input ${
-            errors.nombre
-              ? "border-red-500 focus:border-red-500 focus:ring-red-500"
-              : ""
-          }`}
-          placeholder="Ej: Matemáticas 10A"
-          required
-        />
-        {errors.nombre && (
-          <p className="mt-1 text-sm text-destructive">{errors.nombre}</p>
-        )}
+    <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
+      <div className="bg-white rounded-xl p-6 w-full max-w-md shadow-lg border">
+        <h2 className="text-xl font-bold mb-4 text-gray-900">Crear Nueva Clase</h2>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <label className="text-sm text-gray-600">Nombre</label>
+            <input
+              type="text"
+              name="nombre"
+              value={form.nombre}
+              onChange={handleChange}
+              className="w-full border rounded-md px-3 py-2 focus:ring-2 focus:ring-orange-500"
+            />
+          </div>
+          <div>
+            <label className="text-sm text-gray-600">Descripción</label>
+            <textarea
+              name="descripcion"
+              value={form.descripcion}
+              onChange={handleChange}
+              className="w-full border rounded-md px-3 py-2 focus:ring-2 focus:ring-orange-500"
+            />
+          </div>
+          <div className="flex justify-end gap-2 mt-4">
+            <button
+              type="button"
+              onClick={onClose}
+              className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-md"
+            >
+              Cancelar
+            </button>
+            <button
+              type="submit"
+              disabled={isPending}
+              className="btn-primary"
+            >
+              {isPending ? "Creando..." : "Crear"}
+            </button>
+          </div>
+        </form>
       </div>
-
-      <div>
-        <label htmlFor="descripcion" className="label">
-          Descripción
-        </label>
-        <textarea
-          id="descripcion"
-          name="descripcion"
-          rows={4}
-          value={formData.descripcion}
-          onChange={handleChange}
-          className={`input ${
-            errors.descripcion
-              ? "border-red-500 focus:border-red-500 focus:ring-red-500"
-              : ""
-          }`}
-          placeholder="Describe el contenido y objetivos de la clase..."
-        />
-        {errors.descripcion && (
-          <p className="mt-1 text-sm text-destructive">
-            {errors.descripcion}
-          </p>
-        )}
-      </div>
-
-      <div className="flex items-center">
-        <input
-          type="checkbox"
-          id="is_active"
-          name="is_active"
-          checked={formData.is_active}
-          onChange={handleChange}
-          className="h-4 w-4 text-educoin-600 focus:ring-educoin-500 border-border rounded"
-        />
-        <label htmlFor="is_active" className="ml-2 block text-sm text-foreground">
-          Clase activa
-        </label>
-      </div>
-
-      <div className="flex space-x-3 pt-4">
-        <button
-          type="button"
-          onClick={onClose}
-          className="btn-secondary flex-1"
-        >
-          Cancelar
-        </button>
-        <button
-          type="submit"
-          disabled={isLoading}
-          className="btn-primary flex-1"
-        >
-          {isLoading ? (
-            <LoadingSpinner size="sm" />
-          ) : isEditing ? (
-            "Actualizar"
-          ) : (
-            "Crear Clase"
-          )}
-        </button>
-      </div>
-    </form>
+    </div>
   )
 }
 

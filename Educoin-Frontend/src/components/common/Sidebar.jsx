@@ -10,12 +10,14 @@ import {
   UserIcon,
   BookOpenIcon,
   CurrencyDollarIcon,
+  Cog8ToothIcon,
   ArrowRightOnRectangleIcon,
 } from "@heroicons/react/24/outline"
 import { useAuthContext } from "../../context/AuthContext"
+import { USER_ROLES } from "../../utils/constants"
 
 const Sidebar = ({ isOpen, onClose }) => {
-  const { user, isTeacher, logout } = useAuthContext()
+  const { user, logout } = useAuthContext()
   const location = useLocation()
 
   const teacherNavigation = [
@@ -33,11 +35,22 @@ const Sidebar = ({ isOpen, onClose }) => {
     { name: "Perfil", href: "/profile", icon: UserIcon },
   ]
 
-  const navigation = isTeacher ? teacherNavigation : studentNavigation
+  const adminNavigation = [
+    { name: "Dashboard", href: "/dashboard", icon: HomeIcon },
+    { name: "Usuarios", href: "/admin/users", icon: UserIcon },
+    { name: "Clases", href: "/admin/classrooms", icon: BookOpenIcon },
+    { name: "Ajustes", href: "/admin/settings", icon: Cog8ToothIcon },
+  ]
 
-  const isCurrentPath = (href) => {
-    return location.pathname === href || location.pathname.startsWith(href + "/")
-  }
+  const navigation =
+    user?.role === USER_ROLES.TEACHER
+      ? teacherNavigation
+      : user?.role === USER_ROLES.ADMIN
+      ? adminNavigation
+      : studentNavigation
+
+  const isCurrentPath = (href) =>
+    location.pathname === href || location.pathname.startsWith(href + "/")
 
   const SidebarContent = () => (
     <div className="flex grow flex-col gap-y-5 overflow-y-auto bg-white border-r border-gray-200">

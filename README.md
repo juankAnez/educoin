@@ -64,7 +64,7 @@ Permite a docentes premiar a estudiantes con monedas virtuales (Educoins) por su
 
 8. **Inicia el servidor**
    ```bash
-   python manage.py runserver
+   python manage.py runserver 0.0.0.0:8000
    ```
 
 ## Endpoints principales

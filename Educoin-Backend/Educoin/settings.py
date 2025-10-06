@@ -16,7 +16,7 @@ config = Config(RepositoryEnv(str(ENV_FILE)))
 SECRET_KEY = config('SECRET_KEY')
 DEBUG = config('DEBUG', default=False, cast=bool)
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['localhost', '127.0.0.1', '192.168.1.4']
 
 # ─────────────────────────────────────────────
 # Apps instaladas

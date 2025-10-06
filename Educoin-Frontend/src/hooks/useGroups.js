@@ -43,13 +43,19 @@ export const useDeleteGroup = () => {
 };
 
 export const useJoinGroup = () => {
-  const queryClient = useQueryClient();
+  const queryClient = useQueryClient()
   return useMutation({
     mutationFn: ({ code }) => groupsService.joinGroup(code),
     onSuccess: () => {
-      queryClient.invalidateQueries(["groups"]);
-      toast.success("Te uniste al grupo");
+      queryClient.invalidateQueries(["groups"])
+      toast.success("Te uniste al grupo exitosamente")
     },
-    onError: () => toast.error("Código inválido"),
-  });
+    onError: (error) => {
+      const message =
+        error.response?.data?.detail ||
+        error.response?.data?.message ||
+        "Error al unirte al grupo"
+      toast.error(message)
+    },
+  })
 };
