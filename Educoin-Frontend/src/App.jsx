@@ -9,6 +9,7 @@ import Layout from "./components/common/Layout"
 import AuthLandingPage from "./pages/auth/AuthLandingPage"
 import DashboardPage from "./pages/dashboard/DashboardPage"
 import ClassroomsPage from "./pages/classrooms/ClassroomsPage"
+import GroupsPage from "./pages/groups/GroupsPage"
 import ClassroomDetailPage from "./pages/classrooms/ClassroomDetailPage"
 import ActivitiesPage from "./pages/activities/ActivitiesPage"
 import ActivityDetailPage from "./pages/activities/ActivityDetailPage"
@@ -57,6 +58,7 @@ function App() {
           <Route path="dashboard" element={<DashboardPage />} />
           <Route path="classrooms" element={<ClassroomsPage />} />
           <Route path="classrooms/:id" element={<ClassroomDetailPage />} />
+          <Route path="groups" element={<GroupsPage />} />
           <Route path="activities" element={<ActivitiesPage />} />
           <Route path="activities/:id" element={<ActivityDetailPage />} />
           <Route path="auctions" element={<AuctionsPage />} />

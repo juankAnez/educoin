@@ -4,7 +4,7 @@ import { useState } from "react"
 import { MagnifyingGlassIcon, PlusIcon, ShoppingBagIcon } from "@heroicons/react/24/outline"
 import AuctionCard from "./AuctionCard"
 import CreateAuction from "./CreateAuction"
-import { useAuth } from "../../hooks/useAuth"
+import { useAuthContext } from "../../context/AuthContext"
 import { useAuctions, useDeleteAuction } from "../../hooks/useAuctions"
 import LoadingSpinner from "../common/LoadingSpinner"
 import Modal from "../common/Modal"
@@ -12,7 +12,7 @@ import { debounce } from "../../utils/helpers"
 import { AUCTION_STATUS } from "../../utils/constants"
 
 const AuctionList = () => {
-  const { isTeacher } = useAuth()
+  const { isTeacher } = useAuthContext()
   const [filters, setFilters] = useState({
     search: "",
     status: "",

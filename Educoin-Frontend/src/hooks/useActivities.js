@@ -1,52 +1,102 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
-import { activityService } from "../services/activities"
+import api from "../services/api"
+import { API_ENDPOINTS } from "../utils/constants"
 
-export const useActivities = () => {
+// --- Obtener todas las actividades ---
+export function useActivities() {
   return useQuery({
     queryKey: ["activities"],
-    queryFn: activityService.getAll,
+    queryFn: async () => {
+      const response = await api.get(API_ENDPOINTS.ACTIVITIES)
+      return response.data
+    },
   })
 }
 
-export const useActivity = (id) => {
+// --- Obtener una actividad específica ---
+export function useActivity(activityId) {
   return useQuery({
-    queryKey: ["activity", id],
-    queryFn: () => activityService.getById(id),
-    enabled: !!id,
+    queryKey: ["activity", activityId],
+    queryFn: async () => {
+      const response = await api.get(`${API_ENDPOINTS.ACTIVITIES}${activityId}/`)
+      return response.data
+    },
+    enabled: !!activityId,
   })
 }
 
-export const useCreateActivity = () => {
+// --- Crear una nueva actividad ---
+export function useCreateActivity() {
   const queryClient = useQueryClient()
+
   return useMutation({
-    mutationFn: activityService.create,
+    mutationFn: async (newActivity) => {
+      const response = await api.post(API_ENDPOINTS.ACTIVITIES, newActivity, {
+        headers: { "Content-Type": "multipart/form-data" },
+      })
+      return response.data
+    },
     onSuccess: () => queryClient.invalidateQueries(["activities"]),
   })
 }
 
-export const useUpdateActivity = () => {
+// --- Editar una actividad ---
+export function useUpdateActivity() {
   const queryClient = useQueryClient()
+
   return useMutation({
-    mutationFn: ({ id, data }) => activityService.update(id, data),
+    mutationFn: async ({ id, ...updates }) => {
+      const response = await api.patch(`${API_ENDPOINTS.ACTIVITIES}${id}/`, updates)
+      return response.data
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries(["activities"])
+      queryClient.invalidateQueries(["activity", data.id])
+    },
+  })
+}
+
+// --- Eliminar actividad ---
+export function useDeleteActivity() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: async (id) => {
+      await api.delete(`${API_ENDPOINTS.ACTIVITIES}${id}/`)
+      return id
+    },
     onSuccess: () => queryClient.invalidateQueries(["activities"]),
   })
 }
 
-export const useDeleteActivity = () => {
+// --- Completar actividad (estudiante) ---
+export function useCompleteActivity() {
   const queryClient = useQueryClient()
+
   return useMutation({
-    mutationFn: activityService.remove,
+    mutationFn: async (id) => {
+      const response = await api.post(`${API_ENDPOINTS.ACTIVITIES}${id}/complete/`)
+      return response.data
+    },
     onSuccess: () => queryClient.invalidateQueries(["activities"]),
   })
 }
 
-// Si no usas esto aún, puedes dejarlo vacío o borrarlo del import
-export const useAssignCoins = () => {
-  console.warn("useAssignCoins aún no implementado.")
-  return {}
-}
+// --- Asignar Educoins (docente) ---
+export function useAssignCoins() {
+  const queryClient = useQueryClient()
 
-export const useCompleteActivity = () => {
-  console.warn("useCompleteActivity aún no implementado.")
-  return {}
+  return useMutation({
+    mutationFn: async ({ activityId, studentId, coins }) => {
+      const res = await api.post(`/activities/${activityId}/assign-coins/`, {
+        student_id: studentId,
+        coins,
+      })
+      return res.data
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries(["activities"])
+      queryClient.invalidateQueries(["activity"])
+    },
+  })
 }

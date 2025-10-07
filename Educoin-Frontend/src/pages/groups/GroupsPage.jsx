@@ -26,10 +26,10 @@ export default function GroupsPage() {
             >
               <h2 className="font-semibold text-gray-900">{group.nombre}</h2>
               <p className="text-sm text-gray-500">
-                Clase: {group.classroom_nombre || "Sin clase asociada"}
+                Clase: {group.className || "Sin clase asociada"} 
               </p>
               <p className="text-sm text-gray-500 mt-1">
-                Código: <span className="font-mono">{group.codigo}</span>
+                Código: <span className="font-mono font-bold text-orange-500">{group.codigo}</span>
               </p>
             </div>
           ))}

@@ -79,18 +79,20 @@ export default function StudentDashboard() {
         </motion.div>
       </div>
 
-      {/* Botón Unirse a Grupo */}
-      <div className="flex justify-end">
-        <button
-          onClick={() => setShowJoinCard(!showJoinCard)}
-          className="px-4 py-2 bg-orange-500 text-white rounded-lg shadow hover:bg-orange-600 transition"
-        >
-          {showJoinCard ? "Cerrar" : "Unirse a un grupo"}
-        </button>
-      </div>
+      {/* Botón Unirse a Grupo (solo estudiante) */}
+      {user?.role === "estudiante" && (
+        <div className="flex justify-end">
+          <button
+            onClick={() => setShowJoinCard(!showJoinCard)}
+            className="px-4 py-2 bg-orange-500 text-white rounded-lg shadow hover:bg-orange-600 transition"
+          >
+            {showJoinCard ? "Cerrar" : "Unirse a un grupo"}
+          </button>
+        </div>
+      )}
 
       {/* Card de unirse */}
-      {showJoinCard && <JoinGroupCard />}
+      {user?.role === "estudiante" && showJoinCard && <JoinGroupCard />}
 
       {/* Listado de grupos */}
       <div>
@@ -108,7 +110,10 @@ export default function StudentDashboard() {
                   Clase: {g.classroom_nombre || "No asignada"}
                 </p>
                 <p className="text-sm text-gray-600 mt-1">
-                  Código: <span className="font-mono">{g.codigo}</span>
+                  Código:{" "}
+                  <span className="font-mono font-bold text-orange-500">
+                    {g.codigo || "—"}
+                  </span>
                 </p>
               </motion.div>
             ))}

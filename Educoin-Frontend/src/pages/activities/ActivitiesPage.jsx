@@ -1,36 +1,58 @@
-import { useActivities } from "../../hooks/useActivities"
-import LoadingSpinner from "../../components/common/LoadingSpinner"
+"use client"
+
+import React, { useState } from "react"
+import { useAuthContext } from "../../context/AuthContext"
+import ActivitiesList from "../../components/activities/ActivityList"
+import CreateActivity from "../../components/activities/CreateActivity"
+import Modal from "../../components/common/Modal"
 
 export default function ActivitiesPage() {
-  const { activities, loadingActivities } = useActivities()
+  const { user } = useAuthContext()
+  const [showCreateModal, setShowCreateModal] = useState(false)
 
-  if (loadingActivities)
-    return (
-      <div className="flex justify-center items-center min-h-screen">
-        <LoadingSpinner />
-      </div>
-    )
+  const isTeacher = user?.role === "docente"
+  const isStudent = user?.role === "estudiante"
 
   return (
-    <div className="p-6">
-      <h1 className="text-2xl font-bold mb-4">Actividades</h1>
-      <div className="grid gap-4">
-        {activities.map((act) => (
-          <div
-            key={act.id}
-            className="p-4 border border-gray-300 rounded-lg hover:shadow-md transition"
+    <div className="space-y-8">
+      {/* Header */}
+      <div className="flex justify-between items-center">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900">
+            {isTeacher ? "Gestión de Actividades" : "Actividades Asignadas"}
+          </h1>
+          <p className="text-gray-600">
+            {isTeacher
+              ? "Crea, gestiona y califica las actividades de tus grupos."
+              : "Consulta tus actividades, entrega tus trabajos y revisa tus calificaciones."}
+          </p>
+        </div>
+
+        {/* Solo el docente puede crear actividades */}
+        {isTeacher && (
+          <button
+            onClick={() => setShowCreateModal(true)}
+            className="px-4 py-2 bg-orange-500 text-white rounded-lg shadow hover:bg-orange-600 transition"
           >
-            <h2 className="text-xl font-semibold">{act.nombre}</h2>
-            <p className="text-sm text-gray-600">{act.descripcion}</p>
-            <p className="mt-1 text-sm">
-              Valor Educoins: {act.valor_educoins} | Valor Nota: {act.valor_notas}
-            </p>
-            <p className="mt-1 text-sm text-gray-500">
-              Entrega: {new Date(act.fecha_entrega).toLocaleDateString("es-CO")}
-            </p>
-          </div>
-        ))}
+            + Nueva Actividad
+          </button>
+        )}
       </div>
+
+      {/* Listado de actividades */}
+      <ActivitiesList />
+
+      {/* Modal para crear actividad (solo docente) */}
+      {isTeacher && (
+        <Modal
+          isOpen={showCreateModal}
+          onClose={() => setShowCreateModal(false)}
+          title="Crear nueva actividad"
+          size="lg"
+        >
+          <CreateActivity onClose={() => setShowCreateModal(false)} />
+        </Modal>
+      )}
     </div>
   )
 }

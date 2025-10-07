@@ -1,6 +1,6 @@
 "use client"
 
-import { Users, BookOpen, ArrowRight } from "lucide-react"
+import { Users, BookOpen, ArrowRight, User } from "lucide-react"
 import { Link } from "react-router-dom"
 
 export default function ClassroomCard({ classroom }) {
@@ -19,10 +19,6 @@ export default function ClassroomCard({ classroom }) {
             <span className="font-medium">Docente:</span> {classroom.docente.first_name} {classroom.docente.last_name}
           </p>
         )}
-
-        <p className="text-sm text-gray-500 mb-4">
-          Código de clase: <span className="font-mono">{classroom.codigo || "—"}</span>
-        </p>
       </div>
 
       <div className="flex items-center justify-between mt-auto pt-3 border-t">

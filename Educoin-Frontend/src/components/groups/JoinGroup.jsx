@@ -25,7 +25,7 @@ const JoinGroup = ({ onClose }) => {
         value={code}
         onChange={(e) => setCode(e.target.value)}
         className="input"
-        placeholder="Ej: MATH-10A-2025"
+        placeholder="Ej: ABC123"
         required
       />
 

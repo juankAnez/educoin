@@ -27,7 +27,7 @@ export default function JoinGroupCard() {
           type="text"
           value={code}
           onChange={(e) => setCode(e.target.value.toUpperCase())}
-          placeholder="Ej: WK159U"
+          placeholder="Ej: ABC123"
           className="flex-1 border border-gray-300 rounded-lg px-3 py-2 text-sm uppercase focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none"
         />
         <button

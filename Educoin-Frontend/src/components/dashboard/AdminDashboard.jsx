@@ -10,6 +10,18 @@ export default function AdminDashboard() {
     window.open("http://localhost:8000/admin/", "_blank")
   }
 
+  const openDjangoAdminUsers = () => { 
+    open("http://localhost:8000/admin/users/user/", "_blank")
+  }
+
+    const openDjangoAdminClases = () => {
+    open("http://localhost:8000/admin/classrooms/classroom/", "_blank")
+  }
+
+    const openDjangoAdminActividades = () => {
+    open("http://localhost:8000/admin/activities/activity/", "_blank")
+  }
+
   return (
     <div className="space-y-8">
       {/* Header */}
@@ -66,13 +78,13 @@ export default function AdminDashboard() {
         </p>
 
         <div className="flex flex-wrap gap-4">
-          <button className="px-4 py-2 border border-gray-300 rounded-lg text-gray-800 hover:bg-orange-50 transition">
+          <button onClick={openDjangoAdminUsers} className="px-4 py-2 border border-gray-300 rounded-lg text-gray-800 hover:bg-orange-50 transition">
             Ver usuarios
           </button>
-          <button className="px-4 py-2 border border-gray-300 rounded-lg text-gray-800 hover:bg-orange-50 transition">
+          <button onClick={openDjangoAdminClases} className="px-4 py-2 border border-gray-300 rounded-lg text-gray-800 hover:bg-orange-50 transition">
             Gestionar clases
           </button>
-          <button className="px-4 py-2 border border-gray-300 rounded-lg text-gray-800 hover:bg-orange-50 transition">
+          <button onClick={openDjangoAdminActividades} className="px-4 py-2 border border-gray-300 rounded-lg text-gray-800 hover:bg-orange-50 transition">
             Revisar actividades
           </button>
         </div>

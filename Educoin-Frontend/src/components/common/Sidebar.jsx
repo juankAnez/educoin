@@ -10,8 +10,9 @@ import {
   UserIcon,
   BookOpenIcon,
   CurrencyDollarIcon,
-  Cog8ToothIcon,
+  ArrowRightCircleIcon,
   ArrowRightOnRectangleIcon,
+  UserGroupIcon,
 } from "@heroicons/react/24/outline"
 import { useAuthContext } from "../../context/AuthContext"
 import { USER_ROLES } from "../../utils/constants"
@@ -23,23 +24,23 @@ const Sidebar = ({ isOpen, onClose }) => {
   const teacherNavigation = [
     { name: "Dashboard", href: "/dashboard", icon: HomeIcon },
     { name: "Mis Clases", href: "/classrooms", icon: BookOpenIcon },
-    { name: "Actividades", href: "/activities", icon: ClipboardDocumentListIcon },
+    { name: "Mis Grupos", href:"/groups", icon: UserGroupIcon},
+    { name: "Mis Actividades", href: "/activities", icon: ClipboardDocumentListIcon },
     { name: "Subastas", href: "/auctions", icon: CurrencyDollarIcon },
     { name: "Perfil", href: "/profile", icon: UserIcon },
   ]
 
   const studentNavigation = [
     { name: "Dashboard", href: "/dashboard", icon: HomeIcon },
-    { name: "Mis Clases", href: "/classrooms", icon: BookOpenIcon },
+    { name: "Grupos", href:"/groups", icon: UserGroupIcon},
+    { name: "Actividades", href: "/activities", icon: ClipboardDocumentListIcon },
     { name: "Subastas", href: "/auctions", icon: CurrencyDollarIcon },
     { name: "Perfil", href: "/profile", icon: UserIcon },
   ]
 
   const adminNavigation = [
     { name: "Dashboard", href: "/dashboard", icon: HomeIcon },
-    { name: "Usuarios", href: "/admin/users", icon: UserIcon },
-    { name: "Clases", href: "/admin/classrooms", icon: BookOpenIcon },
-    { name: "Ajustes", href: "/admin/settings", icon: Cog8ToothIcon },
+    { name: "Admin Django", href: "http://localhost:8000/admin/", icon: ArrowRightCircleIcon },
   ]
 
   const navigation =

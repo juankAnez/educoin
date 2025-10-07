@@ -65,7 +65,7 @@ const ClassroomList = () => {
     return (
       <div className="text-center py-12 bg-background">
         <p className="text-red-500 font-medium">
-          ❌ Error al cargar las clases: {error.message}
+          Error al cargar las clases: {error.message}
         </p>
       </div>
     )
