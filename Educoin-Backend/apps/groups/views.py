@@ -22,6 +22,8 @@ class GroupViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         user = self.request.user
+        if user.is_staff or user.role == 'admin':
+            return Group.objects.all()
         if user.role == 'docente':
             return Group.objects.filter(classroom__docente=user)
         elif user.role == 'estudiante':
@@ -30,11 +32,11 @@ class GroupViewSet(viewsets.ModelViewSet):
 
     def get_permissions(self):
         if self.action in ['create', 'update', 'partial_update', 'destroy']:
-            permission_classes = [permissions.IsAuthenticated, IsDocente]
+            permission_classes = [permissions.IsAuthenticated]
         else:
             permission_classes = [permissions.IsAuthenticated]
         return [permission() for permission in permission_classes]
-
+    
     @transaction.atomic
     def perform_create(self, serializer):
         """

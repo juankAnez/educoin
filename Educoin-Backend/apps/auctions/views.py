@@ -6,11 +6,16 @@ from .serializers import AuctionSerializer, BidSerializer
 from apps.users.permissions import AdminOrDocente
 from apps.coins.models import Wallet
 from rest_framework.decorators import action
+from rest_framework.exceptions import ValidationError
+
 
 class AuctionViewSet(viewsets.ModelViewSet):
     queryset = Auction.objects.all()
     serializer_class = AuctionSerializer
     permission_classes = [AdminOrDocente]
+
+    def perform_create(self, serializer):
+        serializer.save(creador=self.request.user)
 
     @action(detail=True, methods=["post"], permission_classes=[AdminOrDocente])
     def close(self, request, pk=None):
@@ -58,18 +63,18 @@ class BidViewSet(viewsets.ModelViewSet):
 
         # Verificar subasta activa
         if auction.estado != "active" or auction.fecha_fin < now():
-            raise ValueError("Esta subasta ya no está activa.")
+            raise ValidationError("Esta subasta ya no está activa.")
 
         # Buscar wallet
         try:
             wallet = Wallet.objects.get(usuario=user, periodo=auction.periodo)
         except Wallet.DoesNotExist:
-            raise ValueError("No tienes una billetera activa para este periodo.")
+            raise ValidationError("No tienes una billetera activa para este periodo.")
 
-        # Validar saldo suficiente (saldo libre, no bloqueado)
+        # Validar saldo suficiente (saldo libre)
         saldo_disponible = wallet.saldo - wallet.bloqueado
         if saldo_disponible < cantidad:
-            raise ValueError("Saldo insuficiente para realizar esta puja.")
+            raise ValidationError("Saldo insuficiente para realizar esta puja.")
 
         # Guardar la puja
         bid = serializer.save(estudiante=user)

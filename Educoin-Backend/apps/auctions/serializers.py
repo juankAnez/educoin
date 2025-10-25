@@ -3,36 +3,39 @@ from .models import Auction, Bid
 
 
 class AuctionSerializer(serializers.ModelSerializer):
-    docente_email = serializers.EmailField(source="docente.email", read_only=True)
+    creador_email = serializers.EmailField(source="creador.email", read_only=True)
+    total_pujas = serializers.SerializerMethodField()
 
     class Meta:
         model = Auction
         fields = [
             "id",
-            "nombre",
+            "titulo",
             "descripcion",
-            "docente",
-            "docente_email",
+            "creador",
+            "creador_email",
             "periodo",
-            "fecha_inicio",
             "fecha_fin",
             "estado",
+            "total_pujas",
         ]
+        read_only_fields = ["creador"]
+    def get_total_pujas(self, obj):
+        return obj.bids.count()
 
 
 class BidSerializer(serializers.ModelSerializer):
     estudiante_email = serializers.EmailField(source="estudiante.email", read_only=True)
-    auction_nombre = serializers.CharField(source="auction.nombre", read_only=True)
+    auction_titulo = serializers.CharField(source="auction.titulo", read_only=True)
 
     class Meta:
         model = Bid
         fields = [
             "id",
             "auction",
-            "auction_nombre",
+            "auction_titulo",
             "estudiante",
             "estudiante_email",
             "cantidad",
-            "fecha",
         ]
-        read_only_fields = ["fecha"]
+        read_only_fields = ["estudiante"]
