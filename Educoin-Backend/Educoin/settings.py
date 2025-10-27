@@ -52,7 +52,7 @@ INSTALLED_APPS = [
     'apps.coins',
     'apps.auctions',
     'apps.common',
-    #'apps.notifications',
+    'apps.notifications',
     #'apps.reports',
 ]
 
