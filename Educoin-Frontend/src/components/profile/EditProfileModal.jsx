@@ -75,7 +75,7 @@ export default function EditProfileModal({ user, onClose }) {
           </div>
 
           <div>
-            <label className="block text-sm text-gray-600">Bio</label>
+            <label className="block text-sm text-gray-600">Biografía</label>
             <textarea
               name="bio"
               value={formData.bio}

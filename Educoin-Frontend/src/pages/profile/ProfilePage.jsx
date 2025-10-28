@@ -44,7 +44,7 @@ export default function ProfilePage() {
 
         {/* Campos del modelo Profile */}
         <div className="border-t pt-4">
-          <p className="text-sm text-gray-500">Bio</p>
+          <p className="text-sm text-gray-500">Biografía</p>
           <p className="text-gray-800">{profile.bio || "Sin descripción"}</p>
         </div>
 
