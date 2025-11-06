@@ -1,45 +1,52 @@
-"use client"
-
 import { useState } from "react"
 import { useJoinGroup } from "../../hooks/useGroups"
-import { KeyIcon } from "@heroicons/react/24/outline"
+import { UserGroupIcon } from "@heroicons/react/24/outline"
 
 export default function JoinGroupCard() {
   const [code, setCode] = useState("")
-  const { mutate: joinGroup, isPending } = useJoinGroup()
+  const joinMutation = useJoinGroup()
 
-  const handleJoin = () => {
+  const handleJoin = async (e) => {
+    e.preventDefault()
     if (!code.trim()) return
-    joinGroup({ code })
+
+    try {
+      await joinMutation.mutateAsync({ code: code.trim().toUpperCase() })
+      setCode("")
+    } catch (error) {
+      console.error("Error uniéndose al grupo:", error)
+    }
   }
 
   return (
-    <div className="bg-white p-6 rounded-xl shadow border flex flex-col items-center text-center">
-      <div className="flex items-center justify-center h-12 w-12 rounded-full bg-orange-100 mb-3">
-        <KeyIcon className="h-6 w-6 text-orange-600" />
+    <div className="bg-gradient-to-r from-blue-500 to-blue-600 rounded-xl p-6 text-white shadow-lg">
+      <div className="flex items-center space-x-3 mb-4">
+        <UserGroupIcon className="h-8 w-8" />
+        <div>
+          <h2 className="text-xl font-bold">Unirse a un Grupo</h2>
+          <p className="text-blue-100 text-sm">
+            Ingresa el código que te compartió tu docente
+          </p>
+        </div>
       </div>
-      <h2 className="text-lg font-semibold text-gray-900 mb-1">Unirse a un Grupo</h2>
-      <p className="text-sm text-gray-500 mb-4">
-        Ingresa el código que tu docente te compartió para unirte al grupo.
-      </p>
-      <div className="flex gap-2 w-full">
+
+      <form onSubmit={handleJoin} className="flex gap-3">
         <input
           type="text"
           value={code}
           onChange={(e) => setCode(e.target.value.toUpperCase())}
-          placeholder="Ej: ABC123"
-          className="flex-1 border border-gray-300 rounded-lg px-3 py-2 text-sm uppercase focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none"
+          placeholder="Código del grupo (ej: ABC123)"
+          maxLength={6}
+          className="flex-1 px-4 py-2.5 rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-white"
         />
         <button
-          onClick={handleJoin}
-          disabled={isPending}
-          className={`px-4 py-2 rounded-lg font-medium text-white transition ${
-            isPending ? "bg-orange-300 cursor-not-allowed" : "bg-orange-500 hover:bg-orange-600"
-          }`}
+          type="submit"
+          disabled={!code.trim() || joinMutation.isPending}
+          className="bg-white text-blue-600 px-6 py-2.5 rounded-lg font-medium hover:bg-blue-50 transition disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          {isPending ? "Uniendo..." : "Unirse"}
+          {joinMutation.isPending ? "Uniéndose..." : "Unirse"}
         </button>
-      </div>
+      </form>
     </div>
   )
 }

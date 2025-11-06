@@ -1,102 +1,128 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
-import api from "../services/api"
-import { API_ENDPOINTS } from "../utils/constants"
+import { activityService, submissionService } from "../services/activities"
+import toast from "react-hot-toast"
 
-// --- Obtener todas las actividades ---
-export function useActivities() {
+// ========== ACTIVITIES ==========
+
+export const useActivities = (params = {}) => {
   return useQuery({
-    queryKey: ["activities"],
-    queryFn: async () => {
-      const response = await api.get(API_ENDPOINTS.ACTIVITIES)
-      return response.data
-    },
+    queryKey: ["activities", params],
+    queryFn: () => activityService.getActivities(params),
+    staleTime: 5 * 60 * 1000,
   })
 }
 
-// --- Obtener una actividad específica ---
-export function useActivity(activityId) {
+export const useActivity = (id) => {
   return useQuery({
-    queryKey: ["activity", activityId],
-    queryFn: async () => {
-      const response = await api.get(`${API_ENDPOINTS.ACTIVITIES}${activityId}/`)
-      return response.data
-    },
-    enabled: !!activityId,
+    queryKey: ["activity", id],
+    queryFn: () => activityService.getActivity(id),
+    enabled: !!id,
   })
 }
 
-// --- Crear una nueva actividad ---
-export function useCreateActivity() {
+export const useCreateActivity = () => {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: async (newActivity) => {
-      const response = await api.post(API_ENDPOINTS.ACTIVITIES, newActivity, {
-        headers: { "Content-Type": "multipart/form-data" },
-      })
-      return response.data
-    },
-    onSuccess: () => queryClient.invalidateQueries(["activities"]),
-  })
-}
-
-// --- Editar una actividad ---
-export function useUpdateActivity() {
-  const queryClient = useQueryClient()
-
-  return useMutation({
-    mutationFn: async ({ id, ...updates }) => {
-      const response = await api.patch(`${API_ENDPOINTS.ACTIVITIES}${id}/`, updates)
-      return response.data
-    },
-    onSuccess: (data) => {
-      queryClient.invalidateQueries(["activities"])
-      queryClient.invalidateQueries(["activity", data.id])
-    },
-  })
-}
-
-// --- Eliminar actividad ---
-export function useDeleteActivity() {
-  const queryClient = useQueryClient()
-
-  return useMutation({
-    mutationFn: async (id) => {
-      await api.delete(`${API_ENDPOINTS.ACTIVITIES}${id}/`)
-      return id
-    },
-    onSuccess: () => queryClient.invalidateQueries(["activities"]),
-  })
-}
-
-// --- Completar actividad (estudiante) ---
-export function useCompleteActivity() {
-  const queryClient = useQueryClient()
-
-  return useMutation({
-    mutationFn: async (id) => {
-      const response = await api.post(`${API_ENDPOINTS.ACTIVITIES}${id}/complete/`)
-      return response.data
-    },
-    onSuccess: () => queryClient.invalidateQueries(["activities"]),
-  })
-}
-
-// --- Asignar Educoins (docente) ---
-export function useAssignCoins() {
-  const queryClient = useQueryClient()
-
-  return useMutation({
-    mutationFn: async ({ activityId, studentId, coins }) => {
-      const res = await api.post(`/activities/${activityId}/assign-coins/`, {
-        student_id: studentId,
-        coins,
-      })
-      return res.data
-    },
+    mutationFn: activityService.createActivity,
     onSuccess: () => {
-      queryClient.invalidateQueries(["activities"])
-      queryClient.invalidateQueries(["activity"])
+      queryClient.invalidateQueries({ queryKey: ["activities"] })
+      toast.success("Actividad creada exitosamente")
     },
+    onError: (error) => {
+      toast.error(error.response?.data?.detail || "Error al crear actividad")
+    },
+  })
+}
+
+export const useUpdateActivity = () => {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: ({ id, data }) => activityService.updateActivity(id, data),
+    onSuccess: (data, variables) => {
+      queryClient.invalidateQueries({ queryKey: ["activities"] })
+      queryClient.invalidateQueries({ queryKey: ["activity", variables.id] })
+      toast.success("Actividad actualizada exitosamente")
+    },
+    onError: (error) => {
+      toast.error(error.response?.data?.detail || "Error al actualizar actividad")
+    },
+  })
+}
+
+export const useDeleteActivity = () => {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: activityService.deleteActivity,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["activities"] })
+      toast.success("Actividad eliminada exitosamente")
+    },
+    onError: (error) => {
+      toast.error(error.response?.data?.detail || "Error al eliminar actividad")
+    },
+  })
+}
+
+// ========== SUBMISSIONS ==========
+
+export const useSubmissions = (params = {}) => {
+  return useQuery({
+    queryKey: ["submissions", params],
+    queryFn: () => submissionService.getSubmissions(params),
+    staleTime: 2 * 60 * 1000,
+  })
+}
+
+export const useSubmission = (id) => {
+  return useQuery({
+    queryKey: ["submission", id],
+    queryFn: () => submissionService.getSubmission(id),
+    enabled: !!id,
+  })
+}
+
+export const useCreateSubmission = () => {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: submissionService.createSubmission,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["submissions"] })
+      queryClient.invalidateQueries({ queryKey: ["activities"] })
+      toast.success("Entrega enviada exitosamente")
+    },
+    onError: (error) => {
+      toast.error(error.response?.data?.detail || "Error al enviar entrega")
+    },
+  })
+}
+
+export const useGradeSubmission = () => {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: ({ id, data }) => submissionService.gradeSubmission(id, data),
+    onSuccess: (response) => {
+      queryClient.invalidateQueries({ queryKey: ["submissions"] })
+      queryClient.invalidateQueries({ queryKey: ["activities"] })
+      queryClient.invalidateQueries({ queryKey: ["wallet"] })
+      toast.success(
+        `Calificación guardada. ${response.coins_ganados > 0 ? `+${response.coins_ganados} Educoins` : ""}`
+      )
+    },
+    onError: (error) => {
+      toast.error(error.response?.data?.detail || "Error al calificar")
+    },
+  })
+}
+
+export const useActivitySubmissions = (activityId) => {
+  return useQuery({
+    queryKey: ["activity-submissions", activityId],
+    queryFn: () => activityService.getActivitySubmissions(activityId),
+    enabled: !!activityId,
   })
 }

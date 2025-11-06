@@ -1,61 +1,78 @@
-import { useState } from "react"
-import { useAuthContext } from "../../context/AuthContext"
-import { useActivities } from "../../hooks/useActivities"
-import Modal from "../../components/common/Modal"
-import CreateActivity from "../../components/activities/CreateActivity"
-import LoadingSpinner from "../../components/common/LoadingSpinner"
+import api from "./api"
+import { API_ENDPOINTS } from "../utils/constants"
 
-export default function ActivitiesPage() {
-  const { user } = useAuthContext()
-  const [showCreateModal, setShowCreateModal] = useState(false)
-  const { data: activities, isLoading } = useActivities()
+export const activityService = {
+  // Obtener todas las actividades (filtradas por rol en backend)
+  getActivities: async (params = {}) => {
+    const res = await api.get(API_ENDPOINTS.ACTIVITIES, { params })
+    return res.data
+  },
 
-  if (isLoading)
-    return (
-      <div className="flex justify-center items-center min-h-[60vh]">
-        <LoadingSpinner size="lg" />
-      </div>
-    )
+  // Obtener una actividad específica
+  getActivity: async (id) => {
+    const res = await api.get(API_ENDPOINTS.ACTIVITY_DETAIL(id))
+    return res.data
+  },
 
-  return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <h1 className="text-2xl font-bold text-gray-900">Gestión de Actividades</h1>
+  // Crear actividad (solo docentes)
+  createActivity: async (data) => {
+    const res = await api.post(API_ENDPOINTS.ACTIVITIES, data, {
+      headers: { "Content-Type": "multipart/form-data" },
+    })
+    return res.data
+  },
 
-        {user?.role === "docente" && (
-          <button
-            onClick={() => setShowCreateModal(true)}
-            className="bg-orange-500 text-white px-4 py-2 rounded-lg hover:bg-orange-600 transition"
-          >
-            + Nueva Actividad
-          </button>
-        )}
-      </div>
+  // Actualizar actividad
+  updateActivity: async (id, data) => {
+    const res = await api.patch(API_ENDPOINTS.ACTIVITY_DETAIL(id), data)
+    return res.data
+  },
 
-      {activities?.length ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {activities.map((a) => (
-            <div key={a.id} className="border rounded-xl p-5 bg-white shadow-sm">
-              <h3 className="font-semibold text-lg">{a.title}</h3>
-              <p className="text-gray-600 text-sm mt-1">{a.description}</p>
-              <p className="text-sm text-gray-500 mt-2">Grupo: {a.group_name || "—"}</p>
-            </div>
-          ))}
-        </div>
-      ) : (
-        <p className="text-gray-500 text-center mt-10">
-          No hay actividades disponibles en este momento
-        </p>
-      )}
+  // Eliminar actividad
+  deleteActivity: async (id) => {
+    const res = await api.delete(API_ENDPOINTS.ACTIVITY_DETAIL(id))
+    return res.data
+  },
 
-      <Modal
-        isOpen={showCreateModal}
-        onClose={() => setShowCreateModal(false)}
-        title="Crear nueva actividad"
-        size="lg"
-      >
-        <CreateActivity onClose={() => setShowCreateModal(false)} />
-      </Modal>
-    </div>
-  )
+  // Obtener submissions de una actividad
+  getActivitySubmissions: async (activityId) => {
+    const res = await api.get(API_ENDPOINTS.SUBMISSIONS, {
+      params: { activity: activityId }
+    })
+    return res.data
+  },
+}
+
+export const submissionService = {
+  // Obtener todas las submissions del usuario
+  getSubmissions: async (params = {}) => {
+    const res = await api.get(API_ENDPOINTS.SUBMISSIONS, { params })
+    return res.data
+  },
+
+  // Obtener una submission específica
+  getSubmission: async (id) => {
+    const res = await api.get(API_ENDPOINTS.SUBMISSION_DETAIL(id))
+    return res.data
+  },
+
+  // Crear submission (estudiantes)
+  createSubmission: async (formData) => {
+    const res = await api.post(API_ENDPOINTS.SUBMISSIONS, formData, {
+      headers: { "Content-Type": "multipart/form-data" },
+    })
+    return res.data
+  },
+
+  // Actualizar submission
+  updateSubmission: async (id, data) => {
+    const res = await api.patch(API_ENDPOINTS.SUBMISSION_DETAIL(id), data)
+    return res.data
+  },
+
+  // Calificar submission (docentes)
+  gradeSubmission: async (id, data) => {
+    const res = await api.patch(API_ENDPOINTS.SUBMISSION_GRADE(id), data)
+    return res.data
+  },
 }
