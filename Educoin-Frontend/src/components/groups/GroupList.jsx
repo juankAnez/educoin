@@ -97,6 +97,9 @@ export default function GroupList() {
           {groups.map((group) => (
             <div
               key={group.id}
+              group={group}
+              isTeacher={isTeacher}
+              onDelete={isTeacher ? handleDelete : null}
               className="bg-white border border-gray-200 rounded-xl shadow-sm hover:shadow-md transition-all duration-200 overflow-hidden"
             >
               {/* Card Header */}

@@ -22,7 +22,7 @@ const Sidebar = ({ isOpen, onClose }) => {
   const location = useLocation()
 
   const teacherNavigation = [
-    { name: "Dashboard", href: "/dashboard", icon: HomeIcon },
+    { name: "Panel Docente", href: "/dashboard", icon: HomeIcon },
     { name: "Mis Clases", href: "/classrooms", icon: BookOpenIcon },
     { name: "Mis Grupos", href:"/groups", icon: UserGroupIcon},
     { name: "Mis Actividades", href: "/activities", icon: ClipboardDocumentListIcon },
@@ -31,7 +31,7 @@ const Sidebar = ({ isOpen, onClose }) => {
   ]
 
   const studentNavigation = [
-    { name: "Dashboard", href: "/dashboard", icon: HomeIcon },
+    { name: "Panel Estudiante", href: "/dashboard", icon: HomeIcon },
     { name: "Grupos", href:"/groups", icon: UserGroupIcon},
     { name: "Actividades", href: "/activities", icon: ClipboardDocumentListIcon },
     { name: "Subastas", href: "/auctions", icon: CurrencyDollarIcon },
@@ -39,7 +39,7 @@ const Sidebar = ({ isOpen, onClose }) => {
   ]
 
   const adminNavigation = [
-    { name: "Dashboard", href: "/dashboard", icon: HomeIcon },
+    { name: "Dashboard Admin", href: "/dashboard", icon: HomeIcon },
     { name: "Admin Django", href: "http://localhost:8000/admin/", icon: ArrowRightCircleIcon },
   ]
 

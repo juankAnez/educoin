@@ -79,6 +79,9 @@ export default function ActivityList() {
           {filteredActivities.map((activity) => (
             <Link
               key={activity.id}
+              activity={activity}
+              isTeacher={isTeacher}
+              userSubmission={activity.submissions?.find(s => s.estudiante === user?.id)}
               to={`/activities/${activity.id}`}
               className="block bg-white border border-gray-200 rounded-xl shadow-sm hover:shadow-md transition-all duration-200 overflow-hidden"
             >
