@@ -38,7 +38,7 @@ const Header = ({ onMenuClick }) => {
           <div className="flex items-center gap-x-2 px-3 py-1 bg-orange-100 rounded-full">
             <CurrencyDollarIcon className="h-5 w-5 text-orange-600" />
             <span className="text-sm font-medium text-orange-600">
-              {formatCoins(user?.wallet?.balance || 0)} Educoins
+              {formatCoins(user?.wallet?.balance || 0)} EC
             </span>
           </div>
         )}

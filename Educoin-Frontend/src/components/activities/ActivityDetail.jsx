@@ -94,7 +94,7 @@ export default function ActivityDetail() {
             </p>
           </div>
 
-          {/* Info Grid */}
+          {/* Info Grid - CORREGIDO EL VALOR EN NOTAS */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="bg-gray-50 rounded-lg p-4">
               <div className="flex items-center space-x-2 text-gray-500 mb-1">
@@ -119,7 +119,7 @@ export default function ActivityDetail() {
             <div className="bg-blue-50 rounded-lg p-4">
               <div className="text-sm text-blue-600 mb-1">Valor en Notas</div>
               <p className="font-semibold text-blue-600 text-xl">
-                {activity.valor_notas}%
+                {activity.valor_notas}
               </p>
             </div>
           </div>

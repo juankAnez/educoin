@@ -21,6 +21,7 @@ from .serializers import (
     ProfileSerializer,
     ChangePasswordSerializer
 )
+from .permissions import IsAdmin
 
 User = get_user_model()
 token_generator = PasswordResetTokenGenerator()
@@ -96,6 +97,80 @@ def api_update_profile(request):
             "user": UserProfileSerializer(user).data
         })
     return Response(profile_serializer.errors, status=400)
+
+
+# --------------------------
+# Lista de usuarios (solo admin)
+# --------------------------
+@api_view(['GET'])
+@permission_classes([IsAuthenticated, IsAdmin])
+def api_list_users(request):
+    """
+    Lista todos los usuarios del sistema (solo admin)
+    """
+    users = User.objects.all().order_by('-date_joined')
+    serializer = UserProfileSerializer(users, many=True)
+    return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+# --------------------------
+# Actualizar usuario (solo admin)
+# --------------------------
+@api_view(['PATCH'])
+@permission_classes([IsAuthenticated, IsAdmin])
+def api_update_user(request, user_id):
+    """
+    Actualizar datos de un usuario (solo admin)
+    """
+    try:
+        user = User.objects.get(id=user_id)
+    except User.DoesNotExist:
+        return Response({"detail": "Usuario no encontrado"}, status=status.HTTP_404_NOT_FOUND)
+
+    # Actualizar campos básicos del usuario
+    user.first_name = request.data.get("first_name", user.first_name)
+    user.last_name = request.data.get("last_name", user.last_name)
+    user.email = request.data.get("email", user.email)
+    user.role = request.data.get("role", user.role)
+    user.is_active = request.data.get("is_active", user.is_active)
+    user.save()
+
+    # Actualizar perfil si hay datos
+    if 'profile' in request.data:
+        profile_data = request.data['profile']
+        profile_serializer = ProfileSerializer(user.profile, data=profile_data, partial=True)
+        if profile_serializer.is_valid():
+            profile_serializer.save()
+
+    return Response({
+        "message": "Usuario actualizado exitosamente",
+        "user": UserProfileSerializer(user).data
+    }, status=status.HTTP_200_OK)
+
+
+# --------------------------
+# Eliminar usuario (solo admin)
+# --------------------------
+@api_view(['DELETE'])
+@permission_classes([IsAuthenticated, IsAdmin])
+def api_delete_user(request, user_id):
+    """
+    Eliminar un usuario (solo admin)
+    """
+    try:
+        user = User.objects.get(id=user_id)
+        if user.role == 'admin' and User.objects.filter(role='admin').count() <= 1:
+            return Response({
+                "detail": "No se puede eliminar el último administrador"
+            }, status=status.HTTP_400_BAD_REQUEST)
+        
+        user.delete()
+        return Response({
+            "message": "Usuario eliminado exitosamente"
+        }, status=status.HTTP_200_OK)
+    except User.DoesNotExist:
+        return Response({"detail": "Usuario no encontrado"}, status=status.HTTP_404_NOT_FOUND)
+
 
 # --------------------------
 # Google login

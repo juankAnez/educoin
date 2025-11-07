@@ -2,8 +2,6 @@ import { useState } from "react"
 import { 
   UsersIcon, 
   AcademicCapIcon,
-  ClipboardDocumentListIcon,
-  CurrencyDollarIcon,
   MagnifyingGlassIcon,
   PencilIcon,
   TrashIcon
@@ -11,19 +9,29 @@ import {
 import { useAuthContext } from "../../context/AuthContext"
 import LoadingSpinner from "../common/LoadingSpinner"
 import Modal from "../common/Modal"
-
-// Hook para gestión de usuarios (debes crearlo)
-import { useUsers } from "../../hooks/useUsers"
+import { useAllUsers, useUpdateUser, useDeleteUser } from "../../hooks/useUsers"
 
 export default function AdminDashboard() {
   const { user } = useAuthContext()
-  const { data: users, isLoading } = useUsers()
+  const { data: users, isLoading } = useAllUsers()
+  const updateUserMutation = useUpdateUser()
+  const deleteUserMutation = useDeleteUser()
+  
   const [searchTerm, setSearchTerm] = useState("")
   const [filterRole, setFilterRole] = useState("all")
   const [showEditModal, setShowEditModal] = useState(false)
   const [selectedUser, setSelectedUser] = useState(null)
+  const [editFormData, setEditFormData] = useState({
+    first_name: "",
+    last_name: "",
+    email: "",
+    role: "",
+    is_active: true
+  })
 
-  const filteredUsers = users?.filter(u => {
+  const mockUsers = users || []
+
+  const filteredUsers = mockUsers?.filter(u => {
     const matchesSearch = 
       u.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       `${u.first_name} ${u.last_name}`.toLowerCase().includes(searchTerm.toLowerCase())
@@ -69,7 +77,7 @@ export default function AdminDashboard() {
               <UsersIcon className="h-6 w-6 text-blue-600" />
             </div>
             <span className="text-2xl font-bold text-gray-900">
-              {users?.length || 0}
+              {mockUsers?.length || 0}
             </span>
           </div>
           <h3 className="text-sm font-medium text-gray-600">Total Usuarios</h3>
@@ -81,7 +89,7 @@ export default function AdminDashboard() {
               <UsersIcon className="h-6 w-6 text-green-600" />
             </div>
             <span className="text-2xl font-bold text-gray-900">
-              {users?.filter(u => u.role === "estudiante").length || 0}
+              {mockUsers?.filter(u => u.role === "estudiante").length || 0}
             </span>
           </div>
           <h3 className="text-sm font-medium text-gray-600">Estudiantes</h3>
@@ -93,7 +101,7 @@ export default function AdminDashboard() {
               <AcademicCapIcon className="h-6 w-6 text-purple-600" />
             </div>
             <span className="text-2xl font-bold text-gray-900">
-              {users?.filter(u => u.role === "docente").length || 0}
+              {mockUsers?.filter(u => u.role === "docente").length || 0}
             </span>
           </div>
           <h3 className="text-sm font-medium text-gray-600">Docentes</h3>
@@ -105,7 +113,7 @@ export default function AdminDashboard() {
               <UsersIcon className="h-6 w-6 text-red-600" />
             </div>
             <span className="text-2xl font-bold text-gray-900">
-              {users?.filter(u => u.role === "admin").length || 0}
+              {mockUsers?.filter(u => u.role === "admin").length || 0}
             </span>
           </div>
           <h3 className="text-sm font-medium text-gray-600">Admins</h3>
@@ -149,6 +157,13 @@ export default function AdminDashboard() {
           </select>
         </div>
 
+        {/* Info Notice */}
+        <div className="mb-6 bg-blue-50 border border-blue-200 rounded-lg p-4">
+          <p className="text-sm text-blue-800">
+            <strong>Nota:</strong> Para gestión completa de usuarios, utiliza el Admin de Django.
+          </p>
+        </div>
+
         {/* Users Table */}
         <div className="overflow-x-auto">
           <table className="w-full">
@@ -157,7 +172,6 @@ export default function AdminDashboard() {
                 <th className="px-4 py-3 text-left text-sm font-semibold text-gray-900">Usuario</th>
                 <th className="px-4 py-3 text-left text-sm font-semibold text-gray-900">Email</th>
                 <th className="px-4 py-3 text-left text-sm font-semibold text-gray-900">Rol</th>
-                <th className="px-4 py-3 text-left text-sm font-semibold text-gray-900">Estado</th>
                 <th className="px-4 py-3 text-right text-sm font-semibold text-gray-900">Acciones</th>
               </tr>
             </thead>
@@ -186,38 +200,16 @@ export default function AdminDashboard() {
                     </span>
                   </td>
                   <td className="px-4 py-3">
-                    <span className={`inline-block px-3 py-1 rounded-full text-xs font-medium ${
-                      u.is_active 
-                        ? "bg-green-100 text-green-700" 
-                        : "bg-red-100 text-red-700"
-                    }`}>
-                      {u.is_active ? "Activo" : "Inactivo"}
-                    </span>
-                  </td>
-                  <td className="px-4 py-3">
                     <div className="flex items-center justify-end space-x-2">
-                      <button
-                        onClick={() => {
-                          setSelectedUser(u)
-                          setShowEditModal(true)
-                        }}
+                      <a
+                        href={`http://localhost:8000/admin/users/user/${u.id}/change/`}
+                        target="_blank"
+                        rel="noopener noreferrer"
                         className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition"
-                        title="Editar"
+                        title="Editar en Django Admin"
                       >
                         <PencilIcon className="h-4 w-4" />
-                      </button>
-                      <button
-                        onClick={() => {
-                          if (window.confirm(`¿Eliminar a ${u.first_name} ${u.last_name}?`)) {
-                            // Implementar eliminación
-                            console.log("Eliminar usuario:", u.id)
-                          }
-                        }}
-                        className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition"
-                        title="Eliminar"
-                      >
-                        <TrashIcon className="h-4 w-4" />
-                      </button>
+                      </a>
                     </div>
                   </td>
                 </tr>
@@ -232,32 +224,6 @@ export default function AdminDashboard() {
           </div>
         )}
       </div>
-
-      {/* Edit User Modal */}
-      {showEditModal && selectedUser && (
-        <Modal
-          isOpen={showEditModal}
-          onClose={() => {
-            setShowEditModal(false)
-            setSelectedUser(null)
-          }}
-          title={`Editar Usuario: ${selectedUser.first_name} ${selectedUser.last_name}`}
-        >
-          <div className="space-y-4">
-            <p className="text-gray-600">
-              Funcionalidad de edición disponible en el Admin de Django
-            </p>
-            <a            
-              href={`http://localhost:8000/admin/users/user/${selectedUser.id}/change/`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="block w-full bg-orange-500 text-white px-4 py-2 rounded-lg hover:bg-orange-600 transition text-center"
-            >
-              Abrir en Admin Django →
-            </a>
-          </div>
-        </Modal>
-      )}
     </div>
   )
 }
