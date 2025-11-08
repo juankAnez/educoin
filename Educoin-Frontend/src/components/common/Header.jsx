@@ -44,7 +44,7 @@ const Header = ({ onMenuClick }) => {
         )}
 
         {/* Notifications */}
-        <button type="button" className="p-2 text-gray-400 hover:text-gray-500">
+        <button type="button" className="p-2 text-orange-400 hover:text-orange-500">
           <BellIcon className="h-6 w-6" />
         </button>
 

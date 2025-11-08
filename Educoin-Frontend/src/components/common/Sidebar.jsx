@@ -11,6 +11,7 @@ import {
   BookOpenIcon,
   CurrencyDollarIcon,
   ArrowRightCircleIcon,
+  WalletIcon,
   ArrowRightOnRectangleIcon,
   UserGroupIcon,
 } from "@heroicons/react/24/outline"
@@ -35,6 +36,7 @@ const Sidebar = ({ isOpen, onClose }) => {
     { name: "Grupos", href:"/groups", icon: UserGroupIcon},
     { name: "Actividades", href: "/activities", icon: ClipboardDocumentListIcon },
     { name: "Subastas", href: "/auctions", icon: CurrencyDollarIcon },
+    { name: "Billetera", href: "/wallet", icon: WalletIcon },
     { name: "Perfil", href: "/profile", icon: UserIcon },
   ]
 

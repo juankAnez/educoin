@@ -68,6 +68,18 @@ const ClassroomDetailPage = () => {
       </div>
 
       {/* Classroom Info Card */}
+      <div className="bg-gradient-to-r from-orange-500 to-orange-600 rounded-xl p-6 text-white shadow-lg mb-6">
+        <div className="flex items-center space-x-4">
+          <div className="p-4 bg-white/20 rounded-lg">
+            <BookOpenIcon className="h-8 w-8 text-white" />
+          </div>
+          <div className="flex-1">
+            <h2 className="text-2xl font-bold">{classroom.nombre}</h2>
+            <p className="text-orange-100">Docente: {classroom.docente_nombre || "N/A"}</p>
+          </div>
+        </div>
+      </div>
+
       <div className="bg-white border border-gray-200 rounded-xl p-6 shadow-sm">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {/* Descripción */}
