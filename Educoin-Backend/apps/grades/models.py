@@ -28,7 +28,7 @@ class Grade(BaseModel):
 
     @property
     def periodo(self):
-        return Period.objects.filter(activo=True).first()
+         return Period.objects.filter(grupo=self.grupo, activo=True).first() 
 
     def calcular_coins_ganados(self):
         return int((Decimal(self.nota) / Decimal(100)) * Decimal(self.activity.valor_educoins))
