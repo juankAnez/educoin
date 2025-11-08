@@ -3,7 +3,7 @@ import { Link } from "react-router-dom"
 import { 
   ClipboardDocumentListIcon,
   CalendarIcon,
-  CurrencyDollarIcon,
+  CurrencyEuroIcon,
   CheckCircleIcon 
 } from "@heroicons/react/24/outline"
 import { useActivities } from "../../hooks/useActivities"
@@ -116,7 +116,7 @@ export default function ActivityList() {
                     <span>{formatDate(activity.fecha_entrega)}</span>
                   </div>
                   <div className="flex items-center space-x-1 text-orange-600 font-medium">
-                    <CurrencyDollarIcon className="h-4 w-4" />
+                    <CurrencyEuroIcon className="h-4 w-4" />
                     <span>{activity.valor_educoins} EC</span>
                   </div>
                 </div>

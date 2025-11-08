@@ -9,8 +9,17 @@ class StudentInGroupSerializer(serializers.ModelSerializer):
         fields = ['id', 'username', 'first_name', 'last_name', 'email', 'role']
 
 
+class ClassroomInGroupSerializer(serializers.ModelSerializer):
+    """Serializer para mostrar información básica del classroom"""
+    class Meta:
+        model = Classroom
+        fields = ['id', 'nombre', 'descripcion']
+        read_only_fields = ['id', 'nombre', 'descripcion']
+
+
 class GroupSerializer(serializers.ModelSerializer):
     estudiantes = StudentInGroupSerializer(many=True, read_only=True)
+    classroom_detail = ClassroomInGroupSerializer(source='classroom', read_only=True)
     student_ids = serializers.PrimaryKeyRelatedField(
         queryset=User.objects.filter(role='estudiante'),
         many=True,
@@ -18,26 +27,35 @@ class GroupSerializer(serializers.ModelSerializer):
         required=False
     )
     classroom = serializers.PrimaryKeyRelatedField(queryset=Classroom.objects.all())
+    
     class Meta:
         model = Group
-        fields = ['id', 'nombre', 'descripcion', 'classroom', 'estudiantes', 'student_ids', 'codigo', 'activo', 'codigo_generado_en', 'codigo_expira_en', 'creado']
+        fields = [
+            'id', 'nombre', 'descripcion', 'classroom', 'classroom_detail',
+            'estudiantes', 'student_ids', 'codigo', 'activo', 
+            'codigo_generado_en', 'codigo_expira_en', 'creado'
+        ]
         read_only_fields = ['creado', 'codigo', 'codigo_generado_en']
 
     def to_representation(self, instance):
         data = super().to_representation(instance)
         request = self.context.get('request')
+        
+        # Agregar información del classroom al nivel principal
+        if data.get('classroom_detail'):
+            data['classroom_nombre'] = data['classroom_detail']['nombre']
+        
         # Mostrar el código solo si el usuario es docente de la clase o es staff
         if request and request.user.is_authenticated:
             if request.user.role == 'docente' and instance.classroom.docente_id == request.user.id:
-                # deja codigo tal cual
                 pass
             elif request.user.role == 'admin' or request.user.is_staff:
                 pass
             else:
-                # ocultar codigo para estudiantes/regulares
                 data.pop('codigo', None)
                 data.pop('codigo_generado_en', None)
                 data.pop('codigo_expira_en', None)
+        
         return data
 
     def create(self, validated_data):
@@ -54,14 +72,9 @@ class GroupSerializer(serializers.ModelSerializer):
             instance.estudiantes.set(student_ids)
         return instance
 
-    def validate_classroom_id(self, value):
+    def validate_classroom(self, value):
         user = self.context['request'].user
-        from apps.classrooms.models import Classroom
-        try:
-            classroom = Classroom.objects.get(id=value)
-        except Classroom.DoesNotExist:
-            raise serializers.ValidationError("Clase no encontrada.")
-        if classroom.docente != user:
+        if user.role == 'docente' and value.docente != user:
             raise serializers.ValidationError("No puedes asignar un grupo a una clase que no es tuya.")
         return value
     

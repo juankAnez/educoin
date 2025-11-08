@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom"
 import {
   ClipboardDocumentListIcon,
-  CurrencyDollarIcon,
+  CurrencyEuroIcon,
   CalendarIcon,
   CheckCircleIcon,
   ClockIcon,
@@ -43,16 +43,21 @@ export default function ActivityCard({ activity, isTeacher, userSubmission }) {
 
       {/* Body */}
       <div className="p-5 space-y-4">
+        {/* Clase y Grupo */}
+        <div className="flex items-center space-x-2">
+          <span className="text-sm text-gray-500">
+            {activity.className} - {activity.groupName}
+          </span>
+        </div>
         {/* Descripción */}
         <p className="text-gray-600 text-sm line-clamp-2 min-h-[40px]">
           {activity.descripcion || "Sin descripción"}
         </p>
-
         {/* Stats Grid */}
         <div className="grid grid-cols-2 gap-3">
           <div className="bg-orange-50 rounded-lg p-3">
             <div className="flex items-center space-x-2 mb-1">
-              <CurrencyDollarIcon className="h-4 w-4 text-orange-600" />
+              <CurrencyEuroIcon className="h-4 w-4 text-orange-600" />
               <span className="text-xs text-gray-600">Educoins</span>
             </div>
             <p className="text-lg font-bold text-orange-600">

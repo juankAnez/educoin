@@ -11,7 +11,7 @@ export default function JoinGroupCard() {
     if (!code.trim()) return
 
     try {
-      await joinMutation.mutateAsync({ code: code.trim().toUpperCase() })
+      await joinMutation.mutateAsync(code.trim().toUpperCase()) // Solo el código
       setCode("")
     } catch (error) {
       console.error("Error uniéndose al grupo:", error)

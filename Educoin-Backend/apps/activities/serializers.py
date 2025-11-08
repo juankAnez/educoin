@@ -1,8 +1,10 @@
 from rest_framework import serializers
 from .models import Activity, Submission
+from apps.users.serializers import UserProfileSerializer  # Importar serializer de usuario
 
 class ActivitySerializer(serializers.ModelSerializer):
     classroom = serializers.SerializerMethodField()
+    submissions = serializers.SerializerMethodField()  # Agregar submissions al listar
 
     class Meta:
         model = Activity
@@ -10,8 +12,60 @@ class ActivitySerializer(serializers.ModelSerializer):
 
     def get_classroom(self, obj):
         return obj.group.classroom.id if obj.group and obj.group.classroom else None
+    
+    def get_submissions(self, obj):
+        # Solo retornar submissions si el usuario es docente
+        request = self.context.get('request')
+        if request and request.user.role == 'docente':
+            submissions = obj.submissions.select_related('estudiante').all()
+            return SubmissionListSerializer(submissions, many=True, context=self.context).data
+        return []
+
+
+class SubmissionListSerializer(serializers.ModelSerializer):
+    """Serializer para listar submissions con datos completos del estudiante"""
+    estudiante = serializers.SerializerMethodField()
+    estudiante_nombre = serializers.SerializerMethodField()
+    estudiante_email = serializers.EmailField(source='estudiante.email', read_only=True)
+    activity_nombre = serializers.CharField(source='activity.nombre', read_only=True)
+    
+    class Meta:
+        model = Submission
+        fields = [
+            'id',
+            'activity',
+            'activity_nombre',
+            'estudiante',  # ID del estudiante
+            'estudiante_nombre',
+            'estudiante_email',
+            'contenido',
+            'archivo',
+            'calificacion',
+            'retroalimentacion',
+            'creado',
+            'actualizado'
+        ]
+    
+    def get_estudiante(self, obj):
+        """Retorna el objeto completo del estudiante"""
+        if obj.estudiante:
+            return {
+                'id': obj.estudiante.id,
+                'email': obj.estudiante.email,
+                'first_name': obj.estudiante.first_name,
+                'last_name': obj.estudiante.last_name,
+            }
+        return None
+    
+    def get_estudiante_nombre(self, obj):
+        """Retorna el nombre completo del estudiante"""
+        if obj.estudiante:
+            return f"{obj.estudiante.first_name} {obj.estudiante.last_name}".strip()
+        return "Desconocido"
+
 
 class SubmissionSerializer(serializers.ModelSerializer):
+    """Serializer para crear submissions"""
     estudiante = serializers.PrimaryKeyRelatedField(read_only=True)
     activity = serializers.PrimaryKeyRelatedField(queryset=Activity.objects.all())
 
@@ -44,11 +98,10 @@ class SubmissionSerializer(serializers.ModelSerializer):
 
         return data
 
-class SubmissionDetailSerializer(SubmissionSerializer):
-    activity = ActivitySerializer(read_only=True)
-    estudiante = serializers.StringRelatedField(read_only=True)
 
-    class Meta(SubmissionSerializer.Meta):
-        fields = SubmissionSerializer.Meta.fields + ['activity', 'estudiante']
-        read_only_fields = SubmissionSerializer.Meta.read_only_fields + ['activity', 'estudiante']
-        
+class SubmissionDetailSerializer(SubmissionListSerializer):
+    """Serializer para detalle de submission con toda la info"""
+    activity = ActivitySerializer(read_only=True)
+
+    class Meta(SubmissionListSerializer.Meta):
+        fields = SubmissionListSerializer.Meta.fields + ['activity']

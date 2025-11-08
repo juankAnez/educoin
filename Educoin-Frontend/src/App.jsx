@@ -16,6 +16,7 @@ import ActivitiesPage from "./pages/activities/ActivitiesPage"
 import ActivityDetailPage from "./pages/activities/ActivityDetailPage"
 import AuctionsPage from "./pages/auctions/AuctionsPage"
 import ProfilePage from "./pages/profile/ProfilePage"
+import WalletPage from "./pages/wallet/WalletPage"
 
 // Pantallas y componentes comunes
 import LoadingScreen from "./components/common/LoadingScreen"
@@ -64,6 +65,7 @@ function App() {
           <Route path="activities/:id" element={<ActivityDetailPage />} />
           <Route path="auctions" element={<AuctionsPage />} />
           <Route path="profile" element={<ProfilePage />} />
+          <Route path="wallet" element={<WalletPage />} />
         </Route>
       )}
 

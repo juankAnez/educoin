@@ -9,7 +9,7 @@ import {
   ClipboardDocumentListIcon,
   UserIcon,
   BookOpenIcon,
-  CurrencyDollarIcon,
+  CurrencyEuroIcon,
   ArrowRightCircleIcon,
   WalletIcon,
   ArrowRightOnRectangleIcon,
@@ -27,7 +27,7 @@ const Sidebar = ({ isOpen, onClose }) => {
     { name: "Mis Clases", href: "/classrooms", icon: BookOpenIcon },
     { name: "Mis Grupos", href:"/groups", icon: UserGroupIcon},
     { name: "Mis Actividades", href: "/activities", icon: ClipboardDocumentListIcon },
-    { name: "Subastas", href: "/auctions", icon: CurrencyDollarIcon },
+    { name: "Subastas", href: "/auctions", icon: CurrencyEuroIcon },
     { name: "Perfil", href: "/profile", icon: UserIcon },
   ]
 
@@ -35,7 +35,7 @@ const Sidebar = ({ isOpen, onClose }) => {
     { name: "Panel Estudiante", href: "/dashboard", icon: HomeIcon },
     { name: "Grupos", href:"/groups", icon: UserGroupIcon},
     { name: "Actividades", href: "/activities", icon: ClipboardDocumentListIcon },
-    { name: "Subastas", href: "/auctions", icon: CurrencyDollarIcon },
+    { name: "Subastas", href: "/auctions", icon: CurrencyEuroIcon },
     { name: "Billetera", href: "/wallet", icon: WalletIcon },
     { name: "Perfil", href: "/profile", icon: UserIcon },
   ]

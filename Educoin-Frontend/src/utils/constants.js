@@ -44,6 +44,7 @@ export const API_ENDPOINTS = {
   AUCTIONS: "/api/auctions/",
   AUCTION_DETAIL: (id) => `/api/auctions/${id}/`,
   AUCTION_PLACE_BID: (id) => `/api/auctions/${id}/place-bid/`,
+  AUCTION_CLOSE: (id) => `/api/auctions/auctions/${id}/close/`,
   AUCTION_BIDS: (id) => `/api/auctions/${id}/bids/`,
   
   // Notifications

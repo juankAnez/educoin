@@ -5,8 +5,18 @@ import toast from "react-hot-toast"
 export const useAuctions = (params = {}) => {
   return useQuery({
     queryKey: ["auctions", params],
-    queryFn: () => auctionService.getAuctions(params),
-    staleTime: 5 * 60 * 1000, // 5 minutes
+    queryFn: async () => {
+      const data = await auctionService.getAuctions(params)
+      // Asegurar que siempre devolvemos un array
+      if (Array.isArray(data)) {
+        return data
+      } else if (data && typeof data === 'object') {
+        // Si es un objeto con una propiedad results (paginación Django)
+        return data.results || []
+      }
+      return []
+    },
+    staleTime: 5 * 60 * 1000,
   })
 }
 
@@ -28,7 +38,7 @@ export const useCreateAuction = () => {
       toast.success("Subasta creada exitosamente")
     },
     onError: (error) => {
-      toast.error(error.message)
+      toast.error(error.response?.data?.detail || "Error al crear subasta")
     },
   })
 }
@@ -44,7 +54,7 @@ export const useUpdateAuction = () => {
       toast.success("Subasta actualizada exitosamente")
     },
     onError: (error) => {
-      toast.error(error.message)
+      toast.error(error.response?.data?.detail || "Error al actualizar subasta")
     },
   })
 }
@@ -59,7 +69,7 @@ export const useDeleteAuction = () => {
       toast.success("Subasta eliminada exitosamente")
     },
     onError: (error) => {
-      toast.error(error.message)
+      toast.error(error.response?.data?.detail || "Error al eliminar subasta")
     },
   })
 }
@@ -68,15 +78,17 @@ export const usePlaceBid = () => {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: ({ auctionId, amount }) => auctionService.placeBid(auctionId, amount),
+    mutationFn: ({ auctionId, cantidad }) => auctionService.placeBid(auctionId, cantidad),
     onSuccess: (data, variables) => {
       queryClient.invalidateQueries({ queryKey: ["auctions"] })
       queryClient.invalidateQueries({ queryKey: ["auction", variables.auctionId] })
       queryClient.invalidateQueries({ queryKey: ["auction-bids", variables.auctionId] })
-      toast.success("¡Puja realizada exitosamente!")
+      queryClient.invalidateQueries({ queryKey: ["wallet"] })
+      queryClient.invalidateQueries({ queryKey: ["all-wallets"] })
+      toast.success("Puja realizada exitosamente")
     },
     onError: (error) => {
-      toast.error(error.message)
+      toast.error(error.response?.data?.detail || "Error al realizar puja")
     },
   })
 }
@@ -86,6 +98,21 @@ export const useAuctionBids = (auctionId) => {
     queryKey: ["auction-bids", auctionId],
     queryFn: () => auctionService.getAuctionBids(auctionId),
     enabled: !!auctionId,
-    refetchInterval: 30000, // Refetch every 30 seconds for live updates
+    refetchInterval: 30000,
+  })
+}
+
+export const useCloseAuction = () => {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: auctionService.closeAuction,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["auctions"] })
+      toast.success("Subasta cerrada exitosamente")
+    },
+    onError: (error) => {
+      toast.error(error.response?.data?.detail || "Error al cerrar subasta")
+    },
   })
 }

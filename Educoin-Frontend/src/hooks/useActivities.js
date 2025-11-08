@@ -89,9 +89,12 @@ export const useCreateSubmission = () => {
 
   return useMutation({
     mutationFn: submissionService.createSubmission,
-    onSuccess: () => {
+    onSuccess: (data) => {
+      // Invalidar TODAS las queries relacionadas
       queryClient.invalidateQueries({ queryKey: ["submissions"] })
       queryClient.invalidateQueries({ queryKey: ["activities"] })
+      queryClient.invalidateQueries({ queryKey: ["activity", data.activity] })
+      
       toast.success("Entrega enviada exitosamente")
     },
     onError: (error) => {

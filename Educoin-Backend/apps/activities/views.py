@@ -6,7 +6,12 @@ from django.db import transaction
 from apps.grades.models import Grade
 from apps.coins.models import CoinTransaction, Wallet, Period
 from .models import Activity, Submission
-from .serializers import ActivitySerializer, SubmissionSerializer
+from .serializers import (
+    ActivitySerializer, 
+    SubmissionSerializer, 
+    SubmissionListSerializer,
+    SubmissionDetailSerializer
+)
 from apps.users.permissions import IsDocente
 
 
@@ -19,11 +24,18 @@ class ActivityViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         user = self.request.user
+        queryset = Activity.objects.select_related('group', 'group__classroom')
+        
         if user.role == 'docente':
-            return Activity.objects.filter(group__classroom__docente=user)
+            queryset = queryset.filter(group__classroom__docente=user)
         elif user.role == 'estudiante':
-            return Activity.objects.filter(group__estudiantes=user, habilitada=True)
-        return Activity.objects.none()
+            queryset = queryset.filter(group__estudiantes=user, habilitada=True)
+        else:
+            return Activity.objects.none()
+        
+        # Prefetch submissions con los datos del estudiante
+        queryset = queryset.prefetch_related('submissions__estudiante')
+        return queryset
 
     def get_permissions(self):
         if self.action in ['create', 'update', 'partial_update', 'destroy']:
@@ -44,9 +56,35 @@ class SubmissionViewSet(viewsets.ModelViewSet):
     Vista para manejar las entregas de los estudiantes.
     Los docentes pueden calificarlas y generar monedas automáticamente.
     """
-    queryset = Submission.objects.all().select_related("activity", "estudiante")
-    serializer_class = SubmissionSerializer
     permission_classes = [permissions.IsAuthenticated]
+
+    def get_serializer_class(self):
+        if self.action == 'list':
+            return SubmissionListSerializer
+        elif self.action == 'retrieve':
+            return SubmissionDetailSerializer
+        return SubmissionSerializer
+
+    def get_queryset(self):
+        user = self.request.user
+        queryset = Submission.objects.select_related(
+            'activity', 
+            'estudiante',
+            'activity__group',
+            'activity__group__classroom'
+        )
+        
+        if user.role == 'docente':
+            queryset = queryset.filter(activity__group__classroom__docente=user)
+        elif user.role == 'estudiante':
+            queryset = queryset.filter(estudiante=user)
+        
+        # Filtrar por actividad si se especifica
+        activity_id = self.request.query_params.get('activity')
+        if activity_id:
+            queryset = queryset.filter(activity_id=activity_id)
+        
+        return queryset
 
     def perform_create(self, serializer):
         user = self.request.user
@@ -89,6 +127,7 @@ class SubmissionViewSet(viewsets.ModelViewSet):
         # --- 3. Educoins ---
         activity = submission.activity
         periodo = Period.objects.filter(activo=True).first()
+        coins_ganados = 0
 
         if periodo:
             wallet, _ = Wallet.objects.get_or_create(
@@ -122,6 +161,6 @@ class SubmissionViewSet(viewsets.ModelViewSet):
             "nota": submission.calificacion,
             "retroalimentacion": submission.retroalimentacion,
             "grade_id": grade.id,
-            "coins_ganados": coins_ganados if periodo else 0,
+            "coins_ganados": coins_ganados,
             "wallet_saldo": wallet.saldo if periodo else None
         }, status=status.HTTP_200_OK)

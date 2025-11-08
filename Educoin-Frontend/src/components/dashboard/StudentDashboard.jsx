@@ -2,19 +2,20 @@ import { Link } from "react-router-dom"
 import { 
   AcademicCapIcon, 
   ClipboardDocumentListIcon,
-  CurrencyDollarIcon,
+  CurrencyEuroIcon,
   TrophyIcon
 } from "@heroicons/react/24/outline"
 import { useActivities } from "../../hooks/useActivities"
 import { useGroups } from "../../hooks/useGroups"
 import { useAuthContext } from "../../context/AuthContext"
 import LoadingSpinner from "../common/LoadingSpinner"
+import { useWallet } from "../../hooks/useWallet"
 
 export default function StudentDashboard() {
   const { user } = useAuthContext()
   const { data: activities, isLoading: activitiesLoading } = useActivities()
   const { data: groups, isLoading: groupsLoading } = useGroups()
-
+  const { data: walletData, isLoading: walletLoading } = useWallet()
   const pendingActivities = activities?.filter(a => !a.submissions?.length) || []
   const completedActivities = activities?.filter(a => a.submissions?.length > 0) || []
 
@@ -79,10 +80,10 @@ export default function StudentDashboard() {
         <div className="bg-white border border-gray-200 rounded-xl p-6 shadow-sm">
           <div className="flex items-center justify-between mb-2">
             <div className="p-2 bg-orange-100 rounded-lg">
-              <CurrencyDollarIcon className="h-6 w-6 text-orange-600" />
+              <CurrencyEuroIcon className="h-6 w-6 text-orange-600" />
             </div>
             <span className="text-2xl font-bold text-orange-600">
-              0 EC
+              {walletData?.saldo || 0} EC
             </span>
           </div>
           <h3 className="text-sm font-medium text-gray-600">Educoins</h3>

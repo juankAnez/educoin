@@ -3,7 +3,7 @@ import { useState } from "react"
 import { 
   ArrowLeftIcon,
   CalendarIcon,
-  CurrencyDollarIcon,
+  CurrencyEuroIcon,
   DocumentArrowUpIcon,
   CheckCircleIcon
 } from "@heroicons/react/24/outline"
@@ -108,7 +108,7 @@ export default function ActivityDetail() {
 
             <div className="bg-orange-50 rounded-lg p-4">
               <div className="flex items-center space-x-2 text-orange-600 mb-1">
-                <CurrencyDollarIcon className="h-5 w-5" />
+                <CurrencyEuroIcon className="h-5 w-5" />
                 <span className="text-sm">Valor en Educoins</span>
               </div>
               <p className="font-semibold text-orange-600 text-xl">

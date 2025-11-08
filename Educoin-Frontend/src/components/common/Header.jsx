@@ -6,7 +6,7 @@ import {
   Bars3Icon,
   BellIcon,
   ChevronDownIcon,
-  CurrencyDollarIcon,
+  CurrencyEuroIcon,
   UserIcon,
   ArrowRightOnRectangleIcon,
 } from "@heroicons/react/24/outline"
@@ -14,10 +14,11 @@ import { Link } from "react-router-dom"
 import { useAuthContext } from "../../context/AuthContext"
 import { formatCoins } from "../../utils/helpers"
 import { USER_ROLES } from "../../utils/constants"
+import { useWallet } from "../../hooks/useWallet"
 
 const Header = ({ onMenuClick }) => {
   const { user, logout } = useAuthContext()
-
+  const { data: walletData, isLoading: walletLoading } = useWallet()
   const isStudent = user?.role === USER_ROLES.STUDENT
 
   const userNavigation = [
@@ -34,11 +35,11 @@ const Header = ({ onMenuClick }) => {
 
       <div className="flex flex-1 items-center justify-end gap-x-4">
         {/* Saldo del estudiante */}
-        {isStudent && (
+        {isStudent && walletData && (
           <div className="flex items-center gap-x-2 px-3 py-1 bg-orange-100 rounded-full">
-            <CurrencyDollarIcon className="h-5 w-5 text-orange-600" />
+            <CurrencyEuroIcon className="h-5 w-5 text-orange-600" />
             <span className="text-sm font-medium text-orange-600">
-              {formatCoins(user?.wallet?.balance || 0)} EC
+              {walletData.saldo || 0} EC
             </span>
           </div>
         )}
