@@ -1,78 +1,168 @@
 import { Link } from "react-router-dom"
-import { ShoppingBagIcon, CalendarIcon, ClockIcon, CheckCircleIcon } from "@heroicons/react/24/outline"
+import { 
+  ShoppingBagIcon, 
+  CalendarIcon, 
+  UserGroupIcon,
+  ClockIcon,
+  CheckCircleIcon,
+  XCircleIcon
+} from "@heroicons/react/24/outline"
 import { useAuthContext } from "../../context/AuthContext"
-import { formatDate } from "../../utils/helpers"
+import { formatDate, formatDateTime } from "../../utils/helpers"
 
 const AuctionCard = ({ auction, onEdit, onDelete, onClose }) => {
   const { user } = useAuthContext()
   const isTeacher = user?.role === "docente"
 
   const isActive = auction.estado === "active"
-  const timeRemaining = new Date(auction.fecha_fin) - new Date()
-  const isEndingSoon = timeRemaining > 0 && timeRemaining < 24 * 60 * 60 * 1000
+  const isClosed = auction.estado === "closed"
+  const fechaFin = new Date(auction.fecha_fin)
+  const now = new Date()
+  const timeRemaining = fechaFin - now
+  const isEndingSoon = timeRemaining > 0 && timeRemaining < 24 * 60 * 60 * 1000 // Menos de 24 horas
+  const hasEnded = timeRemaining <= 0
+  const isExpired = isActive && hasEnded
+
+  // Calcular tiempo restante
+  const getTimeRemainingText = () => {
+    if (isClosed) return "Finalizada"
+    if (hasEnded) return "Tiempo agotado"
+    
+    const days = Math.floor(timeRemaining / (1000 * 60 * 60 * 24))
+    const hours = Math.floor((timeRemaining % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60))
+    
+    if (days > 0) return `${days}d ${hours}h`
+    if (hours > 0) return `${hours}h`
+    
+    const minutes = Math.floor((timeRemaining % (1000 * 60 * 60)) / (1000 * 60))
+    return `${minutes}m`
+  }
+
+  // Información del ganador
+  const winnerInfo = auction.puja_ganadora
 
   return (
-    <div className="bg-white border border-gray-200 rounded-xl shadow-sm hover:shadow-md transition-all duration-200 overflow-hidden">
-      <div className="bg-gradient-to-r from-purple-500 to-purple-600 p-5">
+    <div className={`bg-white border rounded-xl shadow-sm hover:shadow-md transition-all duration-200 overflow-hidden ${
+      isActive ? 'border-purple-200' : 'border-gray-200'
+    }`}>
+      {/* Header con estado */}
+      <div className={`p-5 text-white ${
+        isActive 
+          ? 'bg-gradient-to-r from-purple-500 to-purple-600' 
+          : 'bg-gradient-to-r from-gray-500 to-gray-600'
+      }`}>
         <div className="flex items-start justify-between">
           <div className="flex items-center space-x-3">
             <div className="p-2 bg-white/20 rounded-lg">
-              <ShoppingBagIcon className="h-6 w-6 text-white" />
+              <ShoppingBagIcon className="h-6 w-6" />
             </div>
-            <div>
-              <h3 className="font-bold text-white text-lg">{auction.titulo}</h3>
-              {isEndingSoon && isActive && (
-                <span className="text-xs text-yellow-300">Termina pronto</span>
-              )}
+            <div className="flex-1">
+              <h3 className="font-bold text-lg line-clamp-2">{auction.titulo}</h3>
+              <p className="text-sm opacity-90 mt-1">
+                {auction.grupo_nombre || auction.grupo?.nombre}
+              </p>
             </div>
           </div>
-          {!isActive && <CheckCircleIcon className="h-6 w-6 text-green-300" />}
+          <div className="flex flex-col items-end space-y-2">
+            {isActive && isEndingSoon && (
+              <span className="bg-yellow-500 text-white px-2 py-1 rounded-full text-xs font-medium">
+                ⚡ Termina pronto
+              </span>
+            )}
+            {isClosed && <CheckCircleIcon className="h-6 w-6 text-green-300" />}
+            {isExpired && <XCircleIcon className="h-6 w-6 text-red-300" />}
+          </div>
         </div>
       </div>
 
+      {/* Contenido */}
       <div className="p-5 space-y-4">
-        <p className="text-gray-600 text-sm line-clamp-2 min-h-[40px]">
-          {auction.descripcion || "Sin descripción"}
+        {/* Descripción */}
+        <p className="text-gray-600 text-sm line-clamp-3 min-h-[60px]">
+          {auction.descripcion || "Sin descripción disponible"}
         </p>
 
-        <div className="space-y-2">
+        {/* Información principal */}
+        <div className="space-y-3">
+          {/* Estado y tiempo */}
           <div className="flex items-center justify-between text-sm">
             <span className="text-gray-600">Estado:</span>
             <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-              isActive ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-700"
+              isActive ? "bg-green-100 text-green-700" : 
+              isClosed ? "bg-gray-100 text-gray-700" : 
+              "bg-red-100 text-red-700"
             }`}>
-              {isActive ? "Activa" : "Cerrada"}
+              {isActive ? "Activa" : isClosed ? "Cerrada" : "Expirada"}
             </span>
           </div>
 
+          {/* Tiempo restante */}
           <div className="flex items-center justify-between text-sm">
             <div className="flex items-center space-x-1 text-gray-500">
-              <CalendarIcon className="h-4 w-4" />
-              <span>Finaliza:</span>
+              <ClockIcon className="h-4 w-4" />
+              <span>{isClosed ? "Finalizó:" : "Finaliza:"}</span>
             </div>
-            <span className="text-gray-900 font-medium">{formatDate(auction.fecha_fin)}</span>
+            <div className="text-right">
+              <span className="font-medium text-gray-900">{formatDateTime(auction.fecha_fin)}</span>
+              {isActive && (
+                <div className={`text-xs ${isEndingSoon ? 'text-orange-600 font-semibold' : 'text-gray-500'}`}>
+                  {getTimeRemainingText()}
+                </div>
+              )}
+            </div>
           </div>
 
+          {/* Estadísticas */}
           <div className="flex items-center justify-between text-sm">
-            <span className="text-gray-600">Total de pujas:</span>
+            <div className="flex items-center space-x-1 text-gray-500">
+              <UserGroupIcon className="h-4 w-4" />
+              <span>Pujas:</span>
+            </div>
             <span className="font-bold text-purple-600">{auction.total_pujas || 0}</span>
           </div>
+
+          {/* Creador */}
+          <div className="flex items-center justify-between text-sm">
+            <span className="text-gray-600">Creada por:</span>
+            <span className="text-gray-900">{auction.creador_nombre || auction.creador?.first_name}</span>
+          </div>
+
+          {/* Ganador (si está cerrada) */}
+          {isClosed && winnerInfo && (
+            <div className="bg-green-50 border border-green-200 rounded-lg p-3">
+              <div className="flex items-center justify-between text-sm">
+                <span className="text-green-700 font-medium">Ganador:</span>
+                <span className="text-green-900 font-semibold">
+                  {winnerInfo.estudiante_nombre}
+                </span>
+              </div>
+              <div className="flex items-center justify-between text-sm mt-1">
+                <span className="text-green-600">Puja ganadora:</span>
+                <span className="text-green-800 font-bold">
+                  {winnerInfo.cantidad} EC
+                </span>
+              </div>
+            </div>
+          )}
         </div>
       </div>
 
+      {/* Acciones */}
       <div className="px-5 pb-5 flex gap-2">
         <Link
-          to={`/auctions/${auction.id}`}
+          to={`/auctions/auctions/${auction.id}`}
           className="flex-1 bg-purple-50 text-purple-600 px-4 py-2.5 rounded-lg hover:bg-purple-100 transition text-center text-sm font-medium"
         >
-          Ver Detalles
+          {isTeacher ? "Gestionar" : "Ver Detalles"}
         </Link>
         
         {isTeacher && (
           <>
             <button
               onClick={() => onEdit(auction)}
-              className="px-4 py-2.5 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 transition text-sm font-medium"
+              disabled={isClosed}
+              className="px-4 py-2.5 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 transition text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+              title={isClosed ? "No se puede editar subastas cerradas" : "Editar subasta"}
             >
               Editar
             </button>
@@ -81,6 +171,7 @@ const AuctionCard = ({ auction, onEdit, onDelete, onClose }) => {
               <button
                 onClick={() => onClose(auction.id)}
                 className="px-4 py-2.5 bg-green-50 text-green-600 rounded-lg hover:bg-green-100 transition text-sm font-medium"
+                title="Cerrar subasta manualmente"
               >
                 Cerrar
               </button>
@@ -88,7 +179,9 @@ const AuctionCard = ({ auction, onEdit, onDelete, onClose }) => {
             
             <button
               onClick={() => onDelete(auction.id)}
-              className="px-4 py-2.5 bg-red-50 text-red-600 rounded-lg hover:bg-red-100 transition text-sm font-medium"
+              disabled={isClosed}
+              className="px-4 py-2.5 bg-red-50 text-red-600 rounded-lg hover:bg-red-100 transition text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+              title={isClosed ? "No se puede eliminar subastas cerradas" : "Eliminar subasta"}
             >
               Eliminar
             </button>

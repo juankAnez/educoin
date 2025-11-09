@@ -1,4 +1,5 @@
 import { useState } from "react"
+import { DocumentArrowUpIcon } from "@heroicons/react/24/outline"
 import { useCreateActivity } from "../../hooks/useActivities"
 import { useGroups } from "../../hooks/useGroups"
 
@@ -12,55 +13,114 @@ export default function CreateActivity({ onClose }) {
     tipo: "tarea",
     group: "",
     valor_educoins: 100,
-    valor_notas: 100,
-    fecha_entrega: "",  // ✅ CORREGIDO: usar fecha_entrega en lugar de fecha_inicio/fecha_fin
+    valor_notas: 10,
+    fecha_entrega: "",
     habilitada: true
   })
+  const [archivo, setArchivo] = useState(null)
+  const [errors, setErrors] = useState({})
+
+  const handleChange = (e) => {
+    const { name, value, type, checked } = e.target
+    setFormData(prev => ({
+      ...prev,
+      [name]: type === "checkbox" ? checked : value
+    }))
+    if (errors[name]) {
+      setErrors(prev => ({ ...prev, [name]: "" }))
+    }
+  }
+
+  const handleFileChange = (e) => {
+    const file = e.target.files[0]
+    if (file) {
+      const maxSize = 10 * 1024 * 1024 // 10MB
+      if (file.size > maxSize) {
+        setErrors(prev => ({ ...prev, archivo: "El archivo no debe superar 10MB" }))
+        return
+      }
+      setArchivo(file)
+      setErrors(prev => ({ ...prev, archivo: "" }))
+    }
+  }
 
   const handleSubmit = async (e) => {
     e.preventDefault()
+
+    const newErrors = {}
+    if (!formData.nombre.trim()) {
+      newErrors.nombre = "El nombre es requerido"
+    }
+    if (!formData.group) {
+      newErrors.group = "El grupo es requerido"
+    }
+    if (!formData.fecha_entrega) {
+      newErrors.fecha_entrega = "La fecha de entrega es requerida"
+    }
+
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors)
+      return
+    }
+
     try {
-      // ✅ CORREGIDO: Convertir a ISO string correctamente
-      const fechaEntrega = new Date(formData.fecha_entrega)
-      
-      await createMutation.mutateAsync({
-        ...formData,
-        group: parseInt(formData.group),
-        valor_educoins: parseInt(formData.valor_educoins),
-        valor_notas: parseInt(formData.valor_notas),
-        fecha_entrega: fechaEntrega.toISOString(),
+      const data = new FormData()
+      Object.keys(formData).forEach(key => {
+        if (key === "fecha_entrega") {
+          data.append(key, new Date(formData[key]).toISOString())
+        } else if (key === "group") {
+          data.append(key, parseInt(formData[key]))
+        } else {
+          data.append(key, formData[key])
+        }
       })
+
+      if (archivo) {
+        data.append("archivo_adjunto", archivo)
+      }
+
+      await createMutation.mutateAsync(data)
       onClose()
     } catch (error) {
       console.error("Error creando actividad:", error)
     }
   }
 
+  const minDate = new Date()
+  const minDateString = minDate.toISOString().slice(0, 16)
+
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-1">
-          Nombre de la Actividad *
+          Nombre de la Actividad
         </label>
         <input
           type="text"
+          name="nombre"
           required
           value={formData.nombre}
-          onChange={(e) => setFormData({...formData, nombre: e.target.value})}
-          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+          onChange={handleChange}
+          className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent ${
+            errors.nombre ? "border-red-500" : "border-gray-300"
+          }`}
           placeholder="Ej: Taller de Álgebra"
         />
+        {errors.nombre && (
+          <p className="mt-1 text-sm text-red-600">{errors.nombre}</p>
+        )}
       </div>
 
       <div className="grid grid-cols-2 gap-4">
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">
-            Tipo *
+            Tipo
           </label>
           <select
+            name="tipo"
             required
             value={formData.tipo}
-            onChange={(e) => setFormData({...formData, tipo: e.target.value})}
+            onChange={handleChange}
             className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
           >
             <option value="tarea">Tarea</option>
@@ -73,13 +133,16 @@ export default function CreateActivity({ onClose }) {
 
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">
-            Grupo *
+            Grupo
           </label>
           <select
+            name="group"
             required
             value={formData.group}
-            onChange={(e) => setFormData({...formData, group: e.target.value})}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+            onChange={handleChange}
+            className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent ${
+              errors.group ? "border-red-500" : "border-gray-300"
+            }`}
           >
             <option value="">Selecciona un grupo</option>
             {groups?.map((group) => (
@@ -88,6 +151,9 @@ export default function CreateActivity({ onClose }) {
               </option>
             ))}
           </select>
+          {errors.group && (
+            <p className="mt-1 text-sm text-red-600">{errors.group}</p>
+          )}
         </div>
       </div>
 
@@ -96,10 +162,11 @@ export default function CreateActivity({ onClose }) {
           Descripción
         </label>
         <textarea
+          name="descripcion"
           value={formData.descripcion}
-          onChange={(e) => setFormData({...formData, descripcion: e.target.value})}
+          onChange={handleChange}
           rows={3}
-          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent resize-none"
           placeholder="Describe la actividad..."
         />
       </div>
@@ -107,52 +174,99 @@ export default function CreateActivity({ onClose }) {
       <div className="grid grid-cols-3 gap-4">
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">
-            Educoins *
+            Educoins
           </label>
           <input
             type="number"
+            name="valor_educoins"
             required
             min="0"
             value={formData.valor_educoins}
-            onChange={(e) => setFormData({...formData, valor_educoins: e.target.value})}
+            onChange={handleChange}
             className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
           />
         </div>
 
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">
-            Valor Nota *
+            Valor Nota
           </label>
           <input
             type="number"
+            name="valor_notas"
             required
             min="0"
             value={formData.valor_notas}
-            onChange={(e) => setFormData({...formData, valor_notas: e.target.value})}
+            onChange={handleChange}
             className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
           />
         </div>
 
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">
-            Fecha Límite *
+            Fecha Límite
           </label>
           <input
             type="datetime-local"
+            name="fecha_entrega"
             required
             value={formData.fecha_entrega}
-            onChange={(e) => setFormData({...formData, fecha_entrega: e.target.value})}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+            onChange={handleChange}
+            min={minDateString}
+            className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent ${
+              errors.fecha_entrega ? "border-red-500" : "border-gray-300"
+            }`}
           />
+          {errors.fecha_entrega && (
+            <p className="mt-1 text-sm text-red-600">{errors.fecha_entrega}</p>
+          )}
         </div>
+      </div>
+
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-2">
+          Archivo Adjunto (Opcional)
+        </label>
+        <div className="flex items-center gap-3">
+          <label className="flex-1 cursor-pointer">
+            <div className="flex items-center justify-center px-4 py-3 border-2 border-dashed border-gray-300 rounded-lg hover:border-orange-500 transition">
+              <DocumentArrowUpIcon className="h-6 w-6 text-gray-400 mr-2" />
+              <span className="text-sm text-gray-600">
+                {archivo ? archivo.name : "Seleccionar archivo (PDF, Word, Excel, Imágenes)"}
+              </span>
+            </div>
+            <input
+              type="file"
+              onChange={handleFileChange}
+              className="hidden"
+              accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.zip,.jpg,.jpeg,.png"
+            />
+          </label>
+          {archivo && (
+            <button
+              type="button"
+              onClick={() => setArchivo(null)}
+              className="px-3 py-2 text-red-600 hover:bg-red-50 rounded-lg transition text-sm"
+            >
+              Quitar
+            </button>
+          )}
+        </div>
+        {errors.archivo && (
+          <p className="mt-1 text-sm text-red-600">{errors.archivo}</p>
+        )}
+        <p className="mt-1 text-xs text-gray-500">
+          Tamaño máximo: 10MB
+        </p>
       </div>
 
       <div className="flex items-center">
         <input
           type="checkbox"
           id="habilitada"
+          name="habilitada"
           checked={formData.habilitada}
-          onChange={(e) => setFormData({...formData, habilitada: e.target.checked})}
+          onChange={handleChange}
           className="h-4 w-4 text-orange-500 rounded focus:ring-orange-500"
         />
         <label htmlFor="habilitada" className="ml-2 text-sm text-gray-700">

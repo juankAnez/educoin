@@ -5,13 +5,16 @@ import {
   CalendarIcon,
   CurrencyEuroIcon,
   DocumentArrowUpIcon,
-  CheckCircleIcon
+  CheckCircleIcon,
+  PencilIcon,
+  DocumentTextIcon
 } from "@heroicons/react/24/outline"
 import { useActivity, useActivitySubmissions } from "../../hooks/useActivities"
 import { useAuthContext } from "../../context/AuthContext"
 import LoadingSpinner from "../common/LoadingSpinner"
 import SubmitActivityForm from "./SubmitActivityForm"
 import SubmissionsList from "./SubmissionsList"
+import EditActivityModal from "./EditActivityModal"
 import { formatDate } from "../../utils/helpers"
 
 export default function ActivityDetail() {
@@ -21,6 +24,7 @@ export default function ActivityDetail() {
   const { data: activity, isLoading } = useActivity(id)
   const { data: submissions } = useActivitySubmissions(id)
   const [showSubmitForm, setShowSubmitForm] = useState(false)
+  const [showEditModal, setShowEditModal] = useState(false)
 
   const isTeacher = user?.role === "docente"
   const userSubmission = submissions?.find(s => s.estudiante === user?.id)
@@ -56,15 +60,27 @@ export default function ActivityDetail() {
           <span>Volver</span>
         </button>
         
-        {!isTeacher && !userSubmission && activity.habilitada && (
-          <button
-            onClick={() => setShowSubmitForm(true)}
-            className="flex items-center gap-2 bg-orange-500 text-white px-4 py-2 rounded-lg hover:bg-orange-600 transition"
-          >
-            <DocumentArrowUpIcon className="h-5 w-5" />
-            Entregar Actividad
-          </button>
-        )}
+        <div className="flex gap-3">
+          {isTeacher && (
+            <button
+              onClick={() => setShowEditModal(true)}
+              className="flex items-center gap-2 bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition"
+            >
+              <PencilIcon className="h-5 w-5" />
+              Editar Actividad
+            </button>
+          )}
+          
+          {!isTeacher && !userSubmission && activity.habilitada && !activity.esta_vencida && (
+            <button
+              onClick={() => setShowSubmitForm(true)}
+              className="flex items-center gap-2 bg-purple-500 text-white px-4 py-2 rounded-lg hover:bg-purple-600 transition"
+            >
+              <DocumentArrowUpIcon className="h-5 w-5" />
+              Entregar Actividad
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Activity Card */}
@@ -94,7 +110,26 @@ export default function ActivityDetail() {
             </p>
           </div>
 
-          {/* Info Grid - CORREGIDO EL VALOR EN NOTAS */}
+          {/* Archivo Adjunto del Docente */}
+          {activity.archivo_adjunto && (
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+              <h3 className="font-semibold text-blue-900 mb-2 flex items-center gap-2">
+                <DocumentTextIcon className="h-5 w-5" />
+                Material Adjunto
+              </h3>
+              <a
+                href={activity.archivo_adjunto}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 text-blue-600 hover:text-blue-700 hover:underline"
+              >
+                <DocumentArrowUpIcon className="h-4 w-4" />
+                Ver archivo adjunto del docente
+              </a>
+            </div>
+          )}
+
+          {/* Info Grid */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="bg-gray-50 rounded-lg p-4">
               <div className="flex items-center space-x-2 text-gray-500 mb-1">
@@ -104,6 +139,9 @@ export default function ActivityDetail() {
               <p className="font-semibold text-gray-900">
                 {formatDate(activity.fecha_entrega)}
               </p>
+              {activity.esta_vencida && (
+                <span className="text-xs text-red-600 mt-1 block">Vencida</span>
+              )}
             </div>
 
             <div className="bg-orange-50 rounded-lg p-4">
@@ -131,16 +169,16 @@ export default function ActivityDetail() {
                 <CheckCircleIcon className="h-6 w-6 text-green-600 flex-shrink-0 mt-1" />
                 <div className="flex-1">
                   <h4 className="font-semibold text-green-900 mb-1">
-                    ¡Actividad Entregada!
+                    Actividad Entregada
                   </h4>
                   <p className="text-sm text-green-700">
                     Entregaste esta actividad el {formatDate(userSubmission.creado)}
                   </p>
-                  {userSubmission.calificacion && (
+                  {userSubmission.calificacion !== null && (
                     <div className="mt-3 pt-3 border-t border-green-200">
                       <p className="text-sm text-green-700">
                         <span className="font-semibold">Calificación:</span>{" "}
-                        {userSubmission.calificacion}/5.0
+                        {userSubmission.calificacion}/{activity.valor_notas}
                       </p>
                       {userSubmission.retroalimentacion && (
                         <p className="text-sm text-green-700 mt-1">
@@ -152,6 +190,15 @@ export default function ActivityDetail() {
                   )}
                 </div>
               </div>
+            </div>
+          )}
+
+          {/* Warning si está vencida */}
+          {!isTeacher && !userSubmission && activity.esta_vencida && (
+            <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+              <p className="text-red-700 text-sm">
+                Esta actividad ha vencido. Ya no es posible realizar entregas.
+              </p>
             </div>
           )}
         </div>
@@ -172,6 +219,14 @@ export default function ActivityDetail() {
         <SubmitActivityForm
           activityId={id}
           onClose={() => setShowSubmitForm(false)}
+        />
+      )}
+
+      {/* Edit Modal */}
+      {showEditModal && (
+        <EditActivityModal
+          activity={activity}
+          onClose={() => setShowEditModal(false)}
         />
       )}
     </div>

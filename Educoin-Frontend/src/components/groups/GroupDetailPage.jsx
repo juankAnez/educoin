@@ -8,7 +8,7 @@ import {
   ClipboardIcon,
   UserPlusIcon,
   ClipboardDocumentListIcon,
-  CogIcon,
+  PencilIcon,
 } from "@heroicons/react/24/outline"
 import { useAuthContext } from "../../context/AuthContext"
 import { formatDate } from "../../utils/helpers"
@@ -16,6 +16,8 @@ import LoadingSpinner from "../common/LoadingSpinner"
 import toast from "react-hot-toast"
 import { useQuery } from "@tanstack/react-query"
 import api from "../../services/api"
+import { useState } from "react"
+import EditGroupModal from "./EditGroupModal"
 
 export default function GroupDetailPage() {
   const { id } = useParams()
@@ -32,6 +34,7 @@ export default function GroupDetailPage() {
     enabled: !!id,
   })
 
+  const [showEditModal, setShowEditModal] = useState(false)
   const isTeacher = user?.role === "docente"
 
   const copyCode = (code) => {
@@ -83,9 +86,12 @@ export default function GroupDetailPage() {
             </div>
           </div>
           {isTeacher && (
-            <button className="px-4 py-2 bg-white/20 hover:bg-white/30 rounded-lg transition flex items-center gap-2">
-              <CogIcon className="h-5 w-5" />
-              Configurar
+            <button 
+              onClick={() => setShowEditModal(true)}
+              className="px-4 py-2 bg-white/20 hover:bg-white/30 rounded-lg transition flex items-center gap-2"
+            >
+              <PencilIcon className="h-5 w-5" />
+              Editar Grupo
             </button>
           )}
         </div>
@@ -254,6 +260,14 @@ export default function GroupDetailPage() {
             </Link>
           </div>
         </div>
+      )}
+
+      {/* Modal de Edición */}
+      {showEditModal && (
+        <EditGroupModal
+          group={group}
+          onClose={() => setShowEditModal(false)}
+        />
       )}
     </div>
   )

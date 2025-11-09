@@ -6,12 +6,14 @@ import {
   UserGroupIcon,
   CalendarIcon,
   BookOpenIcon,
-  PlusIcon,
+  PencilIcon,
 } from "@heroicons/react/24/outline"
 import { useClassroom, useClassroomStudents } from "../../hooks/useClassrooms"
 import { useAuthContext } from "../../context/AuthContext"
 import { formatDate } from "../../utils/helpers"
 import LoadingSpinner from "../../components/common/LoadingSpinner"
+import { useState } from "react"
+import EditClassroomModal from "../../components/classroom/EditClassroomModal"
 
 const ClassroomDetailPage = () => {
   const { id } = useParams()
@@ -19,7 +21,8 @@ const ClassroomDetailPage = () => {
   const { user } = useAuthContext()
   const { data: classroom, isLoading: classroomLoading, error: classroomError } = useClassroom(id)
   const { data: students, isLoading: studentsLoading } = useClassroomStudents(id)
-
+  
+  const [showEditModal, setShowEditModal] = useState(false)
   const isTeacher = user?.role === "docente"
 
   if (classroomLoading) {
@@ -59,10 +62,13 @@ const ClassroomDetailPage = () => {
             </p>
           </div>
         </div>
-        {isTeacher && (
-          <button className="btn-secondary flex items-center gap-2">
-            <PlusIcon className="h-5 w-5" />
-            Configurar
+        {isTeacher && classroom.docente === user.id && (
+          <button 
+            onClick={() => setShowEditModal(true)}
+            className="flex items-center gap-2 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition"
+          >
+            <PencilIcon className="h-5 w-5" />
+            Editar Clase
           </button>
         )}
       </div>
@@ -193,6 +199,14 @@ const ClassroomDetailPage = () => {
           </div>
         )}
       </div>
+
+      {/* Modal de Edición */}
+      {showEditModal && (
+        <EditClassroomModal
+          classroom={classroom}
+          onClose={() => setShowEditModal(false)}
+        />
+      )}
     </div>
   )
 }

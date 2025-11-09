@@ -12,12 +12,12 @@ const CreateAuction = ({ auction, onClose }) => {
   const [formData, setFormData] = useState({
     titulo: "",
     descripcion: "",
-    grupo: "",  // ✅ CORREGIDO: usar 'grupo' en lugar de 'periodo'
+    grupo: "",
     fecha_fin: "",
   })
   const [errors, setErrors] = useState({})
 
-  const { data: groups } = useQuery({
+  const { data: groups, isLoading: groupsLoading } = useQuery({
     queryKey: ["groups"],
     queryFn: async () => {
       const res = await api.get("/api/groups/")
@@ -30,7 +30,7 @@ const CreateAuction = ({ auction, onClose }) => {
       setFormData({
         titulo: auction.titulo || "",
         descripcion: auction.descripcion || "",
-        grupo: auction.grupo?.id || auction.grupo || "",  // ✅ Manejar ambos formatos
+        grupo: auction.grupo?.id || auction.grupo || "",
         fecha_fin: auction.fecha_fin ? new Date(auction.fecha_fin).toISOString().slice(0, 16) : "",
       })
     }
@@ -52,8 +52,8 @@ const CreateAuction = ({ auction, onClose }) => {
     e.preventDefault()
 
     const newErrors = {}
-    if (!formData.titulo) newErrors.titulo = "El título es requerido"
-    if (!formData.descripcion) newErrors.descripcion = "La descripción es requerida"
+    if (!formData.titulo.trim()) newErrors.titulo = "El título es requerido"
+    if (!formData.descripcion.trim()) newErrors.descripcion = "La descripción es requerida"
     if (!formData.grupo) newErrors.grupo = "Debes seleccionar un grupo"
     if (!formData.fecha_fin) newErrors.fecha_fin = "La fecha de finalización es requerida"
 
@@ -77,12 +77,16 @@ const CreateAuction = ({ auction, onClose }) => {
       onClose()
     } catch (error) {
       console.error("Error:", error)
-      // Mostrar errores específicos del backend
       if (error.response?.data) {
         const backendErrors = error.response.data
         Object.keys(backendErrors).forEach(key => {
-          setErrors(prev => ({ ...prev, [key]: Array.isArray(backendErrors[key]) ? backendErrors[key][0] : backendErrors[key] }))
+          setErrors(prev => ({ 
+            ...prev, 
+            [key]: Array.isArray(backendErrors[key]) ? backendErrors[key][0] : backendErrors[key] 
+          }))
         })
+      } else {
+        setErrors({ general: "Error de conexión. Intenta nuevamente." })
       }
     }
   }
@@ -90,14 +94,24 @@ const CreateAuction = ({ auction, onClose }) => {
   const isLoading = createAuction.isPending || updateAuction.isPending
 
   const minDate = new Date()
-  minDate.setHours(minDate.getHours() + 1)
+  minDate.setHours(minDate.getHours() + 1) // Mínimo 1 hora en el futuro
   const minDateString = minDate.toISOString().slice(0, 16)
+
+  const maxDate = new Date()
+  maxDate.setDate(maxDate.getDate() + 30) // Máximo 30 días en el futuro
+  const maxDateString = maxDate.toISOString().slice(0, 16)
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
+      {errors.general && (
+        <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+          <p className="text-red-600 text-sm">{errors.general}</p>
+        </div>
+      )}
+
       <div>
         <label htmlFor="titulo" className="block text-sm font-medium text-gray-700 mb-1">
-          Título de la Subasta
+          Título de la Subasta *
         </label>
         <input
           type="text"
@@ -108,13 +122,16 @@ const CreateAuction = ({ auction, onClose }) => {
           className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent ${
             errors.titulo ? "border-red-500" : "border-gray-300"
           }`}
+          placeholder="Ej: Puntos extra en el próximo examen"
+          maxLength={255}
         />
         {errors.titulo && <p className="mt-1 text-sm text-red-600">{errors.titulo}</p>}
+        <p className="mt-1 text-xs text-gray-500">{formData.titulo.length}/255 caracteres</p>
       </div>
 
       <div>
         <label htmlFor="descripcion" className="block text-sm font-medium text-gray-700 mb-1">
-          Descripción
+          Descripción de la Recompensa *
         </label>
         <textarea
           id="descripcion"
@@ -125,37 +142,44 @@ const CreateAuction = ({ auction, onClose }) => {
           className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent ${
             errors.descripcion ? "border-red-500" : "border-gray-300"
           }`}
+          placeholder="Describe detalladamente la recompensa que obtendrá el ganador..."
         />
         {errors.descripcion && <p className="mt-1 text-sm text-red-600">{errors.descripcion}</p>}
       </div>
 
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
           <label htmlFor="grupo" className="block text-sm font-medium text-gray-700 mb-1">
-            Grupo *
+            Grupo Destinatario *
           </label>
           <select
             id="grupo"
             name="grupo"
             value={formData.grupo}
             onChange={handleChange}
+            disabled={groupsLoading}
             className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent ${
               errors.grupo ? "border-red-500" : "border-gray-300"
-            }`}
+            } ${groupsLoading ? 'bg-gray-100 cursor-not-allowed' : ''}`}
           >
-            <option value="">Selecciona un grupo</option>
+            <option value="">{groupsLoading ? "Cargando grupos..." : "Selecciona un grupo"}</option>
             {groups?.map((group) => (
               <option key={group.id} value={group.id}>
-                {group.nombre} - {group.classroom_nombre || 'Sin clase'}
+                {group.nombre} - {group.classroom_nombre || group.classroom?.nombre || 'Sin clase'}
               </option>
             ))}
           </select>
           {errors.grupo && <p className="mt-1 text-sm text-red-600">{errors.grupo}</p>}
+          {groups?.length === 0 && !groupsLoading && (
+            <p className="mt-1 text-sm text-orange-600">
+              No tienes grupos disponibles. Primero crea un grupo en una clase.
+            </p>
+          )}
         </div>
 
         <div>
           <label htmlFor="fecha_fin" className="block text-sm font-medium text-gray-700 mb-1">
-            Fecha de Finalización
+            Fecha de Finalización *
           </label>
           <input
             type="datetime-local"
@@ -167,21 +191,41 @@ const CreateAuction = ({ auction, onClose }) => {
               errors.fecha_fin ? "border-red-500" : "border-gray-300"
             }`}
             min={minDateString}
+            max={maxDateString}
           />
           {errors.fecha_fin && <p className="mt-1 text-sm text-red-600">{errors.fecha_fin}</p>}
+          <p className="mt-1 text-xs text-gray-500">
+            La subasta debe durar entre 1 hora y 30 días
+          </p>
         </div>
       </div>
 
+      {/* Información adicional */}
+      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+        <h4 className="font-medium text-blue-900 mb-2">Información importante</h4>
+        <ul className="text-sm text-blue-700 space-y-1">
+          <li>• Los estudiantes pujarán con sus Educoins acumulados</li>
+          <li>• Las Educoins se bloquean durante la subasta</li>
+          <li>• Solo el ganador pagará las Educoins pujadas</li>
+          <li>• Puedes cerrar la subasta manualmente en cualquier momento</li>
+        </ul>
+      </div>
+
       <div className="flex space-x-3 pt-4">
-        <button type="button" onClick={onClose} className="flex-1 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition">
+        <button 
+          type="button" 
+          onClick={onClose} 
+          disabled={isLoading}
+          className="flex-1 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition disabled:opacity-50"
+        >
           Cancelar
         </button>
         <button
           type="submit"
-          disabled={isLoading}
-          className="flex-1 bg-orange-500 text-white px-4 py-2 rounded-lg hover:bg-orange-600 transition disabled:opacity-50"
+          disabled={isLoading || groupsLoading || groups?.length === 0}
+          className="flex-1 bg-orange-500 text-white px-4 py-2 rounded-lg hover:bg-orange-600 transition disabled:opacity-50 flex items-center justify-center"
         >
-          {isLoading ? <LoadingSpinner size="sm" /> : isEditing ? "Actualizar" : "Crear Subasta"}
+          {isLoading ? <LoadingSpinner size="sm" /> : isEditing ? "Actualizar Subasta" : "Crear Subasta"}
         </button>
       </div>
     </form>

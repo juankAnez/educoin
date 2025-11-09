@@ -59,15 +59,14 @@ export const API_ENDPOINTS = {
   MY_PERIODS: "/api/coins/periods/mis-periodos/",
   
   // ==================== AUCTIONS ====================
-  // ✅ IMPORTANTE: Las subastas ahora usan grupos, no períodos
-  AUCTIONS: "/api/auctions/",
-  AUCTION_DETAIL: (id) => `/api/auctions/${id}/`,
-  AUCTION_CLOSE: (id) => `/api/auctions/${id}/close/`,
+  AUCTIONS: "/api/auctions/auctions/",
+  AUCTION_DETAIL: (id) => `/api/auctions/auctions/${id}/`,
+  AUCTION_CLOSE: (id) => `/api/auctions/auctions/${id}/close/`,
   
-  // Bids
-  BIDS: "/api/bids/",
-  BID_DETAIL: (id) => `/api/bids/${id}/`,
-  AUCTION_BIDS: (auctionId) => `/api/bids/por-subasta/${auctionId}/`,
+  // Bids - usar /api/bids/
+  BIDS: "/api/auctions/bids/",
+  BID_DETAIL: (id) => `/api/auctions/bids/${id}/`,
+  AUCTION_BIDS: (auctionId) => `/api/auctions/bids/por-subasta/${auctionId}/`,
   
   // ==================== NOTIFICATIONS ====================
   NOTIFICATIONS: "/api/notifications/",
