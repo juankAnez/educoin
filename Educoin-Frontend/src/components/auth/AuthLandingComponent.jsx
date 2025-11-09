@@ -9,9 +9,7 @@ import logo from "/educoin.png" // desde /public
 export default function AuthLandingComponent() {
   const [activeForm, setActiveForm] = useState(null)
 
-  const coins = Array.from({ length: 8 }, (_, i) =>
-    i % 2 === 0 ? "/assets/coins/coin1.png" : "/assets/coins/coin2.png"
-  )
+  const coins = Array.from({ length: 8 }, () => "/assets/coins/coin.png")
 
   return (
     <div className="relative min-h-screen flex items-center justify-center overflow-hidden bg-[#fafafa]">

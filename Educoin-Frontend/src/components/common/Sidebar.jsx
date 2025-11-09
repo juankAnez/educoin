@@ -14,6 +14,7 @@ import {
   WalletIcon,
   ArrowRightOnRectangleIcon,
   UserGroupIcon,
+  Cog6ToothIcon,
 } from "@heroicons/react/24/outline"
 import { useAuthContext } from "../../context/AuthContext"
 import { USER_ROLES } from "../../utils/constants"
@@ -42,7 +43,7 @@ const Sidebar = ({ isOpen, onClose }) => {
 
   const adminNavigation = [
     { name: "Dashboard Admin", href: "/dashboard", icon: HomeIcon },
-    { name: "Admin Django", href: "http://localhost:8000/admin/", icon: ArrowRightCircleIcon },
+    { name: "Admin Django", href: "http://localhost:8000/admin/", icon: Cog6ToothIcon },
   ]
 
   const navigation =
@@ -56,66 +57,108 @@ const Sidebar = ({ isOpen, onClose }) => {
     location.pathname === href || location.pathname.startsWith(href + "/")
 
   const SidebarContent = () => (
-    <div className="flex grow flex-col gap-y-5 overflow-y-auto bg-white border-r border-gray-200">
+    <div className="flex grow flex-col gap-y-5 overflow-y-auto bg-gradient-to-b from-white to-gray-50/80 border-r border-gray-100">
       {/* Logo */}
-      <div className="flex h-16 shrink-0 items-center px-6 border-b">
-        <img src="/educoin.png" alt="Educoin" className="h-10 w-10" />
-        <span className="ml-3 text-xl font-bold text-orange-600">Educoin</span>
+      <div className="flex h-20 shrink-0 items-center px-6 border-b border-gray-100">
+        <div className="flex items-center space-x-3">
+          <div className="relative">
+            <div className="h-12 w-12 rounded-2xl bg-gradient-to-br from-gray-100 to-gray-100 flex items-center justify-center shadow-lg overflow-hidden">
+              <img 
+                src="/assets/coins/coin.png" 
+                alt="Educoin" 
+                className="h-8 w-8 object-contain"
+              />
+            </div>
+            <div className="absolute -bottom-1 -right-1 h-5 w-5 rounded-full bg-blue-500 border-2 border-white flex items-center justify-center">
+              <BookOpenIcon className="h-3 w-3 text-white" />
+            </div>
+          </div>
+          <div>
+            <span className="text-xl font-bold text-orange-600">Educoin</span>
+          </div>
+        </div>
       </div>
 
       {/* User */}
-      <div className="px-6 py-4 border-b">
-        <div className="flex items-center">
-          <div className="h-10 w-10 rounded-full bg-orange-200 flex items-center justify-center">
-            <span className="text-sm font-medium text-orange-700">
-              {user?.first_name?.charAt(0)}
-              {user?.last_name?.charAt(0)}
-            </span>
+      <div className="px-6 py-4">
+        <div className="flex items-center space-x-3 p-3 bg-white rounded-xl border border-gray-100 shadow-sm">
+          <div className="h-12 w-12 rounded-xl bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center text-white font-semibold shadow-md">
+            {user?.first_name?.charAt(0)}
+            {user?.last_name?.charAt(0)}
           </div>
-          <div className="ml-3">
-            <p className="text-sm font-medium text-gray-900">
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-semibold text-gray-900 truncate">
               {user?.first_name} {user?.last_name}
             </p>
-            <p className="text-xs text-gray-500 capitalize">{user?.role}</p>
+            <p className="text-xs text-gray-500 capitalize bg-gray-100 px-2 py-1 rounded-full inline-block mt-1">
+              {user?.role}
+            </p>
           </div>
         </div>
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 px-4 py-4 space-y-1">
+      <nav className="flex-1 px-3 py-2 space-y-1">
         {navigation.map((item) => {
           const current = isCurrentPath(item.href)
+          const isExternal = item.href.startsWith('http')
+          
           return (
-            <Link
-              key={item.name}
-              to={item.href}
-              className={`group flex items-center px-2 py-2 text-sm font-medium rounded-lg transition-colors ${
-                current
-                  ? "bg-orange-100 text-orange-600"
-                  : "text-gray-700 hover:bg-gray-50 hover:text-orange-500"
-              }`}
-              onClick={onClose}
-            >
-              <item.icon
-                className={`mr-3 h-5 w-5 flex-shrink-0 ${
-                  current
-                    ? "text-orange-600"
-                    : "text-gray-400 group-hover:text-orange-500"
-                }`}
-              />
-              {item.name}
-            </Link>
+            <div key={item.name}>
+              {isExternal ? (
+                <a
+                  href={item.href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className={`group flex items-center px-3 py-3 text-sm font-medium rounded-xl transition-all duration-200 ${
+                    current
+                      ? "bg-gradient-to-r from-orange-500 to-orange-600 text-white shadow-lg shadow-orange-500/25"
+                      : "text-gray-700 hover:bg-white hover:text-orange-600 hover:shadow-md border border-transparent hover:border-orange-100"
+                  }`}
+                  onClick={onClose}
+                >
+                  <item.icon
+                    className={`mr-3 h-5 w-5 flex-shrink-0 ${
+                      current
+                        ? "text-white"
+                        : "text-gray-400 group-hover:text-orange-500"
+                    }`}
+                  />
+                  {item.name}
+                  <ArrowRightCircleIcon className="ml-auto h-4 w-4 text-gray-400" />
+                </a>
+              ) : (
+                <Link
+                  to={item.href}
+                  className={`group flex items-center px-3 py-3 text-sm font-medium rounded-xl transition-all duration-200 ${
+                    current
+                      ? "bg-gradient-to-r from-orange-500 to-orange-600 text-white shadow-lg shadow-orange-500/25"
+                      : "text-gray-700 hover:bg-white hover:text-orange-600 hover:shadow-md border border-transparent hover:border-orange-100"
+                  }`}
+                  onClick={onClose}
+                >
+                  <item.icon
+                    className={`mr-3 h-5 w-5 flex-shrink-0 ${
+                      current
+                        ? "text-white"
+                        : "text-gray-400 group-hover:text-orange-500"
+                    }`}
+                  />
+                  {item.name}
+                </Link>
+              )}
+            </div>
           )
         })}
       </nav>
 
       {/* Logout */}
-      <div className="px-4 py-4 border-t">
+      <div className="px-3 py-4 border-t border-gray-100">
         <button
           onClick={logout}
-          className="flex items-center justify-center w-full text-sm text-red-500 hover:text-red-600 transition"
+          className="group flex items-center justify-center w-full px-3 py-3 text-sm font-medium text-gray-700 hover:text-red-600 hover:bg-red-50 rounded-xl border border-transparent hover:border-red-100 transition-all duration-200"
         >
-          <ArrowRightOnRectangleIcon className="h-5 w-5 mr-2" />
+          <ArrowRightOnRectangleIcon className="h-5 w-5 mr-2 text-gray-400 group-hover:text-red-500" />
           Cerrar sesión
         </button>
       </div>
@@ -136,7 +179,7 @@ const Sidebar = ({ isOpen, onClose }) => {
             leaveFrom="opacity-100"
             leaveTo="opacity-0"
           >
-            <div className="fixed inset-0 bg-black/60" />
+            <div className="fixed inset-0 bg-black/40 backdrop-blur-sm" />
           </Transition.Child>
 
           <div className="fixed inset-0 flex">
@@ -151,9 +194,9 @@ const Sidebar = ({ isOpen, onClose }) => {
             >
               <Dialog.Panel className="relative mr-16 flex w-full max-w-xs flex-1">
                 <SidebarContent />
-                <div className="absolute top-0 right-0 -mr-12 pt-2">
+                <div className="absolute top-4 right-0 -mr-12 pt-2">
                   <button
-                    className="ml-1 flex h-10 w-10 items-center justify-center rounded-full focus:outline-none focus:ring-2 focus:ring-white"
+                    className="ml-1 flex h-10 w-10 items-center justify-center rounded-full bg-white/10 backdrop-blur-sm border border-white/20 hover:bg-white/20 focus:outline-none focus:ring-2 focus:ring-white transition-all duration-200"
                     onClick={onClose}
                   >
                     <XMarkIcon className="h-6 w-6 text-white" />
@@ -166,7 +209,7 @@ const Sidebar = ({ isOpen, onClose }) => {
       </Transition.Root>
 
       {/* Desktop */}
-      <div className="hidden lg:fixed lg:inset-y-0 lg:z-40 lg:flex lg:w-64 lg:flex-col">
+      <div className="hidden lg:fixed lg:inset-y-0 lg:z-40 lg:flex lg:w-72 lg:flex-col">
         <SidebarContent />
       </div>
     </>
