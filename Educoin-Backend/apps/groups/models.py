@@ -1,53 +1,42 @@
 from django.db import models
-from django.utils import timezone
-from django.utils.crypto import get_random_string
-from apps.classrooms.models import Classroom
-from apps.users.models import User
+from django.db.models.signals import post_save
+from django.dispatch import receiver
 from apps.common.models import BaseModel
-
-def generate_group_code(length=6):
-    alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890'
-    return get_random_string(length=length, allowed_chars=alphabet)
+from apps.coins.models import Period
 
 class Group(BaseModel):
-    nombre = models.CharField(max_length=100)
-    descripcion = models.TextField(blank=True)
-    classroom = models.ForeignKey(Classroom, on_delete=models.CASCADE, related_name="grupos_clases")
-
-    codigo = models.CharField(max_length=10, unique=True, blank=True, null=True)
-    codigo_generado_en = models.DateTimeField(null=True, blank=True)
-    codigo_expira_en = models.DateTimeField(null=True, blank=True)
-
-    estudiantes = models.ManyToManyField(
-        User,
-        related_name="grupos_estudiante",
-        blank=True,
-        limit_choices_to={'role': 'estudiante'}
-    )
-
+    nombre = models.CharField(max_length=255)
+    descripcion = models.TextField(blank=True, null=True)
+    classroom = models.ForeignKey("classrooms.Classroom", on_delete=models.CASCADE, related_name="grupos_clases")
+    estudiantes = models.ManyToManyField("users.User", related_name="grupos_estudiante", blank=True)
+    codigo = models.CharField(max_length=20, unique=True, blank=True, null=True)  # CAMBIO: agregar blank=True, null=True
     activo = models.BooleanField(default=True)
+    codigo_generado_en = models.DateTimeField(auto_now_add=True)
+    codigo_expira_en = models.DateTimeField()
 
-    class Meta:
-        verbose_name = 'Group'
-        verbose_name_plural = 'Groups'
-        ordering = ['nombre']
+    def __str__(self):
+        return f"{self.nombre} ({self.classroom.nombre})"
 
     def save(self, *args, **kwargs):
         if not self.codigo:
-            for _ in range(5):
-                code = generate_group_code(6)
-                if not Group.objects.filter(codigo=code).exists():
-                    self.codigo = code
-                    self.codigo_generado_en = timezone.now()
-                    break
+            self.codigo = self.generar_codigo_unico()
+        if not self.codigo_expira_en:
+            from django.utils import timezone
+            self.codigo_expira_en = timezone.now() + timezone.timedelta(days=30)
         super().save(*args, **kwargs)
 
-    def codigo_valido(self):
-        if not self.codigo:
-            return False
-        if self.codigo_expira_en:
-            return timezone.now() <= self.codigo_expira_en
-        return True
+    def generar_codigo_unico(self):
+        import uuid
+        return str(uuid.uuid4())[:6].upper()
 
-    def __str__(self):
-        return f"{self.nombre} ({self.classroom})"
+    class Meta:
+        ordering = ['-creado']
+
+
+@receiver(post_save, sender=Group)
+def crear_periodos_al_crear_grupo(sender, instance, created, **kwargs):
+    """Crear periodos automaticamente cuando se crea un grupo"""
+    if created:
+        print(f"Creando periodos para el grupo: {instance.nombre}")
+        periodos = Period.crear_periodos_para_grupo(instance)
+        print(f"Periodos creados: {len(periodos)} para grupo {instance.nombre}")

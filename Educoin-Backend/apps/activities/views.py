@@ -4,7 +4,7 @@ from rest_framework.decorators import action
 from rest_framework.exceptions import PermissionDenied
 from django.db import transaction
 from apps.grades.models import Grade
-from apps.coins.models import CoinTransaction, Wallet, Period
+from apps.coins.models import Wallet, Period
 from .models import Activity, Submission
 from .serializers import (
     ActivitySerializer, 
@@ -16,10 +16,6 @@ from apps.users.permissions import IsDocente
 
 
 class ActivityViewSet(viewsets.ModelViewSet):
-    """
-    - Docentes pueden crear/editar actividades en sus clases.
-    - Estudiantes solo ven actividades habilitadas de sus grupos.
-    """
     serializer_class = ActivitySerializer
 
     def get_queryset(self):
@@ -33,7 +29,6 @@ class ActivityViewSet(viewsets.ModelViewSet):
         else:
             return Activity.objects.none()
         
-        # Prefetch submissions con los datos del estudiante
         queryset = queryset.prefetch_related('submissions__estudiante')
         return queryset
 
@@ -52,11 +47,6 @@ class ActivityViewSet(viewsets.ModelViewSet):
 
 
 class SubmissionViewSet(viewsets.ModelViewSet):
-    """
-    Vista para manejar las entregas de los estudiantes.
-    Los docentes pueden calificarlas y generar monedas automáticamente.
-    La validación de fecha límite se hace automáticamente en el serializer.
-    """
     permission_classes = [permissions.IsAuthenticated]
 
     def get_serializer_class(self):
@@ -80,7 +70,6 @@ class SubmissionViewSet(viewsets.ModelViewSet):
         elif user.role == 'estudiante':
             queryset = queryset.filter(estudiante=user)
         
-        # Filtrar por actividad si se especifica
         activity_id = self.request.query_params.get('activity')
         if activity_id:
             queryset = queryset.filter(activity_id=activity_id)
@@ -91,17 +80,12 @@ class SubmissionViewSet(viewsets.ModelViewSet):
         user = self.request.user
         if user.role != "estudiante":
             raise PermissionDenied("Solo los estudiantes pueden enviar actividades.")
-        # La validación de fecha límite se hace en serializer.validate()
         serializer.save(estudiante=user)
 
     @action(detail=True, methods=["patch"], url_path="grade")
     @transaction.atomic
     def grade_submission(self, request, pk=None):
-        """
-        Califica una entrega y:
-        - Actualiza o crea la nota en Grade.
-        - Asigna Educoins según el rendimiento.
-        """
+        """Calificar una entrega y asignar Educoins a la wallet EXISTENTE"""
         submission = self.get_object()
         user = request.user
 
@@ -112,53 +96,39 @@ class SubmissionViewSet(viewsets.ModelViewSet):
         retro = request.data.get("retroalimentacion", "")
 
         if nota is None:
-            return Response({"error": "Debes incluir una calificación."}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({"error": "Debes incluir una calificacion."}, status=status.HTTP_400_BAD_REQUEST)
 
-        # --- 1. Actualizar submission ---
+        # 1. Actualizar submission
         submission.calificacion = nota
         submission.retroalimentacion = retro
         submission.save()
 
-        # --- 2. Crear o actualizar Grade ---
+        # 2. Crear o actualizar Grade (esto activara el signal automaticamente)
         grade, created = Grade.objects.update_or_create(
             activity=submission.activity,
             student=submission.estudiante,
             defaults={"nota": nota, "retroalimentacion": retro}
         )
 
-        # --- 3. Educoins ---
-        activity = submission.activity
-        # FIX: Buscar periodo activo del grupo específico
-        periodo = Period.objects.filter(grupo=activity.group, activo=True).first()
-        coins_ganados = 0
-        wallet = None
-
-        if periodo:
-            wallet, _ = Wallet.objects.get_or_create(
-                usuario=submission.estudiante,
-                grupo=activity.group,
-                periodo=periodo,
-                defaults={"saldo": 0, "bloqueado": 0}
-            )
-
-            coins_ganados = int(float(nota) / 5.0 * activity.valor_educoins)
-
-            # Bonus adicional si la nota ≥ 4.5
-            if float(nota) >= 4.5:
-                coins_ganados += int(activity.valor_educoins * 0.05)
-
-            if coins_ganados > 0:
-                wallet.saldo += coins_ganados
-                wallet.save()
-
-                CoinTransaction.objects.create(
-                    wallet=wallet,
-                    tipo="earn",
-                    cantidad=coins_ganados,
-                    descripcion=f"Monedas ganadas por '{activity.nombre}' (nota {nota})"
+        # 3. Calcular coins ganados
+        coins_ganados = grade.calcular_coins_ganados()
+        
+        # 4. Obtener wallet actualizada para la respuesta
+        periodo_activo = Period.objects.filter(grupo=submission.activity.group, activo=True).first()
+        wallet_saldo = 0
+        
+        if periodo_activo:
+            try:
+                wallet = Wallet.objects.get(
+                    usuario=submission.estudiante,
+                    grupo=submission.activity.group,
+                    periodo=periodo_activo
                 )
+                wallet_saldo = wallet.saldo
+            except Wallet.DoesNotExist:
+                print(f"ERROR: No se encontro wallet para {submission.estudiante.email}")
 
-        # --- 4. Respuesta final ---
+        # 5. Respuesta final
         return Response({
             "mensaje": "Entrega calificada correctamente",
             "submission_id": submission.id,
@@ -166,5 +136,5 @@ class SubmissionViewSet(viewsets.ModelViewSet):
             "retroalimentacion": submission.retroalimentacion,
             "grade_id": grade.id,
             "coins_ganados": coins_ganados,
-            "wallet_saldo": wallet.saldo if wallet else None
+            "wallet_saldo": wallet_saldo
         }, status=status.HTTP_200_OK)

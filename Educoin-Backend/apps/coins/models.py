@@ -1,6 +1,8 @@
 from django.db import models
 from django.conf import settings
 from apps.common.models import BaseModel
+from datetime import timedelta
+from django.utils import timezone
 
 User = settings.AUTH_USER_MODEL
 
@@ -19,14 +21,34 @@ class Period(BaseModel):
         self.save()
 
     def esta_activo(self):
-        """Verifica si el periodo está dentro de sus fechas y activo."""
-        from django.utils import timezone
+        """Verifica si el periodo esta dentro de sus fechas y activo."""
         hoy = timezone.now().date()
         return self.activo and self.fecha_inicio <= hoy <= self.fecha_fin
 
     def __str__(self):
         return f"{self.nombre} ({self.grupo.nombre})"
 
+    @classmethod
+    def crear_periodos_para_grupo(cls, grupo):
+        """Crear 3 periodos automaticamente al crear un grupo"""
+        hoy = timezone.now().date()
+        
+        periodos = []
+        for i in range(3):
+            fecha_inicio = hoy + timedelta(weeks=i*6)
+            fecha_fin = fecha_inicio + timedelta(weeks=6) - timedelta(days=1)
+            
+            periodo = cls.objects.create(
+                grupo=grupo,
+                nombre=f"Corte {i+1}",
+                descripcion=f"Periodo {i+1} del grupo {grupo.nombre}",
+                fecha_inicio=fecha_inicio,
+                fecha_fin=fecha_fin,
+                activo=(i == 0)  # Solo el primer periodo activo
+            )
+            periodos.append(periodo)
+        
+        return periodos
 
 
 class Wallet(BaseModel):
@@ -76,4 +98,4 @@ class CoinTransaction(BaseModel):
     descripcion = models.TextField(blank=True, null=True)
 
     def __str__(self):
-        return f"{self.tipo} {self.cantidad} → {self.wallet.usuario.email}"
+        return f"{self.tipo} {self.cantidad} -> {self.wallet.usuario.email}"

@@ -13,18 +13,22 @@ export default function CreateActivity({ onClose }) {
     group: "",
     valor_educoins: 100,
     valor_notas: 100,
-    fecha_entrega: "",
+    fecha_entrega: "",  // ✅ CORREGIDO: usar fecha_entrega en lugar de fecha_inicio/fecha_fin
     habilitada: true
   })
 
   const handleSubmit = async (e) => {
     e.preventDefault()
     try {
+      // ✅ CORREGIDO: Convertir a ISO string correctamente
+      const fechaEntrega = new Date(formData.fecha_entrega)
+      
       await createMutation.mutateAsync({
         ...formData,
         group: parseInt(formData.group),
         valor_educoins: parseInt(formData.valor_educoins),
-        valor_notas: parseInt(formData.valor_notas)
+        valor_notas: parseInt(formData.valor_notas),
+        fecha_entrega: fechaEntrega.toISOString(),
       })
       onClose()
     } catch (error) {
@@ -131,10 +135,10 @@ export default function CreateActivity({ onClose }) {
 
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">
-            Fecha Entrega *
+            Fecha Límite *
           </label>
           <input
-            type="date"
+            type="datetime-local"
             required
             value={formData.fecha_entrega}
             onChange={(e) => setFormData({...formData, fecha_entrega: e.target.value})}

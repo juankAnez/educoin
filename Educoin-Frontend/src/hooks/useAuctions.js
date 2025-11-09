@@ -38,7 +38,10 @@ export const useCreateAuction = () => {
       toast.success("Subasta creada exitosamente")
     },
     onError: (error) => {
-      toast.error(error.response?.data?.detail || "Error al crear subasta")
+      const errorMessage = error.response?.data?.detail || 
+                          error.response?.data?.message || 
+                          "Error al crear subasta"
+      toast.error(errorMessage)
     },
   })
 }
@@ -54,7 +57,10 @@ export const useUpdateAuction = () => {
       toast.success("Subasta actualizada exitosamente")
     },
     onError: (error) => {
-      toast.error(error.response?.data?.detail || "Error al actualizar subasta")
+      const errorMessage = error.response?.data?.detail || 
+                          error.response?.data?.message || 
+                          "Error al actualizar subasta"
+      toast.error(errorMessage)
     },
   })
 }
@@ -69,7 +75,10 @@ export const useDeleteAuction = () => {
       toast.success("Subasta eliminada exitosamente")
     },
     onError: (error) => {
-      toast.error(error.response?.data?.detail || "Error al eliminar subasta")
+      const errorMessage = error.response?.data?.detail || 
+                          error.response?.data?.message || 
+                          "Error al eliminar subasta"
+      toast.error(errorMessage)
     },
   })
 }
@@ -88,7 +97,12 @@ export const usePlaceBid = () => {
       toast.success("Puja realizada exitosamente")
     },
     onError: (error) => {
-      toast.error(error.response?.data?.detail || "Error al realizar puja")
+      const errorMessage = error.response?.data?.detail || 
+                          error.response?.data?.message || 
+                          Array.isArray(error.response?.data?.non_field_errors) ? 
+                          error.response.data.non_field_errors[0] : 
+                          "Error al realizar puja"
+      toast.error(errorMessage)
     },
   })
 }
@@ -112,7 +126,10 @@ export const useCloseAuction = () => {
       toast.success("Subasta cerrada exitosamente")
     },
     onError: (error) => {
-      toast.error(error.response?.data?.detail || "Error al cerrar subasta")
+      const errorMessage = error.response?.data?.detail || 
+                          error.response?.data?.message || 
+                          "Error al cerrar subasta"
+      toast.error(errorMessage)
     },
   })
 }

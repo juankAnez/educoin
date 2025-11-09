@@ -1,57 +1,46 @@
 import api from "./api"
-import { API_ENDPOINTS } from "../utils/constants"
 
 export const auctionService = {
-  // Obtener todas las subastas
   getAuctions: async (params = {}) => {
-    const res = await api.get(API_ENDPOINTS.AUCTIONS, { params })
+    const res = await api.get("/api/auctions/", { params })
     return res.data
   },
 
-  // Obtener una subasta específica
   getAuction: async (id) => {
-    const res = await api.get(API_ENDPOINTS.AUCTION_DETAIL(id))
+    const res = await api.get(`/api/auctions/${id}/`)
     return res.data
   },
 
-  // Crear subasta (solo docentes)
   createAuction: async (data) => {
-    const res = await api.post(API_ENDPOINTS.AUCTIONS, data)
+    const res = await api.post("/api/auctions/", data)
     return res.data
   },
 
-  // Actualizar subasta
   updateAuction: async (id, data) => {
-    const res = await api.patch(API_ENDPOINTS.AUCTION_DETAIL(id), data)
+    const res = await api.patch(`/api/auctions/${id}/`, data)
     return res.data
   },
 
-  // Eliminar subasta
   deleteAuction: async (id) => {
-    const res = await api.delete(API_ENDPOINTS.AUCTION_DETAIL(id))
+    const res = await api.delete(`/api/auctions/${id}/`)
     return res.data
   },
 
-  // Hacer una puja
   placeBid: async (auctionId, cantidad) => {
-    const res = await api.post(`${API_ENDPOINTS.AUCTIONS}bids/`, {
+    const res = await api.post("/api/auctions/bids/", {
       auction: auctionId,
       cantidad: cantidad
     })
     return res.data
   },
 
-  // Obtener pujas de una subasta
   getAuctionBids: async (auctionId) => {
-    const res = await api.get(`${API_ENDPOINTS.AUCTIONS}bids/`, {
-      params: { auction: auctionId }
-    })
+    const res = await api.get(`/api/auctions/bids/por-subasta/${auctionId}/`)
     return res.data
   },
 
-  // Cerrar subasta (solo docentes)
   closeAuction: async (id) => {
-    const res = await api.post(API_ENDPOINTS.AUCTION_CLOSE(id))
+    const res = await api.post(`/api/auctions/${id}/close/`)
     return res.data
   }
 }

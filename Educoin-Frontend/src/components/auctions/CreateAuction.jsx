@@ -12,15 +12,15 @@ const CreateAuction = ({ auction, onClose }) => {
   const [formData, setFormData] = useState({
     titulo: "",
     descripcion: "",
-    periodo: "",
+    grupo: "",  // ✅ CORREGIDO: usar 'grupo' en lugar de 'periodo'
     fecha_fin: "",
   })
   const [errors, setErrors] = useState({})
 
-  const { data: periods } = useQuery({
-    queryKey: ["periods"],
+  const { data: groups } = useQuery({
+    queryKey: ["groups"],
     queryFn: async () => {
-      const res = await api.get("/api/coins/periods/")
+      const res = await api.get("/api/groups/")
       return res.data
     },
   })
@@ -30,7 +30,7 @@ const CreateAuction = ({ auction, onClose }) => {
       setFormData({
         titulo: auction.titulo || "",
         descripcion: auction.descripcion || "",
-        periodo: auction.periodo || "",
+        grupo: auction.grupo?.id || auction.grupo || "",  // ✅ Manejar ambos formatos
         fecha_fin: auction.fecha_fin ? new Date(auction.fecha_fin).toISOString().slice(0, 16) : "",
       })
     }
@@ -54,7 +54,7 @@ const CreateAuction = ({ auction, onClose }) => {
     const newErrors = {}
     if (!formData.titulo) newErrors.titulo = "El título es requerido"
     if (!formData.descripcion) newErrors.descripcion = "La descripción es requerida"
-    if (!formData.periodo) newErrors.periodo = "Debes seleccionar un periodo"
+    if (!formData.grupo) newErrors.grupo = "Debes seleccionar un grupo"
     if (!formData.fecha_fin) newErrors.fecha_fin = "La fecha de finalización es requerida"
 
     if (Object.keys(newErrors).length > 0) {
@@ -65,7 +65,7 @@ const CreateAuction = ({ auction, onClose }) => {
     try {
       const submitData = {
         ...formData,
-        periodo: parseInt(formData.periodo),
+        grupo: parseInt(formData.grupo),
         fecha_fin: new Date(formData.fecha_fin).toISOString(),
       }
 
@@ -77,6 +77,13 @@ const CreateAuction = ({ auction, onClose }) => {
       onClose()
     } catch (error) {
       console.error("Error:", error)
+      // Mostrar errores específicos del backend
+      if (error.response?.data) {
+        const backendErrors = error.response.data
+        Object.keys(backendErrors).forEach(key => {
+          setErrors(prev => ({ ...prev, [key]: Array.isArray(backendErrors[key]) ? backendErrors[key][0] : backendErrors[key] }))
+        })
+      }
     }
   }
 
@@ -124,26 +131,26 @@ const CreateAuction = ({ auction, onClose }) => {
 
       <div className="grid grid-cols-2 gap-4">
         <div>
-          <label htmlFor="periodo" className="block text-sm font-medium text-gray-700 mb-1">
-            Periodo
+          <label htmlFor="grupo" className="block text-sm font-medium text-gray-700 mb-1">
+            Grupo *
           </label>
           <select
-            id="periodo"
-            name="periodo"
-            value={formData.periodo}
+            id="grupo"
+            name="grupo"
+            value={formData.grupo}
             onChange={handleChange}
             className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent ${
-              errors.periodo ? "border-red-500" : "border-gray-300"
+              errors.grupo ? "border-red-500" : "border-gray-300"
             }`}
           >
-            <option value="">Selecciona un periodo</option>
-            {periods?.map((period) => (
-              <option key={period.id} value={period.id}>
-                {period.nombre} - {period.grupo_nombre}
+            <option value="">Selecciona un grupo</option>
+            {groups?.map((group) => (
+              <option key={group.id} value={group.id}>
+                {group.nombre} - {group.classroom_nombre || 'Sin clase'}
               </option>
             ))}
           </select>
-          {errors.periodo && <p className="mt-1 text-sm text-red-600">{errors.periodo}</p>}
+          {errors.grupo && <p className="mt-1 text-sm text-red-600">{errors.grupo}</p>}
         </div>
 
         <div>
