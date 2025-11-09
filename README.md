@@ -1,124 +1,180 @@
 # Educoin
 
-Plataforma web de gamificación educativa para instituciones de Colombia.  
+Plataforma web de gamificación educativa para instituciones de Colombia.
 Permite a docentes premiar a estudiantes con monedas virtuales (Educoins) por su desempeño académico, que luego pueden usar en subastas de premios.
 
 ## Tecnologías
 
-- **Backend:** Django, Django REST Framework, JWT, MySQL, (Allauth próximamente)
-- **Frontend:** React, Vite, Tailwind CSS
-- **Otros:** django-cors-headers, drf-yasg, axios, (más adelante se documentará más)
+### Backend
+- Django
+- Django REST Framework  
+- JWT
+- MySQL
+- (Allauth próximamente)
+
+### Frontend
+- React
+- Vite
+- Tailwind CSS
+
+### Otros
+- django-cors-headers
+- drf-yasg
+- axios
+- (más dependencias serán documentadas)
 
 ## Instalación
 
-1. **Clona el repositorio**
-   ```bash
-   git clone https://github.com/juankAnez/educoin.git
-   cd educoin
-   ```
+### 1. Clonar el repositorio
+```bash
+git clone https://github.com/juankAnez/educoin.git
+cd educoin
+```
 
-2. **Crea y activa un entorno virtual**
-   ```bash
-   python -m venv venv
-   # Windows:
-   .\venv\Scripts\activate
-   # Linux/Mac:
-   source venv/bin/activate
-   ```
+### 2. Crear y activar entorno virtual
+```bash
+python -m venv venv
 
-3. **Instala las dependencias**
-   ```bash
-   pip install -r requirements.txt
-   ```
+# Windows:
+.\venv\Scripts\activate
 
-4. **Configura el archivo `.env`**
-   Copia el ejemplo y ajusta tus credenciales:
-   ```
-   SECRET_KEY=...
-   DEBUG=True
-   DB_NAME=educoin_db
-   DB_USER=educoin_user
-   DB_PASSWORD=...
-   DB_HOST=localhost
-   DB_PORT=3306
-   ```
+# Linux/Mac:
+source venv/bin/activate
+```
 
-5. **Crea la base de datos MySQL**
-   ```sql
-   CREATE DATABASE educoin_db CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-   CREATE USER 'educoin_user'@'localhost' IDENTIFIED BY 'tu_password';
-   GRANT ALL PRIVILEGES ON educoin_db.* TO 'educoin_user'@'localhost';
-   FLUSH PRIVILEGES;
-   ```
+### 3. Instalar dependencias
+```bash
+pip install -r requirements.txt
+```
 
-6. **Realiza las migraciones**
-   ```bash
-   python manage.py makemigrations
-   python manage.py migrate
-   ```
+### 4. Configurar archivo .env
+```env
+SECRET_KEY=...
+DEBUG=True
+DB_NAME=educoin_db
+DB_USER=educoin_user
+DB_PASSWORD=...
+DB_HOST=localhost
+DB_PORT=3306
+```
 
-7. **Crea un superusuario**
-   ```bash
-   python manage.py createsuperuser
-   ```
+### 5. Crear base de datos MySQL
+```sql
+CREATE DATABASE educoin_db CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+CREATE USER 'educoin_user'@'localhost' IDENTIFIED BY 'tu_password';
+GRANT ALL PRIVILEGES ON educoin_db.* TO 'educoin_user'@'localhost';
+FLUSH PRIVILEGES;
+```
 
-8. **Inicia el servidor**
-   ```bash
-   python manage.py runserver 0.0.0.0:8000
-   ```
+### 6. Realizar migraciones
+```bash
+python manage.py makemigrations
+python manage.py migrate
+```
 
-## Endpoints principales
+### 7. Crear superusuario
+```bash
+python manage.py createsuperuser
+```
 
-- **Autenticación y registro:**  
-  - `/api/users/register/`  
-  - `/api/users/login/`  
-  - `/api/users/profile/`
-  - `/api/users/profile/update/`  
-  - `/api/users/password-reset/` 
+### 8. Iniciar servidor
+```bash
+python manage.py runserver 0.0.0.0:8000
+```
 
-- **Login Allauth:**
-  - `/accounts/login/`
-  - `/accounts/logout/`
-  - `/accounts/google/login/`
+La API estará disponible en `http://localhost:8000/api/`
 
-- **CRUD de entidades principales (requiere JWT):**
-  - `/api/classrooms/`
-  - `/api/groups/`
-  - `/api/groups/join/`  
-  - `/api/activities/`
-  - `/api/submissions/`
-  - `/api/submissions/<id>/grade/`
-  - `/api/coins/wallets/`
-  - `/api/coins/transactions/`
-  - `/api/grades/`
-  - `/api/auctions/`
+## API Endpoints
 
-## Apps principales
+> Todos los endpoints están bajo el prefijo `/api/`
 
-- **users:** Usuarios, roles, autenticación.
-- **classrooms:** Clases asignadas a usuarios con rol de docente.
-- **groups:** Grupos de las clases asignadas a docentes y relación con estudiante.
-- **activities:** Actividades, envíos (submissions) y calificaciones.
-- **coins:** Billeteras y transacciones de Educoins.
-- **grades:** Registro oficial de calificaciones.
-- **auctions:** Subastas y pujas de estudiantes.
+### Users (Autenticación y Perfiles)
+- `POST /users/register/` - Registro de usuario
+- `POST /users/login/` - Login manual
+- `POST /users/google/` - Login con Google
+- `GET /users/profile/` - Obtener perfil
+- `PATCH /users/profile/update/` - Actualizar perfil
+- `PATCH /users/change-password/` - Cambiar contraseña
+- `POST /users/password-reset/` - Resetear contraseña
+- `POST /users/password-reset-confirm/<uidb64>/<token>/` - Confirmar reset
+
+### Users (Admin)
+- `GET /users/list/` - Listar usuarios
+- `PATCH /users/<user_id>/update/` - Actualizar usuario
+- `DELETE /users/<user_id>/delete/` - Eliminar usuario
+
+### Classrooms
+- `GET, POST /classrooms/` - Listar/Crear clases
+- `GET, PATCH, DELETE /classrooms/<id>/` - Gestionar clase
+- `GET /classrooms/<id>/students/` - Ver estudiantes
+
+### Groups
+- `GET, POST /groups/` - Listar/Crear grupos
+- `GET, PATCH, DELETE /groups/<id>/` - Gestionar grupo
+- `POST /groups/join/` - Unirse por código
+- `POST /groups/<id>/join/` - Unirse por ID
+
+### Activities
+- `GET, POST /activities/` - Listar/Crear actividades
+- `GET, PATCH, DELETE /activities/<id>/` - Gestionar actividad
+
+### Submissions
+- `GET, POST /submissions/` - Listar/Crear entregas
+- `GET /submissions/<id>/` - Ver entrega
+- `PATCH /submissions/<id>/grade/` - Calificar
+
+### Grades
+- `GET /grades/` - Listar calificaciones
+- `GET /grades/mis-notas/` - Ver notas propias
+- `GET /grades/grupo/<group_id>/reporte/` - Reporte grupal
+- `POST /grades/calificar-multiple/` - Calificación múltiple
+
+### Coins
+- `GET /coins/periods/` - Listar períodos
+- `GET /coins/wallets/mi-wallet/` - Ver billetera
+- `POST /coins/wallets/<wallet_id>/depositar/` - Depositar
+- `GET /coins/transactions/` - Ver transacciones
+
+### Auctions
+- `GET, POST /auctions/` - Listar/Crear subastas
+- `GET /auctions/<id>/` - Ver subasta
+- `POST /auctions/<id>/close/` - Cerrar subasta
+
+### Bids
+- `GET, POST /bids/` - Listar/Crear pujas
+- `GET /bids/<id>/` - Ver puja
+
+### Notifications
+- `GET /notifications/` - Listar notificaciones
+- `GET /notifications/no-leidas/` - Ver no leídas
+- `POST /notifications/<id>/marcar-leida/` - Marcar leída
+- `POST /notifications/marcar-todas-leidas/` - Marcar todas
+- `DELETE /notifications/eliminar-todas/` - Eliminar todas
+
+## Apps Principales
+- `users`: Usuarios y autenticación
+- `classrooms`: Gestión de clases
+- `groups`: Grupos y membresías
+- `activities`: Actividades y entregas
+- `coins`: Sistema de Educoins
+- `grades`: Sistema de calificaciones
+- `auctions`: Sistema de subastas
+- `notifications`: Sistema de notificaciones
 
 ## Roles
-
-- **Administrador:** Gestión global de la plataforma.
-- **Docente:** Crea clases, actividades, subastas y asigna Educoins.
-- **Estudiante:** Participa en clases, actividades y subastas.
+- **Administrador**: Gestión global
+- **Docente**: Gestión académica
+- **Estudiante**: Participación
 
 ## Pruebas
-
-Puedes usar Thunder Client, Postman o cualquier cliente HTTP para probar los endpoints.  
-Recuerda enviar el token JWT en el header `Authorization: Bearer <token>` para endpoints protegidos.
+Use Thunder Client, Postman u otro cliente HTTP.
+Header requerido: `Authorization: Bearer <token>`
 
 ## Notas
+- Frontend en `./Educoin-Frontend`
+- Documentación API: drf-yasg/drf-spectacular
 
-- El frontend (React + Vite + Tailwind) se desarrolla en el mismo repositorio en la ruta *./Educoin-Frontend* .
-- Para documentación automática de la API, puedes instalar y configurar `drf-yasg` o `drf-spectacular`.
-
----
-
-**Autores:** Equipo Educoin (Juan Añez e Ivan Martinez)
+## Autores
+Equipo Educoin:
+- Juan Añez
+- Ivan Martinez
