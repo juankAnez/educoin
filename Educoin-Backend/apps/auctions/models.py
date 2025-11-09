@@ -1,6 +1,5 @@
 from django.db import models
 from django.conf import settings
-from apps.coins.models import Period
 from apps.common.models import BaseModel
 
 User = settings.AUTH_USER_MODEL
@@ -14,18 +13,34 @@ class Auction(BaseModel):
     titulo = models.CharField(max_length=255)
     descripcion = models.TextField(blank=True, null=True)
     creador = models.ForeignKey(User, on_delete=models.CASCADE, related_name="auctions")
-    periodo = models.ForeignKey(Period, on_delete=models.CASCADE, related_name="auctions")
+    
+    # Relación directa con grupo
+    grupo = models.ForeignKey("groups.Group", on_delete=models.CASCADE, related_name="auctions")
+    
     estado = models.CharField(max_length=10, choices=ESTADOS, default="active")
     fecha_fin = models.DateTimeField()
 
+    class Meta:
+        ordering = ['-creado']
+
     def __str__(self):
-        return f"Auction {self.titulo} - {self.estado}"
+        return f"{self.titulo} - {self.estado} ({self.grupo.nombre})"
 
 
 class Bid(BaseModel):
     auction = models.ForeignKey(Auction, on_delete=models.CASCADE, related_name="bids")
     estudiante = models.ForeignKey(User, on_delete=models.CASCADE, related_name="bids")
     cantidad = models.PositiveIntegerField()
+    
+    # Campo para saber quién registró la puja
+    registrado_por = models.ForeignKey(
+        User, 
+        on_delete=models.SET_NULL, 
+        null=True, 
+        blank=True,
+        related_name="bids_registradas",
+        help_text="Usuario que registró esta puja (estudiante o docente)"
+    )
 
     class Meta:
         unique_together = ('auction', 'estudiante')

@@ -15,8 +15,8 @@ class GroupViewSet(viewsets.ModelViewSet):
     Gestiona los grupos de clase:
     - Los docentes pueden crear grupos.
     - Los estudiantes pueden unirse por código o por ID.
-    - Al crear el grupo se generan automáticamente los 3 periodos (cortes).
-    - Al unirse un estudiante, se le genera su wallet para el periodo activo.
+    - Los periodos deben ser creados manualmente por el docente después de crear el grupo.
+    - Al unirse un estudiante, se le genera su wallet para el periodo activo (si existe).
     """
     serializer_class = GroupSerializer
 
@@ -42,7 +42,7 @@ class GroupViewSet(viewsets.ModelViewSet):
         """
         Al crear un grupo:
         - Se valida que el usuario sea docente.
-        - Se generan automáticamente 3 periodos de 6 semanas cada uno.
+        - NO se crean periodos automáticamente (el docente los crea después).
         """
         user = self.request.user
         classroom = serializer.validated_data.get('classroom')
@@ -53,18 +53,7 @@ class GroupViewSet(viewsets.ModelViewSet):
             raise PermissionDenied("No puedes crear grupos en clases de otros docentes.")
 
         group = serializer.save()
-        fecha_inicio = timezone.now().date()
-        duracion_corte = 6  # semanas por periodo (ajustable)
-
-        for i in range(3):
-            Period.objects.create(
-                grupo=group,
-                nombre=f"Corte {i+1}",
-                descripcion=f"Periodo {i+1} del grupo {group.nombre}",
-                fecha_inicio=fecha_inicio + timedelta(weeks=i * duracion_corte),
-                fecha_fin=fecha_inicio + timedelta(weeks=(i + 1) * duracion_corte),
-                activo=(i == 0)  # solo el primer corte activo inicialmente
-            )
+        # Ya no creamos periodos automáticamente aquí
 
     # -------------------------------
     # JOIN POR CÓDIGO
@@ -76,7 +65,7 @@ class GroupViewSet(viewsets.ModelViewSet):
         Endpoint: POST /api/groups/join/
         Body: { "code": "ABC123" }
         El estudiante se une a un grupo por código y se le crea una wallet
-        en el periodo activo del grupo.
+        en el periodo activo del grupo (si existe).
         """
         code = request.data.get('code', '').strip().upper()
         if not code:
@@ -100,7 +89,7 @@ class GroupViewSet(viewsets.ModelViewSet):
         # --- 1. Añadir estudiante al grupo ---
         group.estudiantes.add(user)
 
-        # --- 2. Crear wallet para el periodo activo ---
+        # --- 2. Crear wallet para el periodo activo (si existe) ---
         periodo_activo = Period.objects.filter(grupo=group, activo=True).first()
         wallet_creada = False
 
@@ -147,7 +136,7 @@ class GroupViewSet(viewsets.ModelViewSet):
         # --- 1. Añadir estudiante ---
         group.estudiantes.add(user)
 
-        # --- 2. Crear wallet por grupo y periodo activo ---
+        # --- 2. Crear wallet por grupo y periodo activo (si existe) ---
         periodo_activo = Period.objects.filter(grupo=group, activo=True).first()
         wallet_creada = False
 

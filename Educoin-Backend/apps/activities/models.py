@@ -17,7 +17,7 @@ class Activity(BaseModel):
     descripcion = models.TextField(blank=True)
     valor_educoins = models.PositiveIntegerField(default=100)
     valor_notas = models.PositiveIntegerField(default=100)
-    fecha_entrega = models.DateField()
+    fecha_entrega = models.DateTimeField()  # ← CAMBIO: DateField → DateTimeField
     habilitada = models.BooleanField(default=True)
 
     class Meta:
@@ -26,11 +26,21 @@ class Activity(BaseModel):
     def __str__(self):
         return f"{self.nombre} ({self.group.nombre})"
 
+    def esta_vencida(self):
+        """Verifica si la actividad ya pasó su fecha y hora límite"""
+        from django.utils import timezone
+        return timezone.now() > self.fecha_entrega
+
+    def puede_entregar(self):
+        """Verifica si un estudiante puede entregar esta actividad"""
+        return self.habilitada and not self.esta_vencida()
+
+
 class Submission(BaseModel):
     activity = models.ForeignKey(Activity, on_delete=models.CASCADE, related_name='submissions')
     estudiante = models.ForeignKey('users.User', on_delete=models.CASCADE, related_name='submissions')
     contenido = models.TextField(blank=True)  # ahora opcional
-    archivo = models.FileField(upload_to='submissions/', null=True, blank=True)  # NEW
+    archivo = models.FileField(upload_to='submissions/', null=True, blank=True)
     calificacion = models.DecimalField(max_digits=5, decimal_places=2, null=True, blank=True)
     retroalimentacion = models.TextField(blank=True)
 

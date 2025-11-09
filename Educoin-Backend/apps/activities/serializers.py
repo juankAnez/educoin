@@ -1,10 +1,14 @@
 from rest_framework import serializers
+from django.utils import timezone
 from .models import Activity, Submission
-from apps.users.serializers import UserProfileSerializer  # Importar serializer de usuario
+from apps.users.serializers import UserProfileSerializer
 
 class ActivitySerializer(serializers.ModelSerializer):
     classroom = serializers.SerializerMethodField()
-    submissions = serializers.SerializerMethodField()  # Agregar submissions al listar
+    submissions = serializers.SerializerMethodField()
+    puede_entregar = serializers.SerializerMethodField()
+    esta_vencida = serializers.SerializerMethodField()
+    tiempo_restante = serializers.SerializerMethodField()
 
     class Meta:
         model = Activity
@@ -20,6 +24,31 @@ class ActivitySerializer(serializers.ModelSerializer):
             submissions = obj.submissions.select_related('estudiante').all()
             return SubmissionListSerializer(submissions, many=True, context=self.context).data
         return []
+    
+    def get_puede_entregar(self, obj):
+        """Indica si un estudiante puede entregar esta actividad"""
+        return obj.puede_entregar()
+    
+    def get_esta_vencida(self, obj):
+        """Indica si la actividad ya venció"""
+        return obj.esta_vencida()
+    
+    def get_tiempo_restante(self, obj):
+        """Devuelve el tiempo restante hasta la fecha límite"""
+        if obj.esta_vencida():
+            return "Vencida"
+        
+        diferencia = obj.fecha_entrega - timezone.now()
+        dias = diferencia.days
+        horas = diferencia.seconds // 3600
+        minutos = (diferencia.seconds % 3600) // 60
+        
+        if dias > 0:
+            return f"{dias} día(s) {horas} hora(s)"
+        elif horas > 0:
+            return f"{horas} hora(s) {minutos} minuto(s)"
+        else:
+            return f"{minutos} minuto(s)"
 
 
 class SubmissionListSerializer(serializers.ModelSerializer):
@@ -35,7 +64,7 @@ class SubmissionListSerializer(serializers.ModelSerializer):
             'id',
             'activity',
             'activity_nombre',
-            'estudiante',  # ID del estudiante
+            'estudiante',
             'estudiante_nombre',
             'estudiante_email',
             'contenido',
@@ -90,11 +119,22 @@ class SubmissionSerializer(serializers.ModelSerializer):
 
         # Validar duplicado
         if Submission.objects.filter(activity=activity, estudiante=user).exists():
-            raise serializers.ValidationError("Ya has enviado una entrega para esta actividad.")
+            raise serializers.ValidationError({
+                "detail": "Ya has enviado una entrega para esta actividad."
+            })
 
         # Validar que la actividad esté habilitada
         if not activity.habilitada:
-            raise serializers.ValidationError("La actividad no está habilitada para entregas.")
+            raise serializers.ValidationError({
+                "detail": "La actividad no está habilitada para entregas."
+            })
+
+        # NUEVA VALIDACIÓN: Verificar fecha y hora límite
+        if activity.esta_vencida():
+            raise serializers.ValidationError({
+                "detail": "La fecha y hora límite de esta actividad han expirado.",
+                "fecha_limite": activity.fecha_entrega.isoformat()
+            })
 
         return data
 

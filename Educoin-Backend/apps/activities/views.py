@@ -55,6 +55,7 @@ class SubmissionViewSet(viewsets.ModelViewSet):
     """
     Vista para manejar las entregas de los estudiantes.
     Los docentes pueden calificarlas y generar monedas automáticamente.
+    La validación de fecha límite se hace automáticamente en el serializer.
     """
     permission_classes = [permissions.IsAuthenticated]
 
@@ -90,6 +91,7 @@ class SubmissionViewSet(viewsets.ModelViewSet):
         user = self.request.user
         if user.role != "estudiante":
             raise PermissionDenied("Solo los estudiantes pueden enviar actividades.")
+        # La validación de fecha límite se hace en serializer.validate()
         serializer.save(estudiante=user)
 
     @action(detail=True, methods=["patch"], url_path="grade")
@@ -126,8 +128,10 @@ class SubmissionViewSet(viewsets.ModelViewSet):
 
         # --- 3. Educoins ---
         activity = submission.activity
-        periodo = Period.objects.filter(activo=True).first()
+        # FIX: Buscar periodo activo del grupo específico
+        periodo = Period.objects.filter(grupo=activity.group, activo=True).first()
         coins_ganados = 0
+        wallet = None
 
         if periodo:
             wallet, _ = Wallet.objects.get_or_create(
@@ -162,5 +166,5 @@ class SubmissionViewSet(viewsets.ModelViewSet):
             "retroalimentacion": submission.retroalimentacion,
             "grade_id": grade.id,
             "coins_ganados": coins_ganados,
-            "wallet_saldo": wallet.saldo if periodo else None
+            "wallet_saldo": wallet.saldo if wallet else None
         }, status=status.HTTP_200_OK)
