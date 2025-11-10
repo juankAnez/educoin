@@ -1,8 +1,9 @@
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from apps.grades.models import Grade
-from apps.auctions.models import Auction
+from apps.auctions.models import Auction, Bid
 from apps.coins.models import CoinTransaction
+from apps.activities.models import Submission
 from .models import Notification
 
 
@@ -16,7 +17,7 @@ def notificar_calificacion(sender, instance, created, **kwargs):
             titulo='Nueva calificación recibida',
             mensaje=f'Has recibido una calificación de {instance.nota} en "{instance.activity.nombre}"',
             grade_id=instance.id,
-            activity_id=instance.activity.id,  # Agregar esto
+            activity_id=instance.activity.id,
             metadata={
                 'nota': str(instance.nota),
                 'activity_nombre': instance.activity.nombre,
@@ -25,12 +26,36 @@ def notificar_calificacion(sender, instance, created, **kwargs):
         )
 
 
+@receiver(post_save, sender=Submission)
+def notificar_entrega_estudiante(sender, instance, created, **kwargs):
+    """Notificar al docente cuando un estudiante entrega una actividad"""
+    if created:
+        try:
+            # Obtener el docente del grupo
+            docente = instance.activity.group.classroom.docente
+            
+            Notification.objects.create(
+                usuario=docente,
+                tipo='actividad',
+                titulo='Nueva entrega recibida',
+                mensaje=f'{instance.estudiante.first_name} {instance.estudiante.last_name} ha entregado "{instance.activity.nombre}"',
+                activity_id=instance.activity.id,
+                metadata={
+                    'estudiante_nombre': f'{instance.estudiante.first_name} {instance.estudiante.last_name}',
+                    'estudiante_email': instance.estudiante.email,
+                    'activity_nombre': instance.activity.nombre,
+                    'submission_id': instance.id
+                }
+            )
+        except Exception as e:
+            print(f"Error creando notificación de entrega: {e}")
+
+
 @receiver(post_save, sender=Auction)
 def notificar_nueva_subasta(sender, instance, created, **kwargs):
     """Notificar a los estudiantes del grupo cuando hay una nueva subasta"""
     if created and instance.estado == 'active':
         try:
-            # CORREGIDO: Auction tiene grupo directamente, no periodo
             grupo = instance.grupo
             estudiantes = grupo.estudiantes.all()
             
@@ -43,7 +68,8 @@ def notificar_nueva_subasta(sender, instance, created, **kwargs):
                     auction_id=instance.id,
                     metadata={
                         'auction_titulo': instance.titulo,
-                        'fecha_fin': instance.fecha_fin.isoformat()
+                        'fecha_fin': instance.fecha_fin.isoformat(),
+                        'precio_inicial': str(instance.precio_inicial)
                     }
                 )
                 for estudiante in estudiantes
@@ -53,6 +79,32 @@ def notificar_nueva_subasta(sender, instance, created, **kwargs):
                 Notification.objects.bulk_create(notificaciones)
         except Exception as e:
             print(f"Error creando notificaciones de subasta: {e}")
+
+
+@receiver(post_save, sender=Bid)
+def notificar_nueva_puja(sender, instance, created, **kwargs):
+    """Notificar al docente cuando un estudiante hace una puja"""
+    if created:
+        try:
+            # Obtener el docente del grupo de la subasta
+            docente = instance.auction.grupo.classroom.docente
+            
+            Notification.objects.create(
+                usuario=docente,
+                tipo='subasta_nueva',
+                titulo='Nueva puja recibida',
+                mensaje=f'{instance.estudiante.first_name} {instance.estudiante.last_name} ha pujado {instance.cantidad} EC en "{instance.auction.titulo}"',
+                auction_id=instance.auction.id,
+                metadata={
+                    'estudiante_nombre': f'{instance.estudiante.first_name} {instance.estudiante.last_name}',
+                    'estudiante_email': instance.estudiante.email,
+                    'auction_titulo': instance.auction.titulo,
+                    'cantidad_puja': str(instance.cantidad),
+                    'bid_id': instance.id
+                }
+            )
+        except Exception as e:
+            print(f"Error creando notificación de puja: {e}")
 
 
 @receiver(post_save, sender=CoinTransaction)

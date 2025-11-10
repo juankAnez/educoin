@@ -6,7 +6,7 @@ from apps.users.serializers import UserProfileSerializer
 class ActivitySerializer(serializers.ModelSerializer):
     classroom = serializers.SerializerMethodField()
     submissions = serializers.SerializerMethodField()
-    user_submission = serializers.SerializerMethodField()  # NUEVO
+    user_submission = serializers.SerializerMethodField()
     puede_entregar = serializers.SerializerMethodField()
     esta_vencida = serializers.SerializerMethodField()
     tiempo_restante = serializers.SerializerMethodField()
@@ -27,12 +27,23 @@ class ActivitySerializer(serializers.ModelSerializer):
         return []
     
     def get_user_submission(self, obj):
-        """NUEVO: Siempre retornar la submission del usuario actual si existe"""
+        """Retornar la submission del usuario actual con calificación si existe"""
         request = self.context.get('request')
         if request and request.user.role == 'estudiante':
             try:
                 submission = obj.submissions.get(estudiante=request.user)
-                return SubmissionListSerializer(submission, context=self.context).data
+                # Incluir todos los datos de la submission incluyendo calificación
+                return {
+                    'id': submission.id,
+                    'contenido': submission.contenido,
+                    'archivo': submission.archivo.url if submission.archivo else None,
+                    'calificacion': float(submission.calificacion) if submission.calificacion is not None else None,
+                    'retroalimentacion': submission.retroalimentacion,
+                    'creado': submission.creado.isoformat() if submission.creado else None,
+                    'actualizado': submission.actualizado.isoformat() if submission.actualizado else None,
+                    'estudiante': submission.estudiante.id,
+                    'activity': submission.activity.id
+                }
             except Submission.DoesNotExist:
                 return None
         return None
@@ -140,7 +151,7 @@ class SubmissionSerializer(serializers.ModelSerializer):
                 "detail": "La actividad no está habilitada para entregas."
             })
 
-        # NUEVA VALIDACIÓN: Verificar fecha y hora límite
+        # Verificar fecha y hora límite
         if activity.esta_vencida():
             raise serializers.ValidationError({
                 "detail": "La fecha y hora límite de esta actividad han expirado.",

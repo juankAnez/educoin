@@ -23,7 +23,7 @@ import toast from 'react-hot-toast'
 const NotificationsDropdown = () => {
   const [isOpen, setIsOpen] = useState(false)
   const [viewMode, setViewMode] = useState('all') // 'all', 'unread'
-  const [showActions, setShowActions] = useState(false) // Para móviles
+  const [showActions, setShowActions] = useState(false)
   const dropdownRef = useRef(null)
   const queryClient = useQueryClient()
   const navigate = useNavigate()
@@ -40,7 +40,7 @@ const NotificationsDropdown = () => {
         return []
       }
     },
-    refetchInterval: 15000, // Refrescar cada 15 segundos
+    refetchInterval: 15000,
   })
 
   const notifications = notificationsData || []
@@ -52,7 +52,7 @@ const NotificationsDropdown = () => {
 
   const unreadCount = notifications.filter(n => !n.leida).length
 
-  // Marcar como leída
+  // Mutaciones
   const markAsReadMutation = useMutation({
     mutationFn: async (id) => {
       await api.post(`/api/notifications/${id}/marcar-leida/`)
@@ -65,7 +65,6 @@ const NotificationsDropdown = () => {
     }
   })
 
-  // Marcar todas como leídas
   const markAllAsReadMutation = useMutation({
     mutationFn: async () => {
       await api.post('/api/notifications/marcar-todas-leidas/')
@@ -79,7 +78,6 @@ const NotificationsDropdown = () => {
     }
   })
 
-  // Eliminar notificación
   const deleteNotificationMutation = useMutation({
     mutationFn: async (id) => {
       await api.delete(`/api/notifications/${id}/`)
@@ -93,7 +91,6 @@ const NotificationsDropdown = () => {
     }
   })
 
-  // Eliminar todas las leídas
   const deleteAllReadMutation = useMutation({
     mutationFn: async () => {
       const readNotifications = notifications.filter(n => n.leida)
@@ -123,15 +120,17 @@ const NotificationsDropdown = () => {
 
     if (isOpen) {
       document.addEventListener('mousedown', handleClickOutside)
+      document.addEventListener('touchstart', handleClickOutside)
     }
 
     return () => {
       document.removeEventListener('mousedown', handleClickOutside)
+      document.removeEventListener('touchstart', handleClickOutside)
     }
   }, [isOpen])
 
   const getNotificationIcon = (tipo) => {
-    const baseClasses = "h-4 w-4 xs:h-5 xs:w-5"
+    const baseClasses = "h-4 w-4"
     
     switch (tipo) {
       case 'actividad':
@@ -171,12 +170,10 @@ const NotificationsDropdown = () => {
   }
 
   const handleNotificationClick = (notification) => {
-    // Marcar como leída si no lo está
     if (!notification.leida) {
       markAsReadMutation.mutate(notification.id)
     }
 
-    // Navegar según el tipo y datos disponibles
     let targetUrl = null
     
     if (notification.activity_id) {
@@ -184,7 +181,7 @@ const NotificationsDropdown = () => {
     } else if (notification.auction_id) {
       targetUrl = `/auctions/${notification.auction_id}`
     } else if (notification.grade_id) {
-      targetUrl = `/activities` // Las calificaciones se ven en actividades
+      targetUrl = '/activities'
     } else if (notification.tipo === 'monedas') {
       targetUrl = '/wallet'
     }
@@ -192,7 +189,6 @@ const NotificationsDropdown = () => {
     if (targetUrl) {
       navigate(targetUrl)
     } else {
-      // Si no hay URL específica, navegar a la página principal correspondiente
       switch (notification.tipo) {
         case 'actividad':
           navigate('/activities')
@@ -208,7 +204,6 @@ const NotificationsDropdown = () => {
           navigate('/wallet')
           break
         default:
-          // No navegar, solo cerrar el dropdown
           break
       }
     }
@@ -218,9 +213,7 @@ const NotificationsDropdown = () => {
   }
 
   const getPriority = (notification) => {
-    // Notificaciones no leídas tienen prioridad
     if (!notification.leida) return 1
-    // Notificaciones recientes (menos de 1 hora)
     const created = new Date(notification.creado)
     const now = new Date()
     const hoursDiff = (now - created) / (1000 * 60 * 60)
@@ -228,7 +221,7 @@ const NotificationsDropdown = () => {
     return 3
   }
 
-  // Ordenar notificaciones por prioridad y fecha
+  // Ordenar notificaciones
   const sortedNotifications = [...filteredNotifications].sort((a, b) => {
     const priorityA = getPriority(a)
     const priorityB = getPriority(b)
@@ -240,42 +233,70 @@ const NotificationsDropdown = () => {
     return new Date(b.creado) - new Date(a.creado)
   })
 
-  // Tamaños responsivos del dropdown
-  const getDropdownWidth = () => {
-    if (typeof window === 'undefined') return 'w-80'
+  // Mejorado: Responsive dropdown sizing optimizado para móviles
+  const getDropdownStyles = () => {
+    if (typeof window === 'undefined') return { 
+      width: 'calc(100vw - 2rem)', 
+      maxWidth: '400px',
+      position: 'left-1/2 transform -translate-x-1/2' 
+    }
     
     const width = window.innerWidth
-    if (width < 475) return 'w-[calc(100vw-2rem)] max-w-xs' // xs
-    if (width < 640) return 'w-80' // sm
-    if (width < 768) return 'w-96' // md
-    return 'w-96' // lg, xl
+    
+    // Mobile (320px - 767px) - Mejorado
+    if (width < 768) {
+      return {
+        width: 'calc(100vw - 1.5rem)',
+        maxWidth: '400px',
+        position: 'left-1/2 transform -translate-x-1/2'
+      }
+    }
+    
+    // Tablet (768px - 1023px)
+    if (width < 1024) {
+      return {
+        width: '28rem',
+        maxWidth: 'none',
+        position: 'right-0'
+      }
+    }
+    
+    // Laptop (1024px - 1439px)
+    if (width < 1440) {
+      return {
+        width: '32rem',
+        maxWidth: 'none',
+        position: 'right-0'
+      }
+    }
+    
+    // Desktop (1440px+)
+    return {
+      width: '36rem',
+      maxWidth: 'none',
+      position: 'right-0'
+    }
   }
 
-  const getDropdownPosition = () => {
-    if (typeof window === 'undefined') return 'right-0'
-    
-    const width = window.innerWidth
-    if (width < 475) return 'right-1/2 transform translate-x-1/2' // Centrado en móviles muy pequeños
-    return 'right-0'
-  }
+  const dropdownStyles = getDropdownStyles()
 
   return (
     <div className="relative" ref={dropdownRef}>
-      {/* Bell Button */}
+      {/* Bell Button - Mejorado para móviles */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className={`relative p-1.5 xs:p-2 rounded-lg xs:rounded-xl transition-all duration-200 ${
+        className={`relative p-2 rounded-lg transition-all duration-200 touch-manipulation ${
           isOpen 
             ? 'bg-orange-100 text-orange-600' 
             : 'text-gray-600 hover:bg-gray-100 hover:text-orange-500'
         }`}
         aria-label="Notificaciones"
       >
-        <BellIcon className="h-5 w-5 xs:h-6 xs:w-6" />
+        <BellIcon className="h-5 w-5" />
         {unreadCount > 0 && (
-          <span className={`absolute -top-0.5 -right-0.5 xs:top-1 xs:right-1 h-4 w-4 xs:h-5 xs:w-5 text-[10px] xs:text-xs rounded-full flex items-center justify-center font-bold ring-1 xs:ring-2 ring-white ${
+          <span className={`absolute -top-1 -right-1 h-4 w-4 text-[10px] rounded-full flex items-center justify-center font-bold ring-2 ring-white ${
             unreadCount > 9 
-              ? 'bg-red-500 text-white text-[8px] xs:text-[10px]' 
+              ? 'bg-red-500 text-white text-[8px]' 
               : 'bg-orange-500 text-white'
           }`}>
             {unreadCount > 9 ? '9+' : unreadCount}
@@ -283,80 +304,85 @@ const NotificationsDropdown = () => {
         )}
       </button>
 
-      {/* Dropdown */}
+      {/* Dropdown - Mejorado para móviles */}
       {isOpen && (
-        <div className={`absolute ${getDropdownPosition()} mt-2 ${getDropdownWidth()} bg-white rounded-xl xs:rounded-2xl shadow-xl border border-gray-200 z-50 max-h-[85vh] flex flex-col transform transition-all duration-200`}>
-          {/* Header */}
-          <div className="flex items-center justify-between p-3 xs:p-4 border-b border-gray-200 bg-gradient-to-r from-orange-50 to-white">
+        <div 
+          className={`fixed sm:absolute ${dropdownStyles.position} mt-2 shadow-xl border border-gray-200 z-50 max-h-[80vh] flex flex-col transform transition-all duration-200 bg-white rounded-xl overflow-hidden`}
+          style={{ 
+            width: dropdownStyles.width,
+            maxWidth: dropdownStyles.maxWidth
+          }}
+        >
+          {/* Header - Mejorado para móviles */}
+          <div className="flex items-center justify-between p-4 border-b border-gray-200 bg-gradient-to-r from-orange-50 to-white">
             <div className="flex-1 min-w-0">
-              <h3 className="font-semibold text-gray-900 text-base xs:text-lg truncate">Notificaciones</h3>
+              <h3 className="font-semibold text-gray-900 text-base">Notificaciones</h3>
               <div className="flex items-center gap-2 mt-1 flex-wrap">
                 {unreadCount > 0 && (
-                  <span className="text-xs font-medium text-orange-600 bg-orange-100 px-2 py-1 rounded-full whitespace-nowrap">
+                  <span className="text-xs font-medium text-orange-600 bg-orange-100 px-2 py-1 rounded-full">
                     {unreadCount} sin leer
                   </span>
                 )}
-                <span className="text-xs text-gray-500 whitespace-nowrap">
+                <span className="text-xs text-gray-500">
                   {notifications.length} total
                 </span>
               </div>
             </div>
             
             <div className="flex items-center gap-1 flex-shrink-0">
-              {/* Botón de acciones para móviles */}
-              <div className="xs:hidden">
+              {/* Mobile actions button */}
+              <div className="sm:hidden">
                 <button
                   onClick={() => setShowActions(!showActions)}
-                  className="p-1.5 hover:bg-gray-100 rounded-lg transition text-gray-600"
+                  className="p-2 hover:bg-gray-100 rounded-lg transition text-gray-600 touch-manipulation"
                   title="Más acciones"
                 >
-                  <EllipsisHorizontalIcon className="h-4 w-4" />
+                  <EllipsisHorizontalIcon className="h-5 w-5" />
                 </button>
               </div>
 
-              {/* Botones normales para tablets y mayores */}
-              <div className="hidden xs:flex items-center gap-1">
+              {/* Desktop actions */}
+              <div className="hidden sm:flex items-center gap-1">
                 <button
                   onClick={() => setViewMode(viewMode === 'all' ? 'unread' : 'all')}
                   className="p-2 hover:bg-gray-100 rounded-lg transition text-gray-600"
                   title={viewMode === 'all' ? 'Ver solo no leídas' : 'Ver todas'}
                 >
-                  {viewMode === 'all' ? <EyeIcon className="h-4 w-4" /> : <EyeSlashIcon className="h-4 w-4" />}
+                  {viewMode === 'all' ? <EyeIcon className="h-5 w-5" /> : <EyeSlashIcon className="h-5 w-5" />}
                 </button>
                 <button
                   onClick={() => setIsOpen(false)}
                   className="p-2 hover:bg-gray-100 rounded-lg transition text-gray-600"
                   aria-label="Cerrar"
                 >
-                  <XMarkIcon className="h-4 w-4 xs:h-5 xs:w-5" />
+                  <XMarkIcon className="h-5 w-5" />
                 </button>
               </div>
             </div>
           </div>
 
-          {/* Actions Bar - Siempre visible en tablets+, condicional en móviles */}
+          {/* Actions Bar - Mejorado para móviles */}
           {(unreadCount > 0 || notifications.some(n => n.leida)) && (
-            <div className={`${showActions ? 'flex' : 'hidden'} xs:flex items-center justify-between p-2 xs:p-3 border-b border-gray-100 bg-gray-50/50`}>
-              <div className="flex items-center gap-1 xs:gap-2 flex-wrap">
+            <div className={`${showActions ? 'flex' : 'hidden'} sm:flex items-center justify-between p-3 border-b border-gray-100 bg-gray-50/50`}>
+              <div className="flex items-center gap-2 flex-wrap">
                 {unreadCount > 0 && (
                   <button
                     onClick={() => markAllAsReadMutation.mutate()}
                     disabled={markAllAsReadMutation.isPending}
-                    className="text-xs text-blue-600 hover:text-blue-700 font-medium disabled:opacity-50 px-2 xs:px-3 py-1 xs:py-1.5 rounded-lg hover:bg-blue-50 transition flex items-center gap-1 whitespace-nowrap"
+                    className="text-xs text-blue-600 hover:text-blue-700 font-medium disabled:opacity-50 px-3 py-2 rounded-lg hover:bg-blue-50 transition flex items-center gap-1 touch-manipulation min-h-[44px]"
                   >
-                    <CheckIcon className="h-3 w-3" />
-                    <span className="hidden xs:inline">Marcar todas</span>
-                    <span className="xs:hidden">Todas leídas</span>
+                    <CheckIcon className="h-4 w-4" />
+                    <span>Marcar todas</span>
                   </button>
                 )}
                 
-                {/* Filtro de vista para móviles */}
-                <div className="xs:hidden">
+                {/* Mobile view mode toggle */}
+                <div className="sm:hidden">
                   <button
                     onClick={() => setViewMode(viewMode === 'all' ? 'unread' : 'all')}
-                    className="text-xs text-gray-600 hover:text-gray-700 font-medium px-2 py-1 rounded-lg hover:bg-gray-100 transition flex items-center gap-1 whitespace-nowrap"
+                    className="text-xs text-gray-600 hover:text-gray-700 font-medium px-3 py-2 rounded-lg hover:bg-gray-100 transition flex items-center gap-1 touch-manipulation min-h-[44px]"
                   >
-                    {viewMode === 'all' ? <EyeSlashIcon className="h-3 w-3" /> : <EyeIcon className="h-3 w-3" />}
+                    {viewMode === 'all' ? <EyeSlashIcon className="h-4 w-4" /> : <EyeIcon className="h-4 w-4" />}
                     <span>{viewMode === 'all' ? 'Solo no leídas' : 'Ver todas'}</span>
                   </button>
                 </div>
@@ -366,41 +392,41 @@ const NotificationsDropdown = () => {
                 <button
                   onClick={() => deleteAllReadMutation.mutate()}
                   disabled={deleteAllReadMutation.isPending}
-                  className="text-xs text-red-600 hover:text-red-700 font-medium disabled:opacity-50 px-2 xs:px-3 py-1 xs:py-1.5 rounded-lg hover:bg-red-50 transition flex items-center gap-1 whitespace-nowrap"
+                  className="text-xs text-red-600 hover:text-red-700 font-medium disabled:opacity-50 px-3 py-2 rounded-lg hover:bg-red-50 transition flex items-center gap-1 touch-manipulation min-h-[44px]"
                 >
-                  <TrashIcon className="h-3 w-3" />
-                  <span className="hidden xs:inline">Limpiar leídas</span>
-                  <span className="xs:hidden">Limpiar</span>
+                  <TrashIcon className="h-4 w-4" />
+                  <span className="hidden sm:inline">Eliminar leídas</span>
+                  <span className="sm:hidden">Limpiar</span>
                 </button>
               )}
             </div>
           )}
 
-          {/* Notifications List */}
+          {/* Notifications List - Mejorado para móviles */}
           <div className="overflow-y-auto flex-1">
             {isLoading ? (
-              <div className="flex flex-col items-center justify-center py-8 xs:py-12 px-4">
-                <div className="animate-spin rounded-full h-6 w-6 xs:h-8 xs:w-8 border-b-2 border-orange-500 mb-3 xs:mb-4"></div>
-                <p className="text-gray-500 text-xs xs:text-sm">Cargando notificaciones...</p>
+              <div className="flex flex-col items-center justify-center py-8 px-4">
+                <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-orange-500 mb-3"></div>
+                <p className="text-gray-500 text-sm">Cargando notificaciones...</p>
               </div>
             ) : error ? (
-              <div className="text-center py-8 xs:py-12 px-4">
-                <ExclamationTriangleIcon className="h-8 w-8 xs:h-12 xs:w-12 text-red-300 mx-auto mb-3 xs:mb-4" />
-                <p className="text-red-500 text-xs xs:text-sm">Error al cargar notificaciones</p>
+              <div className="text-center py-8 px-4">
+                <ExclamationTriangleIcon className="h-8 w-8 text-red-300 mx-auto mb-3" />
+                <p className="text-red-500 text-sm">Error al cargar notificaciones</p>
                 <button 
                   onClick={() => queryClient.invalidateQueries(['notifications'])}
-                  className="text-xs text-blue-600 hover:text-blue-700 mt-2"
+                  className="text-xs text-blue-600 hover:text-blue-700 mt-2 touch-manipulation"
                 >
                   Reintentar
                 </button>
               </div>
             ) : sortedNotifications.length === 0 ? (
-              <div className="text-center py-8 xs:py-12 px-4">
-                <BellIcon className="h-12 w-12 xs:h-16 xs:w-16 text-gray-200 mx-auto mb-3 xs:mb-4" />
+              <div className="text-center py-8 px-4">
+                <BellIcon className="h-12 w-12 text-gray-200 mx-auto mb-3" />
                 <p className="text-gray-500 text-sm font-medium">
                   {viewMode === 'unread' ? 'No hay notificaciones sin leer' : 'No tienes notificaciones'}
                 </p>
-                <p className="text-xs text-gray-400 mt-1 max-w-xs mx-auto">
+                <p className="text-xs text-gray-400 mt-1">
                   {viewMode === 'unread' 
                     ? '¡Buen trabajo! Estás al día con todo.' 
                     : 'Aquí verás tus actividades, calificaciones y más'
@@ -412,7 +438,7 @@ const NotificationsDropdown = () => {
                 {sortedNotifications.map((notification) => (
                   <div
                     key={notification.id}
-                    className={`p-3 xs:p-4 hover:bg-gray-50 transition-all duration-200 relative group border-l-2 xs:border-l-4 ${
+                    className={`p-3 hover:bg-gray-50 transition-all duration-200 relative group border-l-4 ${
                       !notification.leida 
                         ? 'bg-blue-50/50 border-l-blue-400' 
                         : 'border-l-transparent'
@@ -420,47 +446,47 @@ const NotificationsDropdown = () => {
                   >
                     <div 
                       onClick={() => handleNotificationClick(notification)}
-                      className="flex items-start gap-2 xs:gap-3 cursor-pointer"
+                      className="flex items-start gap-3 cursor-pointer touch-manipulation"
                     >
                       {/* Icon */}
-                      <div className={`p-1.5 xs:p-2 rounded-lg flex-shrink-0 border ${getNotificationColor(notification.tipo)}`}>
+                      <div className={`p-2 rounded-lg flex-shrink-0 border ${getNotificationColor(notification.tipo)}`}>
                         {getNotificationIcon(notification.tipo)}
                       </div>
 
-                      {/* Content */}
+                      {/* Content - Mejorado para móviles */}
                       <div className="flex-1 min-w-0">
-                        <div className="flex items-start justify-between gap-2">
-                          <p className={`text-xs xs:text-sm font-medium line-clamp-2 ${
+                        <div className="flex items-start justify-between gap-2 mb-1">
+                          <p className={`text-sm font-medium line-clamp-2 break-words ${
                             !notification.leida ? 'text-gray-900' : 'text-gray-700'
                           }`}>
                             {notification.titulo}
                           </p>
                           {!notification.leida && (
-                            <div className="w-1.5 h-1.5 xs:w-2 xs:h-2 bg-blue-500 rounded-full flex-shrink-0 mt-1 xs:mt-1.5"></div>
+                            <div className="w-2 h-2 bg-blue-500 rounded-full flex-shrink-0 mt-1.5"></div>
                           )}
                         </div>
                         
-                        <p className="text-xs text-gray-600 mt-1 line-clamp-2 xs:line-clamp-3 leading-relaxed">
+                        <p className="text-xs text-gray-600 line-clamp-3 leading-relaxed mb-2 break-words">
                           {notification.mensaje}
                         </p>
                         
-                        {/* Metadata adicional */}
+                        {/* Metadata - Mejorado para móviles */}
                         {notification.metadata && (
-                          <div className="mt-2 flex flex-wrap gap-1">
+                          <div className="flex flex-wrap gap-1 mb-2">
                             {notification.metadata.nota && (
-                              <span className="inline-flex items-center px-1.5 xs:px-2 py-0.5 xs:py-1 rounded-full text-[10px] xs:text-xs font-medium bg-green-100 text-green-800">
+                              <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
                                 Nota: {notification.metadata.nota}
                               </span>
                             )}
                             {notification.metadata.cantidad && (
-                              <span className="inline-flex items-center px-1.5 xs:px-2 py-0.5 xs:py-1 rounded-full text-[10px] xs:text-xs font-medium bg-orange-100 text-orange-800">
+                              <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-orange-100 text-orange-800">
                                 +{notification.metadata.cantidad} EC
                               </span>
                             )}
                           </div>
                         )}
 
-                        <div className="flex items-center mt-2 text-[10px] xs:text-xs text-gray-500">
+                        <div className="flex items-center text-xs text-gray-500">
                           <ClockIcon className="h-3 w-3 mr-1 flex-shrink-0" />
                           <span className="truncate">
                             {notification.tiempo_transcurrido || formatRelativeTime(notification.creado) || formatDateTime(notification.creado)}
@@ -469,18 +495,18 @@ const NotificationsDropdown = () => {
                       </div>
                     </div>
 
-                    {/* Action Buttons - Solo hover en tablets+ */}
-                    <div className="absolute top-2 xs:top-3 right-2 xs:right-3 flex items-center gap-0.5 xs:gap-1 opacity-0 xs:group-hover:opacity-100 transition-opacity">
+                    {/* Desktop Action Buttons */}
+                    <div className="absolute top-3 right-3 hidden sm:flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                       {!notification.leida && (
                         <button
                           onClick={(e) => {
                             e.stopPropagation()
                             markAsReadMutation.mutate(notification.id)
                           }}
-                          className="p-0.5 xs:p-1 text-gray-400 hover:text-green-600 transition-colors rounded"
+                          className="p-1.5 text-gray-400 hover:text-green-600 transition-colors rounded-lg hover:bg-green-50 touch-manipulation"
                           title="Marcar como leída"
                         >
-                          <CheckIcon className="h-3 w-3 xs:h-4 xs:w-4" />
+                          <CheckIcon className="h-4 w-4" />
                         </button>
                       )}
                       <button
@@ -488,24 +514,24 @@ const NotificationsDropdown = () => {
                           e.stopPropagation()
                           deleteNotificationMutation.mutate(notification.id)
                         }}
-                        className="p-0.5 xs:p-1 text-gray-400 hover:text-red-600 transition-colors rounded"
+                        className="p-1.5 text-gray-400 hover:text-red-600 transition-colors rounded-lg hover:bg-red-50 touch-manipulation"
                         title="Eliminar"
                       >
-                        <TrashIcon className="h-3 w-3 xs:h-4 xs:w-4" />
+                        <TrashIcon className="h-4 w-4" />
                       </button>
                     </div>
 
-                    {/* Action Buttons - Siempre visibles en móviles pequeños */}
-                    <div className="xs:hidden flex items-center gap-2 mt-2 pt-2 border-t border-gray-100">
+                    {/* Mobile Action Buttons - Mejorado para touch */}
+                    <div className="sm:hidden flex items-center gap-2 mt-3 pt-3 border-t border-gray-100">
                       {!notification.leida && (
                         <button
                           onClick={(e) => {
                             e.stopPropagation()
                             markAsReadMutation.mutate(notification.id)
                           }}
-                          className="flex-1 text-xs text-green-600 hover:text-green-700 font-medium py-1.5 rounded-lg hover:bg-green-50 transition flex items-center justify-center gap-1"
+                          className="flex-1 text-xs text-green-600 hover:text-green-700 font-medium py-2 rounded-lg hover:bg-green-50 transition flex items-center justify-center gap-1 touch-manipulation min-h-[44px]"
                         >
-                          <CheckIcon className="h-3 w-3" />
+                          <CheckIcon className="h-4 w-4" />
                           Leída
                         </button>
                       )}
@@ -514,9 +540,9 @@ const NotificationsDropdown = () => {
                           e.stopPropagation()
                           deleteNotificationMutation.mutate(notification.id)
                         }}
-                        className="flex-1 text-xs text-red-600 hover:text-red-700 font-medium py-1.5 rounded-lg hover:bg-red-50 transition flex items-center justify-center gap-1"
+                        className="flex-1 text-xs text-red-600 hover:text-red-700 font-medium py-2 rounded-lg hover:bg-red-50 transition flex items-center justify-center gap-1 touch-manipulation min-h-[44px]"
                       >
-                        <TrashIcon className="h-3 w-3" />
+                        <TrashIcon className="h-4 w-4" />
                         Eliminar
                       </button>
                     </div>
@@ -526,20 +552,20 @@ const NotificationsDropdown = () => {
             )}
           </div>
 
-          {/* Footer */}
+          {/* Footer - Mejorado para móviles */}
           {sortedNotifications.length > 0 && (
-            <div className="p-2 xs:p-3 border-t border-gray-200 bg-gray-50">
+            <div className="p-4 border-t border-gray-200 bg-gray-50">
               <div className="flex items-center justify-between">
-                <p className="text-xs text-gray-500 truncate">
+                <p className="text-xs text-gray-500">
                   {viewMode === 'unread' 
                     ? `${unreadCount} sin leer` 
-                    : `${sortedNotifications.length} notificaciones`
+                    : `${sortedNotifications.length} total`
                   }
                 </p>
                 {viewMode === 'all' && unreadCount > 0 && (
                   <button
                     onClick={() => setViewMode('unread')}
-                    className="text-xs text-blue-600 hover:text-blue-700 font-medium whitespace-nowrap ml-2"
+                    className="text-xs text-blue-600 hover:text-blue-700 font-medium touch-manipulation"
                   >
                     Ver solo sin leer
                   </button>

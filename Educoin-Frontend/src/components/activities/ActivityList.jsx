@@ -13,7 +13,14 @@ import {
   ClockIcon,
   XCircleIcon,
   PencilIcon,
-  TrashIcon
+  TrashIcon,
+  FunnelIcon,
+  ListBulletIcon,
+  ClockIcon as ClockSolidIcon,
+  CheckBadgeIcon,
+  DocumentTextIcon,
+  PresentationChartBarIcon,
+  QuestionMarkCircleIcon
 } from "@heroicons/react/24/outline";
 import LoadingSpinner from "../common/LoadingSpinner";
 import Modal from "../common/Modal";
@@ -29,6 +36,7 @@ const ActivityList = () => {
   const [typeFilter, setTypeFilter] = useState("");
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [editingActivity, setEditingActivity] = useState(null);
+  const [showFilters, setShowFilters] = useState(false);
 
   const { data: activities, isLoading, refetch } = useActivities();
   const deleteActivity = useDeleteActivity();
@@ -50,7 +58,6 @@ const ActivityList = () => {
     refetch();
   };
 
-  // Filtrado usando user_submission
   const filteredActivities = activities?.filter((activity) => {
     const matchesSearch =
       activity.nombre?.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -71,7 +78,6 @@ const ActivityList = () => {
     return matchesSearch && matchesType;
   }) || [];
 
-  // Estadísticas actualizadas para usar user_submission
   const stats = {
     total: activities?.length || 0,
     pendientes: isStudent 
@@ -96,7 +102,6 @@ const ActivityList = () => {
     return icons[tipo] || ClipboardDocumentCheckIcon;
   };
 
-  // Estado de la actividad actualizado para usar user_submission
   const getActivityStatus = (activity) => {
     if (isStudent) {
       const hasSubmission = activity.user_submission !== null && activity.user_submission !== undefined;
@@ -140,106 +145,132 @@ const ActivityList = () => {
   }
 
   return (
-    <div className="space-y-6 px-4 sm:px-6 lg:px-8 py-6">
-      {/* Header con botón para crear actividad (solo docentes) */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+    <div className="space-y-4 sm:space-y-6 px-3 sm:px-4 lg:px-6 xl:px-8 py-4 sm:py-6">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
         <div className="text-center sm:text-left">
-          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Actividades Asignadas</h1>
-          <p className="text-gray-600 text-sm sm:text-base mt-1">
+          <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900">
+            Actividades Asignadas
+          </h1>
+          <p className="text-gray-600 text-xs sm:text-sm lg:text-base mt-1">
             {isTeacher ? "Gestiona las actividades de tus grupos" : "Consulta tus actividades, entrega tus trabajos y revisa tus calificaciones."}
           </p>
         </div>
         {isTeacher && (
           <button 
             onClick={() => setShowCreateModal(true)}
-            className="flex items-center justify-center gap-2 bg-purple-500 text-white px-4 py-2.5 rounded-lg hover:bg-purple-600 transition text-sm sm:text-base w-full sm:w-auto"
+            className="flex items-center justify-center gap-2 bg-purple-500 text-white px-3 sm:px-4 py-2 sm:py-2.5 rounded-lg hover:bg-purple-600 transition text-sm sm:text-base w-full sm:w-auto touch-manipulation shadow-sm"
           >
             <PlusIcon className="h-4 w-4 sm:h-5 sm:w-5" />
-            Nueva Actividad
+            <span>Nueva Actividad</span>
           </button>
         )}
       </div>
 
+      {/* Stats - Solo para estudiantes */}
       {isStudent && (
-        <>
-          <div className="bg-gradient-to-r from-purple-500 to-purple-600 rounded-xl p-6 text-white">
-            <h2 className="text-xl font-bold mb-4">Mi Progreso</h2>
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-              <div className="text-center bg-white/10 rounded-lg p-4">
-                <div className="text-2xl font-bold">{stats.total}</div>
-                <div className="text-sm text-purple-100">Total</div>
-              </div>
-              <div className="text-center bg-white/10 rounded-lg p-4">
-                <div className="text-2xl font-bold">{stats.pendientes}</div>
-                <div className="text-sm text-purple-100">Pendientes</div>
-              </div>
-              <div className="text-center bg-white/10 rounded-lg p-4">
-                <div className="text-2xl font-bold">{stats.completadas}</div>
-                <div className="text-sm text-purple-100">Completadas</div>
-              </div>
-              <div className="text-center bg-white/10 rounded-lg p-4">
-                <div className="text-2xl font-bold">{stats.calificadas}</div>
-                <div className="text-sm text-purple-100">Calificadas</div>
-              </div>
+        <div className="bg-gradient-to-r from-purple-500 to-purple-600 rounded-xl p-4 sm:p-6 text-white shadow-lg">
+          <h2 className="text-base sm:text-lg lg:text-xl font-bold mb-3 sm:mb-4">Mi Progreso</h2>
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+            <div className="text-center bg-white/10 backdrop-blur-sm rounded-lg p-3 sm:p-4 hover:bg-white/20 transition">
+              <div className="text-xl sm:text-2xl lg:text-3xl font-bold">{stats.total}</div>
+              <div className="text-xs sm:text-sm text-purple-100 mt-1">Total</div>
+            </div>
+            <div className="text-center bg-white/10 backdrop-blur-sm rounded-lg p-3 sm:p-4 hover:bg-white/20 transition">
+              <div className="text-xl sm:text-2xl lg:text-3xl font-bold">{stats.pendientes}</div>
+              <div className="text-xs sm:text-sm text-purple-100 mt-1">Pendientes</div>
+            </div>
+            <div className="text-center bg-white/10 backdrop-blur-sm rounded-lg p-3 sm:p-4 hover:bg-white/20 transition">
+              <div className="text-xl sm:text-2xl lg:text-3xl font-bold">{stats.completadas}</div>
+              <div className="text-xs sm:text-sm text-purple-100 mt-1">Completadas</div>
+            </div>
+            <div className="text-center bg-white/10 backdrop-blur-sm rounded-lg p-3 sm:p-4 hover:bg-white/20 transition">
+              <div className="text-xl sm:text-2xl lg:text-3xl font-bold">{stats.calificadas}</div>
+              <div className="text-xs sm:text-sm text-purple-100 mt-1">Calificadas</div>
             </div>
           </div>
-
-          {/* Sección de Avance de Proyecto */}
-          <div className="bg-white border border-gray-200 rounded-xl p-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-3">Avance Proyecto</h3>
-            <p className="text-gray-600">Avance de Proyecto de software</p>
-          </div>
-        </>
+        </div>
       )}
 
       {/* Filtros */}
-      <div className="bg-white border border-gray-200 rounded-xl p-4">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className="relative">
-            <MagnifyingGlassIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+      <div className="bg-white border border-gray-200 rounded-xl p-3 sm:p-4 shadow-sm">
+        {/* Mobile Filter Toggle */}
+        <div className="flex items-center justify-between mb-3 sm:hidden">
+          <h3 className="font-semibold text-gray-900 text-sm">Filtros</h3>
+          <button
+            onClick={() => setShowFilters(!showFilters)}
+            className="flex items-center gap-1 text-purple-600 text-sm touch-manipulation"
+          >
+            <FunnelIcon className="h-4 w-4" />
+            {showFilters ? 'Ocultar' : 'Mostrar'}
+          </button>
+        </div>
+
+        <div className={`${showFilters ? 'flex' : 'hidden'} sm:flex flex-col sm:grid sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4`}>
+          {/* Search */}
+          <div className="relative sm:col-span-2 lg:col-span-1">
+            <MagnifyingGlassIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 sm:h-5 sm:w-5 text-gray-400" />
             <input
               type="text"
               placeholder="Buscar actividades..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+              className="w-full pl-9 sm:pl-10 pr-4 py-2 sm:py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-sm sm:text-base"
             />
           </div>
 
+          {/* Status Filter - Solo estudiantes */}
           {isStudent && (
-            <select
-              value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
-              className="px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-            >
-              <option value="todas">Todas</option>
-              <option value="pendientes">Pendientes</option>
-              <option value="completadas">Completadas</option>
-            </select>
+            <div className="relative">
+              <ListBulletIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 sm:h-5 sm:w-5 text-gray-400" />
+              <select
+                value={statusFilter}
+                onChange={(e) => setStatusFilter(e.target.value)}
+                className="w-full pl-9 sm:pl-10 pr-4 py-2 sm:py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-sm sm:text-base bg-white appearance-none"
+              >
+                <option value="todas">
+                  Todas las actividades
+                </option>
+                <option value="pendientes">
+                  Pendientes de entrega
+                </option>
+                <option value="completadas">
+                  Completadas
+                </option>
+              </select>
+            </div>
           )}
 
-          <select
-            value={typeFilter}
-            onChange={(e) => setTypeFilter(e.target.value)}
-            className="px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-          >
-            <option value="">Todos los tipos</option>
-            <option value="tarea">Tareas</option>
-            <option value="examen">Exámenes</option>
-            <option value="proyecto">Proyectos</option>
-            <option value="quiz">Quizzes</option>
-            <option value="exposicion">Exposiciones</option>
-          </select>
+          {/* Type Filter */}
+          <div className="relative">
+            <DocumentTextIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 sm:h-5 sm:w-5 text-gray-400" />
+            <select
+              value={typeFilter}
+              onChange={(e) => setTypeFilter(e.target.value)}
+              className={`w-full pl-9 sm:pl-10 pr-4 py-2 sm:py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-sm sm:text-base bg-white appearance-none ${!isStudent ? 'sm:col-span-2 lg:col-span-1' : ''}`}
+            >
+              <option value="">Todos los tipos</option>
+              <option value="tarea">Tareas</option>
+              <option value="examen">Exámenes</option>
+              <option value="proyecto">Proyectos</option>
+              <option value="quiz">Quizzes</option>
+              <option value="exposicion">Exposiciones</option>
+            </select>
+          </div>
         </div>
       </div>
 
-      {/* Lista de actividades */}
+      {/* Activities Grid */}
       <div>
-        <h2 className="text-xl font-semibold text-gray-900 mb-4">Actividades</h2>
-        <p className="text-gray-600 mb-6">Completa actividades para ganar Educoins</p>
+        <div className="flex items-center justify-between mb-3 sm:mb-4">
+          <h2 className="text-lg sm:text-xl font-semibold text-gray-900">Actividades</h2>
+          <p className="text-xs sm:text-sm text-gray-600">
+            {filteredActivities.length} {filteredActivities.length === 1 ? 'actividad' : 'actividades'}
+          </p>
+        </div>
         
         {filteredActivities.length > 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-4 sm:gap-5 lg:gap-6">
             {filteredActivities.map((activity) => {
               const IconComponent = getActivityIcon(activity.tipo);
               const status = getActivityStatus(activity);
@@ -248,38 +279,38 @@ const ActivityList = () => {
               return (
                 <div
                   key={activity.id}
-                  className="bg-white border border-gray-200 rounded-xl shadow-sm hover:shadow-md transition-all duration-200 overflow-hidden"
+                  className="bg-white border border-gray-200 rounded-xl shadow-sm hover:shadow-md transition-all duration-200 overflow-hidden flex flex-col"
                 >
-                  <div className="bg-gradient-to-r from-purple-50 to-purple-100 p-5 border-b border-gray-200">
-                    <div className="flex items-start justify-between mb-3">
-                      <div className="flex items-center space-x-3">
-                        <div className="p-2 bg-purple-100 rounded-lg">
-                          <IconComponent className="h-5 w-5 text-purple-600" />
+                  {/* Header - Purple Theme */}
+                  <div className="bg-gradient-to-r from-purple-50 to-purple-100 p-4 sm:p-5 border-b border-purple-200">
+                    <div className="flex items-start justify-between mb-2 sm:mb-3 gap-2">
+                      <div className="flex items-center space-x-2 sm:space-x-3 flex-1 min-w-0">
+                        <div className="p-1.5 sm:p-2 bg-purple-100 rounded-lg flex-shrink-0">
+                          <IconComponent className="h-4 w-4 sm:h-5 sm:w-5 text-purple-600" />
                         </div>
-                        <div>
-                          <span className="text-xs font-medium text-purple-600 uppercase">
-                            {activity.tipo}
-                          </span>
-                        </div>
+                        <span className="text-xs font-medium text-purple-600 uppercase truncate">
+                          {activity.tipo}
+                        </span>
                       </div>
-                      <span className={`px-3 py-1 rounded-full text-xs font-medium ${status.color}`}>
+                      <span className={`px-2 sm:px-3 py-1 rounded-full text-xs font-medium ${status.color} flex-shrink-0`}>
                         {status.label}
                       </span>
                     </div>
-                    <h3 className="font-bold text-gray-900 text-lg line-clamp-2">
+                    <h3 className="font-bold text-gray-900 text-sm sm:text-base lg:text-lg line-clamp-2 break-words min-h-[40px] sm:min-h-[48px]">
                       {activity.nombre}
                     </h3>
                   </div>
 
-                  <div className="p-5 space-y-4">
-                    <p className="text-gray-600 text-sm line-clamp-3 min-h-[60px]">
+                  {/* Body */}
+                  <div className="p-4 sm:p-5 space-y-3 sm:space-y-4 flex-1 flex flex-col">
+                    <p className="text-gray-600 text-xs sm:text-sm line-clamp-3 min-h-[60px] break-words">
                       {activity.descripcion || "Sin descripción"}
                     </p>
 
-                    <div className="space-y-2">
-                      <div className="flex items-center justify-between text-sm">
-                        <div className="flex items-center space-x-2 text-gray-600">
-                          <CurrencyEuroIcon className="h-4 w-4" />
+                    <div className="space-y-2 flex-1">
+                      <div className="flex items-center justify-between text-xs sm:text-sm">
+                        <div className="flex items-center space-x-1 sm:space-x-2 text-gray-600">
+                          <CurrencyEuroIcon className="h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
                           <span>Recompensa:</span>
                         </div>
                         <span className="font-bold text-orange-600">
@@ -287,9 +318,9 @@ const ActivityList = () => {
                         </span>
                       </div>
 
-                      <div className="flex items-center justify-between text-sm">
-                        <div className="flex items-center space-x-2 text-gray-600">
-                          <AcademicCapIcon className="h-4 w-4" />
+                      <div className="flex items-center justify-between text-xs sm:text-sm">
+                        <div className="flex items-center space-x-1 sm:space-x-2 text-gray-600">
+                          <AcademicCapIcon className="h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
                           <span>Valor:</span>
                         </div>
                         <span className="font-bold text-blue-600">
@@ -297,53 +328,52 @@ const ActivityList = () => {
                         </span>
                       </div>
 
-                      <div className="flex items-center justify-between text-sm">
-                        <div className="flex items-center space-x-2 text-gray-600">
-                          <CalendarIcon className="h-4 w-4" />
+                      <div className="flex items-center justify-between text-xs sm:text-sm">
+                        <div className="flex items-center space-x-1 sm:space-x-2 text-gray-600">
+                          <CalendarIcon className="h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
                           <span>Entrega:</span>
                         </div>
-                        <span className={`font-medium text-sm ${
+                        <span className={`font-medium ${
                           activity.esta_vencida ? "text-red-600" : "text-gray-900"
                         }`}>
                           {new Date(activity.fecha_entrega).toLocaleDateString("es-ES", {
                             day: "2-digit",
-                            month: "short",
-                            year: "numeric"
+                            month: "short"
                           })}
                         </span>
                       </div>
 
                       {activity.tiempo_restante && !activity.esta_vencida && (
-                        <div className="flex items-center justify-between text-sm">
-                          <div className="flex items-center space-x-2 text-gray-600">
-                            <ClockIcon className="h-4 w-4" />
+                        <div className="flex items-center justify-between text-xs sm:text-sm">
+                          <div className="flex items-center space-x-1 sm:space-x-2 text-gray-600">
+                            <ClockSolidIcon className="h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
                             <span>Tiempo:</span>
                           </div>
-                          <span className="font-medium text-orange-600 text-sm">
+                          <span className="font-medium text-orange-600">
                             {activity.tiempo_restante}
                           </span>
                         </div>
                       )}
                     </div>
 
-                    {/* Mostrar calificación usando user_submission */}
+                    {/* Grade Display */}
                     {isStudent && submission?.calificacion !== null && submission?.calificacion !== undefined && (
-                      <div className="bg-green-50 border border-green-200 rounded-lg p-3">
+                      <div className="bg-green-50 border border-green-200 rounded-lg p-2 sm:p-3 mt-auto">
                         <div className="flex items-center justify-between">
-                          <span className="text-sm font-medium text-green-700">
+                          <span className="text-xs sm:text-sm font-medium text-green-700">
                             Tu calificación:
                           </span>
                           <div className="text-right">
-                            <span className="text-2xl font-bold text-green-700">
+                            <span className="text-lg sm:text-xl lg:text-2xl font-bold text-green-700">
                               {submission.calificacion}
                             </span>
-                            <span className="text-sm text-green-600">
+                            <span className="text-xs sm:text-sm text-green-600">
                               /{activity.valor_notas}
                             </span>
                           </div>
                         </div>
                         {submission.retroalimentacion && (
-                          <p className="text-xs text-green-600 mt-2 line-clamp-2">
+                          <p className="text-xs text-green-600 mt-1 sm:mt-2 line-clamp-2 break-words">
                             {submission.retroalimentacion}
                           </p>
                         )}
@@ -351,11 +381,12 @@ const ActivityList = () => {
                     )}
                   </div>
 
-                  <div className="px-5 pb-5">
+                  {/* Footer Actions */}
+                  <div className="px-4 sm:px-5 pb-4 sm:pb-5">
                     {isStudent ? (
                       <Link
                         to={`/activities/${activity.id}`}
-                        className="block w-full text-center bg-purple-500 text-white px-4 py-2.5 rounded-lg hover:bg-purple-600 transition font-medium"
+                        className="block w-full text-center bg-purple-500 text-white px-3 sm:px-4 py-2 sm:py-2.5 rounded-lg hover:bg-purple-600 transition font-medium text-xs sm:text-sm lg:text-base touch-manipulation"
                       >
                         {submission ? "Ver Entrega" : "Ver Detalles"}
                       </Link>
@@ -363,23 +394,23 @@ const ActivityList = () => {
                       <div className="flex gap-2">
                         <Link
                           to={`/activities/${activity.id}`}
-                          className="flex-1 text-center bg-purple-50 text-purple-600 px-4 py-2.5 rounded-lg hover:bg-purple-100 transition font-medium text-sm"
+                          className="flex-1 text-center bg-purple-50 text-purple-600 px-3 py-2 sm:py-2.5 rounded-lg hover:bg-purple-100 transition font-medium text-xs sm:text-sm touch-manipulation"
                         >
                           Ver
                         </Link>
                         <button
                           onClick={() => handleEdit(activity)}
-                          className="px-4 py-2.5 bg-orange-50 text-orange-600 rounded-lg hover:bg-orange-100 transition flex items-center justify-center"
+                          className="px-3 py-2 sm:py-2.5 bg-orange-50 text-orange-600 rounded-lg hover:bg-orange-100 transition flex items-center justify-center touch-manipulation"
                           title="Editar actividad"
                         >
-                          <PencilIcon className="h-5 w-5" />
+                          <PencilIcon className="h-4 w-4 sm:h-5 sm:w-5" />
                         </button>
                         <button
                           onClick={() => handleDelete(activity.id)}
-                          className="px-4 py-2.5 bg-red-50 text-red-600 rounded-lg hover:bg-red-100 transition flex items-center justify-center"
+                          className="px-3 py-2 sm:py-2.5 bg-red-50 text-red-600 rounded-lg hover:bg-red-100 transition flex items-center justify-center touch-manipulation"
                           title="Eliminar actividad"
                         >
-                          <TrashIcon className="h-5 w-5" />
+                          <TrashIcon className="h-4 w-4 sm:h-5 sm:w-5" />
                         </button>
                       </div>
                     )}
@@ -389,12 +420,12 @@ const ActivityList = () => {
             })}
           </div>
         ) : (
-          <div className="text-center py-16 bg-gray-50 rounded-xl">
-            <ClipboardDocumentCheckIcon className="h-16 w-16 text-gray-300 mx-auto mb-4" />
-            <h3 className="text-xl font-semibold text-gray-700 mb-2">
+          <div className="text-center py-12 sm:py-16 bg-gray-50 rounded-xl">
+            <ClipboardDocumentCheckIcon className="h-12 w-12 sm:h-16 sm:w-16 text-gray-300 mx-auto mb-3 sm:mb-4" />
+            <h3 className="text-lg sm:text-xl font-semibold text-gray-700 mb-2">
               No se encontraron actividades
             </h3>
-            <p className="text-gray-500 mb-4 max-w-md mx-auto">
+            <p className="text-xs sm:text-sm text-gray-500 mb-4 max-w-md mx-auto px-4">
               {searchTerm || typeFilter || statusFilter !== "todas"
                 ? "Intenta con otros filtros"
                 : isTeacher
@@ -404,9 +435,9 @@ const ActivityList = () => {
             {isTeacher && (
               <button 
                 onClick={() => setShowCreateModal(true)}
-                className="bg-purple-500 text-white px-6 py-3 rounded-lg hover:bg-purple-600 transition inline-flex items-center gap-2"
+                className="bg-purple-500 text-white px-4 sm:px-6 py-2 sm:py-3 rounded-lg hover:bg-purple-600 transition inline-flex items-center gap-2 text-sm sm:text-base touch-manipulation"
               >
-                <PlusIcon className="h-5 w-5" />
+                <PlusIcon className="h-4 w-4 sm:h-5 sm:w-5" />
                 Crear Primera Actividad
               </button>
             )}
@@ -414,7 +445,7 @@ const ActivityList = () => {
         )}
       </div>
 
-      {/* Modal para crear/editar actividad */}
+      {/* Modal */}
       <Modal
         isOpen={showCreateModal}
         onClose={handleCloseModal}
