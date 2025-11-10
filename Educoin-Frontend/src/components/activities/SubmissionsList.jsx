@@ -11,7 +11,6 @@ export default function SubmissionsList({ submissions, activityId }) {
     nota: "",
     retroalimentacion: ""
   })
-  const { user } = useAuthContext()
 
   // Debug temporal - eliminar después
   useEffect(() => {
@@ -40,14 +39,14 @@ export default function SubmissionsList({ submissions, activityId }) {
   if (!submissions || submissions.length === 0) {
     return (
       <div className="text-center py-8 text-gray-500 bg-gray-50 rounded-lg border border-gray-200">
-        No hay entregas aún
+        <DocumentTextIcon className="h-12 w-12 text-gray-300 mx-auto mb-3" />
+        <p className="text-sm sm:text-base">No hay entregas aún</p>
       </div>
     )
   }
 
   // Función auxiliar para obtener el nombre del estudiante
   const getStudentName = (submission) => {
-    // Prioridad 1: Objeto estudiante completo
     if (submission.estudiante && typeof submission.estudiante === 'object') {
       const firstName = submission.estudiante.first_name || ''
       const lastName = submission.estudiante.last_name || ''
@@ -55,7 +54,6 @@ export default function SubmissionsList({ submissions, activityId }) {
       if (fullName) return fullName
     }
     
-    // Prioridad 2: Objeto user (similar al AuthContext)
     if (submission.user && typeof submission.user === 'object') {
       const firstName = submission.user.first_name || ''
       const lastName = submission.user.last_name || ''
@@ -63,12 +61,10 @@ export default function SubmissionsList({ submissions, activityId }) {
       if (fullName) return fullName
     }
     
-    // Prioridad 3: Email como fallback
     if (submission.estudiante_email) {
       return submission.estudiante_email
     }
     
-    // Prioridad 4: User ID como último recurso
     if (submission.user) {
       return `Usuario ${submission.user}`
     }
@@ -77,17 +73,14 @@ export default function SubmissionsList({ submissions, activityId }) {
   }
 
   const getStudentEmail = (submission) => {
-    // Prioridad 1: Email directo
     if (submission.estudiante_email) {
       return submission.estudiante_email
     }
     
-    // Prioridad 2: Email del objeto estudiante
     if (submission.estudiante && typeof submission.estudiante === 'object' && submission.estudiante.email) {
       return submission.estudiante.email
     }
     
-    // Prioridad 3: Email del objeto user
     if (submission.user && typeof submission.user === 'object' && submission.user.email) {
       return submission.user.email
     }
@@ -108,8 +101,8 @@ export default function SubmissionsList({ submissions, activityId }) {
           >
             <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4">
               <div className="flex items-start space-x-3 md:space-x-4 flex-1">
-                <div className="bg-blue-50 p-1.5 md:p-2 rounded-full flex-shrink-0">
-                  <UserCircleIcon className="h-6 w-6 md:h-8 md:w-8 text-blue-600" />
+                <div className="bg-purple-50 p-1.5 md:p-2 rounded-full flex-shrink-0">
+                  <UserCircleIcon className="h-6 w-6 md:h-8 md:w-8 text-purple-600" />
                 </div>
                 <div className="flex-1 min-w-0">
                   <h4 className="font-semibold text-gray-900 text-base md:text-lg truncate">
@@ -128,7 +121,7 @@ export default function SubmissionsList({ submissions, activityId }) {
                   </p>
                   
                   {submission.contenido && (
-                    <p className="text-sm text-gray-700 mt-2 md:mt-3 bg-blue-50 border border-blue-100 p-2 md:p-3 rounded-lg break-words">
+                    <p className="text-sm text-gray-700 mt-2 md:mt-3 bg-purple-50 border border-purple-100 p-2 md:p-3 rounded-lg break-words">
                       {submission.contenido}
                     </p>
                   )}
@@ -168,7 +161,7 @@ export default function SubmissionsList({ submissions, activityId }) {
                         retroalimentacion: submission.retroalimentacion || ""
                       })
                     }}
-                    className="bg-gradient-to-r from-blue-600 to-blue-700 text-white px-3 md:px-5 py-1.5 md:py-2.5 rounded-lg hover:from-blue-700 hover:to-blue-800 transition-all duration-200 font-medium text-sm md:text-base shadow-sm w-full sm:w-auto lg:w-full text-center"
+                    className="bg-gradient-to-r from-purple-600 to-purple-700 text-white px-3 md:px-5 py-1.5 md:py-2.5 rounded-lg hover:from-purple-700 hover:to-purple-800 transition-all duration-200 font-medium text-sm md:text-base shadow-sm w-full sm:w-auto lg:w-full text-center"
                   >
                     Calificar
                   </button>
@@ -191,7 +184,7 @@ export default function SubmissionsList({ submissions, activityId }) {
                       required
                       value={gradeData.nota}
                       onChange={(e) => setGradeData({...gradeData, nota: e.target.value})}
-                      className="w-full px-3 md:px-4 py-2 md:py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200 text-sm md:text-base"
+                      className="w-full px-3 md:px-4 py-2 md:py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-colors duration-200 text-sm md:text-base"
                     />
                   </div>
                 </div>
@@ -204,7 +197,7 @@ export default function SubmissionsList({ submissions, activityId }) {
                     value={gradeData.retroalimentacion}
                     onChange={(e) => setGradeData({...gradeData, retroalimentacion: e.target.value})}
                     rows={3}
-                    className="w-full px-3 md:px-4 py-2 md:py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200 text-sm md:text-base"
+                    className="w-full px-3 md:px-4 py-2 md:py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-colors duration-200 text-sm md:text-base"
                     placeholder="Comentarios para el estudiante..."
                   />
                 </div>
@@ -219,7 +212,7 @@ export default function SubmissionsList({ submissions, activityId }) {
                   <button
                     onClick={() => handleGrade(submission.id)}
                     disabled={!gradeData.nota || gradeMutation.isPending}
-                    className="px-4 md:px-5 py-2 md:py-2.5 bg-gradient-to-r from-green-600 to-green-700 text-white rounded-lg hover:from-green-700 hover:to-green-800 transition-all duration-200 font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 text-sm md:text-base order-1 sm:order-2"
+                    className="px-4 md:px-5 py-2 md:py-2.5 bg-gradient-to-r from-purple-600 to-purple-700 text-white rounded-lg hover:from-purple-700 hover:to-purple-800 transition-all duration-200 font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 text-sm md:text-base order-1 sm:order-2"
                   >
                     {gradeMutation.isPending ? (
                       <>

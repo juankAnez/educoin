@@ -6,6 +6,7 @@ from apps.users.serializers import UserProfileSerializer
 class ActivitySerializer(serializers.ModelSerializer):
     classroom = serializers.SerializerMethodField()
     submissions = serializers.SerializerMethodField()
+    user_submission = serializers.SerializerMethodField()  # NUEVO
     puede_entregar = serializers.SerializerMethodField()
     esta_vencida = serializers.SerializerMethodField()
     tiempo_restante = serializers.SerializerMethodField()
@@ -24,6 +25,17 @@ class ActivitySerializer(serializers.ModelSerializer):
             submissions = obj.submissions.select_related('estudiante').all()
             return SubmissionListSerializer(submissions, many=True, context=self.context).data
         return []
+    
+    def get_user_submission(self, obj):
+        """NUEVO: Siempre retornar la submission del usuario actual si existe"""
+        request = self.context.get('request')
+        if request and request.user.role == 'estudiante':
+            try:
+                submission = obj.submissions.get(estudiante=request.user)
+                return SubmissionListSerializer(submission, context=self.context).data
+            except Submission.DoesNotExist:
+                return None
+        return None
     
     def get_puede_entregar(self, obj):
         """Indica si un estudiante puede entregar esta actividad"""
@@ -49,7 +61,6 @@ class ActivitySerializer(serializers.ModelSerializer):
             return f"{horas} hora(s) {minutos} minuto(s)"
         else:
             return f"{minutos} minuto(s)"
-
 
 class SubmissionListSerializer(serializers.ModelSerializer):
     """Serializer para listar submissions con datos completos del estudiante"""

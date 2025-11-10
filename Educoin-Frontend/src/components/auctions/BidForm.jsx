@@ -50,7 +50,7 @@ const BidForm = ({ auction, userBalance = 0 }) => {
 
   if (!isActive || hasEnded) {
     return (
-      <div className="card bg-gray-50">
+      <div className="bg-gray-50 border border-gray-200 rounded-xl p-4">
         <div className="text-center py-4">
           <p className="text-gray-500">Esta subasta ha finalizado</p>
         </div>
@@ -59,7 +59,7 @@ const BidForm = ({ auction, userBalance = 0 }) => {
   }
 
   return (
-    <div className="card">
+    <div className="bg-white border border-gray-200 rounded-xl p-6 shadow-sm">
       <h3 className="text-lg font-semibold text-gray-900 mb-4">Realizar Puja</h3>
 
       <div className="space-y-4">
@@ -70,17 +70,17 @@ const BidForm = ({ auction, userBalance = 0 }) => {
 
         <div className="flex items-center justify-between text-sm">
           <span className="text-gray-600">Puja mínima:</span>
-          <span className="font-medium text-educoin-600">{formatCoins(minBid)}</span>
+          <span className="font-medium text-orange-600">{formatCoins(minBid)}</span>
         </div>
 
         <div className="flex items-center justify-between text-sm">
           <span className="text-gray-600">Tu balance:</span>
-          <span className="font-medium text-gray-900">{formatCoins(userBalance)}</span>
+          <span className="font-medium text-orange-900">{formatCoins(userBalance)}</span>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label htmlFor="bidAmount" className="label">
+            <label htmlFor="bidAmount" className="block text-sm font-medium text-gray-700 mb-2">
               Tu Puja
             </label>
             <div className="relative">
@@ -90,7 +90,9 @@ const BidForm = ({ auction, userBalance = 0 }) => {
                 id="bidAmount"
                 value={bidAmount}
                 onChange={handleChange}
-                className={`input pl-10 ${error ? "border-red-500 focus:border-red-500 focus:ring-red-500" : ""}`}
+                className={`w-full pl-10 pr-4 py-3 border rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent ${
+                  error ? "border-red-500 focus:border-red-500 focus:ring-red-500" : "border-gray-300"
+                }`}
                 placeholder={minBid.toString()}
                 min={minBid}
                 max={userBalance}
@@ -103,7 +105,7 @@ const BidForm = ({ auction, userBalance = 0 }) => {
           <button
             type="submit"
             disabled={placeBid.isPending || !bidAmount || userBalance < minBid}
-            className="btn-primary w-full"
+            className="w-full bg-green-500 text-white py-3 rounded-lg hover:bg-green-600 transition font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
           >
             {placeBid.isPending ? <LoadingSpinner size="sm" /> : "Realizar Puja"}
           </button>

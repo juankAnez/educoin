@@ -90,7 +90,6 @@ export const useCreateSubmission = () => {
   return useMutation({
     mutationFn: submissionService.createSubmission,
     onSuccess: (data) => {
-      // Invalidar TODAS las queries relacionadas
       queryClient.invalidateQueries({ queryKey: ["submissions"] })
       queryClient.invalidateQueries({ queryKey: ["activities"] })
       queryClient.invalidateQueries({ queryKey: ["activity", data.activity] })
@@ -99,6 +98,23 @@ export const useCreateSubmission = () => {
     },
     onError: (error) => {
       toast.error(error.response?.data?.detail || "Error al enviar entrega")
+    },
+  })
+}
+
+// NUEVO: Hook para cancelar submission
+export const useCancelSubmission = () => {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: submissionService.cancelSubmission,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["submissions"] })
+      queryClient.invalidateQueries({ queryKey: ["activities"] })
+      toast.success("Entrega cancelada exitosamente")
+    },
+    onError: (error) => {
+      toast.error(error.response?.data?.detail || "Error al cancelar entrega")
     },
   })
 }

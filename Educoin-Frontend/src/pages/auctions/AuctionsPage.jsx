@@ -4,7 +4,7 @@ import {
   ExclamationTriangleIcon, 
   ArrowPathIcon, 
   CurrencyEuroIcon,
-  GifIcon,
+  BanknotesIcon,
   TrophyIcon,
   AcademicCapIcon,
   UserGroupIcon,
@@ -119,8 +119,8 @@ export default function AuctionsPage() {
           <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
             <div className="flex-1">
               <div className="flex items-center gap-3 mb-3">
-                <div className="p-3 bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl">
-                  <GifIcon className="h-7 w-7 text-white" />
+                <div className="p-3 bg-gradient-to-br from-green-500 to-green-600 rounded-xl">
+                  <BanknotesIcon className="h-7 w-7 text-white" />
                 </div>
                 <div>
                   <h1 className="text-3xl font-bold text-gray-900">

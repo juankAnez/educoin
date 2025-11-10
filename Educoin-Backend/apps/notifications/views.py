@@ -1,7 +1,6 @@
 from rest_framework import viewsets, permissions, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
-from django.db.models import Q
 from .models import Notification
 from .serializers import NotificationSerializer, NotificationCreateSerializer
 
@@ -19,7 +18,7 @@ class NotificationViewSet(viewsets.ModelViewSet):
         user = self.request.user
         return Notification.objects.filter(usuario=user).select_related('usuario')
 
-    @action(detail=False, methods=['get'])
+    @action(detail=False, methods=['get'], url_path='no-leidas')
     def no_leidas(self, request):
         """Obtener solo las notificaciones no leídas"""
         notificaciones = self.get_queryset().filter(leida=False)
@@ -29,7 +28,7 @@ class NotificationViewSet(viewsets.ModelViewSet):
             'notificaciones': serializer.data
         })
 
-    @action(detail=False, methods=['post'])
+    @action(detail=False, methods=['post'], url_path='marcar-todas-leidas')
     def marcar_todas_leidas(self, request):
         """Marcar todas las notificaciones del usuario como leídas"""
         count = self.get_queryset().filter(leida=False).update(leida=True)
@@ -37,7 +36,7 @@ class NotificationViewSet(viewsets.ModelViewSet):
             'message': f'{count} notificaciones marcadas como leídas'
         })
 
-    @action(detail=True, methods=['post'])
+    @action(detail=True, methods=['post'], url_path='marcar-leida')
     def marcar_leida(self, request, pk=None):
         """Marcar una notificación específica como leída"""
         notificacion = self.get_object()
@@ -47,7 +46,7 @@ class NotificationViewSet(viewsets.ModelViewSet):
             'notificacion': self.get_serializer(notificacion).data
         })
 
-    @action(detail=False, methods=['delete'])
+    @action(detail=False, methods=['delete'], url_path='eliminar-todas')
     def eliminar_todas(self, request):
         """Eliminar todas las notificaciones del usuario"""
         count, _ = self.get_queryset().delete()
@@ -55,7 +54,7 @@ class NotificationViewSet(viewsets.ModelViewSet):
             'message': f'{count} notificaciones eliminadas'
         })
 
-    @action(detail=False, methods=['get'])
+    @action(detail=False, methods=['get'], url_path='estadisticas')
     def estadisticas(self, request):
         """Obtener estadísticas de notificaciones"""
         qs = self.get_queryset()

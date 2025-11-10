@@ -6,23 +6,25 @@ export const useWallet = () => {
     queryKey: ["wallet"],
     queryFn: async () => {
       try {
-        const res = await api.get("/api/coins/wallets/mi-wallet/")
-        return res.data
+        const res = await api.get("/api/coins/wallets/");
+        // Si devuelve array, tomar el primero
+        if (Array.isArray(res.data)) {
+          return res.data[0] || null;
+        }
+        return res.data;
       } catch (error) {
         if (error.response?.status === 404) {
-          // Si no tiene wallet, retornar null en lugar de error
-          return null
+          return null;
         }
-        throw error
+        throw error;
       }
     },
     staleTime: 2 * 60 * 1000,
     retry: (failureCount, error) => {
-      // No reintentar en 404 (estudiante sin wallet)
       if (error.response?.status === 404) {
-        return false
+        return false;
       }
-      return failureCount < 2
+      return failureCount < 2;
     },
   })
 }

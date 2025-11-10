@@ -118,22 +118,22 @@ export default function EditActivityModal({ activity, onClose }) {
 
       <div className="flex min-h-full items-center justify-center p-4">
         <div
-          className="relative bg-white rounded-xl w-full max-w-2xl shadow-lg border border-purple-400 shadow-purple-500/20 max-h-[90vh] overflow-y-auto"
+          className="relative bg-white rounded-xl w-full max-w-2xl shadow-lg border border-purple-200 shadow-purple-500/10 max-h-[90vh] overflow-y-auto"
           onClick={(e) => e.stopPropagation()}
         >
-          <div className="sticky top-0 bg-white flex items-center justify-between p-6 border-b border-gray-200 z-10">
-            <h3 className="text-xl font-semibold text-gray-900">
+          <div className="sticky top-0 bg-white flex items-center justify-between p-4 sm:p-6 border-b border-gray-200 z-10">
+            <h3 className="text-lg sm:text-xl font-semibold text-gray-900">
               Editar Actividad
             </h3>
             <button
               onClick={onClose}
               className="text-gray-400 hover:text-gray-600 transition p-1 rounded-lg hover:bg-gray-100"
             >
-              <XMarkIcon className="h-6 w-6" />
+              <XMarkIcon className="h-5 w-5 sm:h-6 sm:w-6" />
             </button>
           </div>
 
-          <form onSubmit={handleSubmit} className="p-6 space-y-4">
+          <form onSubmit={handleSubmit} className="p-4 sm:p-6 space-y-4 sm:space-y-6">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Nombre de la Actividad
@@ -143,7 +143,7 @@ export default function EditActivityModal({ activity, onClose }) {
                 name="nombre"
                 value={formData.nombre}
                 onChange={handleChange}
-                className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent ${
+                className={`w-full px-3 py-2.5 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-sm sm:text-base ${
                   errors.nombre ? "border-red-500" : "border-gray-300"
                 }`}
                 placeholder="Ej: Taller de Álgebra"
@@ -153,7 +153,7 @@ export default function EditActivityModal({ activity, onClose }) {
               )}
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Tipo
@@ -162,7 +162,7 @@ export default function EditActivityModal({ activity, onClose }) {
                   name="tipo"
                   value={formData.tipo}
                   onChange={handleChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                  className="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-sm sm:text-base"
                 >
                   <option value="tarea">Tarea</option>
                   <option value="examen">Examen</option>
@@ -180,7 +180,7 @@ export default function EditActivityModal({ activity, onClose }) {
                   name="group"
                   value={formData.group}
                   onChange={handleChange}
-                  className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent ${
+                  className={`w-full px-3 py-2.5 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-sm sm:text-base ${
                     errors.group ? "border-red-500" : "border-gray-300"
                   }`}
                 >
@@ -206,12 +206,12 @@ export default function EditActivityModal({ activity, onClose }) {
                 value={formData.descripcion}
                 onChange={handleChange}
                 rows={3}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent resize-none"
+                className="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent resize-none text-sm sm:text-base"
                 placeholder="Describe la actividad..."
               />
             </div>
 
-            <div className="grid grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Educoins
@@ -222,7 +222,7 @@ export default function EditActivityModal({ activity, onClose }) {
                   min="0"
                   value={formData.valor_educoins}
                   onChange={handleChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                  className="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-sm sm:text-base"
                 />
               </div>
 
@@ -236,7 +236,7 @@ export default function EditActivityModal({ activity, onClose }) {
                   min="0"
                   value={formData.valor_notas}
                   onChange={handleChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                  className="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-sm sm:text-base"
                 />
               </div>
 
@@ -250,7 +250,7 @@ export default function EditActivityModal({ activity, onClose }) {
                   value={formData.fecha_entrega}
                   onChange={handleChange}
                   min={minDateString}
-                  className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent ${
+                  className={`w-full px-3 py-2.5 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-sm sm:text-base ${
                     errors.fecha_entrega ? "border-red-500" : "border-gray-300"
                   }`}
                 />
@@ -264,11 +264,11 @@ export default function EditActivityModal({ activity, onClose }) {
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Archivo Adjunto
               </label>
-              <div className="flex items-center gap-3">
-                <label className="flex-1 cursor-pointer">
+              <div className="flex flex-col sm:flex-row items-center gap-3">
+                <label className="flex-1 cursor-pointer w-full">
                   <div className="flex items-center justify-center px-4 py-3 border-2 border-dashed border-gray-300 rounded-lg hover:border-purple-500 transition">
-                    <DocumentArrowUpIcon className="h-6 w-6 text-gray-400 mr-2" />
-                    <span className="text-sm text-gray-600">
+                    <DocumentArrowUpIcon className="h-5 w-5 sm:h-6 sm:w-6 text-gray-400 mr-2" />
+                    <span className="text-xs sm:text-sm text-gray-600 text-center">
                       {archivo ? archivo.name : "Seleccionar archivo"}
                     </span>
                   </div>
@@ -284,7 +284,7 @@ export default function EditActivityModal({ activity, onClose }) {
                 <p className="mt-1 text-sm text-red-600">{errors.archivo}</p>
               )}
               {activity.archivo_adjunto && !archivo && (
-                <p className="mt-1 text-sm text-gray-500">
+                <p className="mt-1 text-xs sm:text-sm text-gray-500">
                   Archivo actual: 
                   <a 
                     href={activity.archivo_adjunto} 
@@ -312,18 +312,18 @@ export default function EditActivityModal({ activity, onClose }) {
               </label>
             </div>
 
-            <div className="flex gap-3 pt-4">
+            <div className="flex flex-col sm:flex-row gap-3 pt-4">
               <button
                 type="button"
                 onClick={onClose}
-                className="flex-1 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition"
+                className="flex-1 px-4 py-2.5 border border-gray-300 rounded-lg hover:bg-gray-50 transition text-sm sm:text-base"
               >
                 Cancelar
               </button>
               <button
                 type="submit"
                 disabled={updateMutation.isPending}
-                className="flex-1 bg-purple-500 text-white px-4 py-2 rounded-lg hover:bg-purple-600 transition disabled:opacity-50 flex items-center justify-center"
+                className="flex-1 bg-purple-500 text-white px-4 py-2.5 rounded-lg hover:bg-purple-600 transition disabled:opacity-50 text-sm sm:text-base flex items-center justify-center"
               >
                 {updateMutation.isPending ? (
                   <LoadingSpinner size="sm" />

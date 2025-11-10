@@ -1,10 +1,9 @@
 import api from "./api"
-import { API_ENDPOINTS } from "../utils/constants"
 
 export const notificationService = {
   async getNotifications(params = {}) {
     try {
-      const response = await api.get(API_ENDPOINTS.NOTIFICATIONS, { params })
+      const response = await api.get('/api/notifications/', { params })
       return response.data
     } catch (error) {
       throw new Error(error.response?.data?.detail || "Error al obtener las notificaciones")
@@ -13,9 +12,7 @@ export const notificationService = {
 
   async markAsRead(notificationId) {
     try {
-      const response = await api.patch(`${API_ENDPOINTS.NOTIFICATIONS}${notificationId}/`, {
-        read: true,
-      })
+      const response = await api.post(`/api/notifications/${notificationId}/marcar-leida/`)
       return response.data
     } catch (error) {
       throw new Error(error.response?.data?.detail || "Error al marcar como leída")
@@ -24,7 +21,7 @@ export const notificationService = {
 
   async markAllAsRead() {
     try {
-      const response = await api.post(`${API_ENDPOINTS.NOTIFICATIONS}mark_all_read/`)
+      const response = await api.post('/api/notifications/marcar-todas-leidas/')
       return response.data
     } catch (error) {
       throw new Error(error.response?.data?.detail || "Error al marcar todas como leídas")
@@ -33,10 +30,28 @@ export const notificationService = {
 
   async deleteNotification(notificationId) {
     try {
-      await api.delete(`${API_ENDPOINTS.NOTIFICATIONS}${notificationId}/`)
+      await api.delete(`/api/notifications/${notificationId}/`)
       return true
     } catch (error) {
       throw new Error(error.response?.data?.detail || "Error al eliminar la notificación")
     }
   },
+
+  async getUnread() {
+    try {
+      const response = await api.get('/api/notifications/no-leidas/')
+      return response.data
+    } catch (error) {
+      throw new Error(error.response?.data?.detail || "Error al obtener no leídas")
+    }
+  },
+
+  async getStats() {
+    try {
+      const response = await api.get('/api/notifications/estadisticas/')
+      return response.data
+    } catch (error) {
+      throw new Error(error.response?.data?.detail || "Error al obtener estadísticas")
+    }
+  }
 }

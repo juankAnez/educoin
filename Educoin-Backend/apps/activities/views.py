@@ -82,6 +82,34 @@ class SubmissionViewSet(viewsets.ModelViewSet):
             raise PermissionDenied("Solo los estudiantes pueden enviar actividades.")
         serializer.save(estudiante=user)
 
+    def destroy(self, request, *args, **kwargs):
+        """Permitir que estudiantes cancelen sus entregas si NO están calificadas"""
+        submission = self.get_object()
+        
+        # Solo el estudiante dueño puede eliminar
+        if request.user.role == 'estudiante' and submission.estudiante != request.user:
+            raise PermissionDenied("No puedes eliminar entregas de otros estudiantes.")
+        
+        # No se puede eliminar si ya está calificada
+        if submission.calificacion is not None:
+            return Response(
+                {"detail": "No puedes cancelar una entrega que ya fue calificada."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        # Verificar que la actividad no haya vencido
+        if submission.activity.esta_vencida():
+            return Response(
+                {"detail": "No puedes cancelar una entrega después de la fecha límite."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        submission.delete()
+        return Response(
+            {"detail": "Entrega cancelada exitosamente."},
+            status=status.HTTP_200_OK
+        )
+
     @action(detail=True, methods=["patch"], url_path="grade")
     @transaction.atomic
     def grade_submission(self, request, pk=None):

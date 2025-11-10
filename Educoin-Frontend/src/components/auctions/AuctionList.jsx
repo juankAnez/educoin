@@ -40,7 +40,7 @@ const AuctionList = () => {
   const handleCloseModal = () => {
     setShowCreateModal(false)
     setEditingAuction(null)
-    refetch() // Refrescar la lista después de crear/editar
+    refetch()
   }
 
   // Asegurar que auctions es un array antes de filtrar
@@ -85,32 +85,32 @@ const AuctionList = () => {
 
   return (
     <div className="space-y-6">
-      {/* Header con estadísticas */}
-      <div className="bg-green-400 rounded-xl p-6 text-white">
+      {/* Header con estadísticas - Verde para detalles */}
+      <div className="bg-gradient-to-r from-green-500 to-green-600 rounded-xl p-6 text-white">
         <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
           <div>
             <h1 className="text-2xl font-bold">Subastas Académicas</h1>
-            <p className="text-purple-100">
+            <p className="text-green-100">
               {isTeacher ? "Gestiona las subastas de tus grupos" : "Participa en subastas con tus Educoins"}
             </p>
           </div>
           
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
             <div className="text-center">
-              <div className="text-2xl font-bold text-gray-200">{stats.total}</div>
-              <div className="text-sm text-gray-200">Total</div>
+              <div className="text-2xl font-bold text-white">{stats.total}</div>
+              <div className="text-sm text-green-100">Total</div>
             </div>
             <div className="text-center">
-              <div className="text-2xl font-bold text-gray-200">{stats.active}</div>
-              <div className="text-sm text-gray-200">Activas</div>
+              <div className="text-2xl font-bold text-white">{stats.active}</div>
+              <div className="text-sm text-green-100">Activas</div>
             </div>
             <div className="text-center">
-              <div className="text-2xl font-bold text-gray-200">{stats.closed}</div>
-              <div className="text-sm text-gray-200">Cerradas</div>
+              <div className="text-2xl font-bold text-white">{stats.closed}</div>
+              <div className="text-sm text-green-100">Cerradas</div>
             </div>
             <div className="text-center">
-              <div className="text-2xl font-bold text-gray-200">{stats.totalBids}</div>
-              <div className="text-sm text-gray-200">Pujas</div>
+              <div className="text-2xl font-bold text-orange-300">{stats.totalBids}</div>
+              <div className="text-sm text-green-100">Pujas</div>
             </div>
           </div>
         </div>
@@ -126,14 +126,14 @@ const AuctionList = () => {
               placeholder="Buscar por título o descripción..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
             />
           </div>
 
           <select
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
-            className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+            className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
           >
             <option value="">Todos los estados</option>
             <option value="active">Activas</option>
@@ -181,7 +181,7 @@ const AuctionList = () => {
           {(isTeacher && !searchTerm && !statusFilter) && (
             <button 
               onClick={() => setShowCreateModal(true)} 
-              className="bg-orange-500 text-white px-6 py-2.5 rounded-lg hover:bg-orange-600 transition inline-flex items-center gap-2"
+              className="bg-green-500 text-white px-6 py-2.5 rounded-lg hover:bg-green-600 transition inline-flex items-center gap-2"
             >
               <PlusIcon className="h-5 w-5" />
               Crear Primera Subasta

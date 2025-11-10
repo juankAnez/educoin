@@ -6,7 +6,7 @@ import LoadingSpinner from "../common/LoadingSpinner"
 
 export default function EditGroupModal({ group, onClose }) {
   const updateMutation = useUpdateGroup()
-  const { data: classrooms } = useClassrooms()
+  const { data: classrooms, isLoading: classroomsLoading } = useClassrooms()
   const [formData, setFormData] = useState({
     nombre: "",
     descripcion: "",
@@ -69,39 +69,43 @@ export default function EditGroupModal({ group, onClose }) {
 
   return (
     <div className="fixed inset-0 z-50 overflow-y-auto">
-      <div
-        className="fixed inset-0 bg-opacity-40 backdrop-blur-sm transition-opacity"
-        onClick={onClose}
-      />
-
       <div className="flex min-h-full items-center justify-center p-4">
-        <div
-          className="relative bg-white rounded-xl w-full max-w-lg shadow-lg border border-blue-400 shadow-blue-500/20"
+        {/* Backdrop */}
+        <div 
+          className="fixed inset-0 bg-opacity-40 backdrop-blur-sm transition-opacity"
+          onClick={onClose}
+        />
+        
+        {/* Modal */}
+        <div 
+          className="relative bg-white rounded-xl sm:rounded-2xl w-full max-w-md shadow-lg border border-blue-200"
           onClick={(e) => e.stopPropagation()}
         >
-          <div className="flex items-center justify-between p-6 border-b border-gray-200">
-            <h3 className="text-xl font-semibold text-gray-900">
+          {/* Header */}
+          <div className="flex items-center justify-between p-4 sm:p-6 border-b border-gray-200">
+            <h3 className="text-lg sm:text-xl font-semibold text-gray-900">
               Editar Grupo
             </h3>
             <button
               onClick={onClose}
-              className="text-gray-400 hover:text-gray-600 transition p-1 rounded-lg hover:bg-gray-100"
+              className="p-1.5 text-gray-400 hover:text-gray-600 rounded-lg hover:bg-gray-100 transition-colors"
             >
-              <XMarkIcon className="h-6 w-6" />
+              <XMarkIcon className="h-5 w-5" />
             </button>
           </div>
 
-          <form onSubmit={handleSubmit} className="p-6 space-y-4">
+          {/* Form */}
+          <form onSubmit={handleSubmit} className="p-4 sm:p-6 space-y-4 sm:space-y-6">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Nombre del Grupo
+                Nombre del Grupo <span className="text-red-500">*</span>
               </label>
               <input
                 type="text"
                 name="nombre"
                 value={formData.nombre}
                 onChange={handleChange}
-                className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                className={`w-full px-3 sm:px-4 py-2.5 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-colors text-sm sm:text-base ${
                   errors.nombre ? "border-red-500" : "border-gray-300"
                 }`}
                 placeholder="Ej: Grupo A - Matemáticas"
@@ -113,23 +117,29 @@ export default function EditGroupModal({ group, onClose }) {
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Clase
+                Clase Asociada <span className="text-red-500">*</span>
               </label>
-              <select
-                name="classroom"
-                value={formData.classroom}
-                onChange={handleChange}
-                className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
-                  errors.classroom ? "border-red-500" : "border-gray-300"
-                }`}
-              >
-                <option value="">Selecciona una clase</option>
-                {classrooms?.map((classroom) => (
-                  <option key={classroom.id} value={classroom.id}>
-                    {classroom.nombre}
-                  </option>
-                ))}
-              </select>
+              {classroomsLoading ? (
+                <div className="flex items-center justify-center py-4">
+                  <LoadingSpinner size="sm" />
+                </div>
+              ) : (
+                <select
+                  name="classroom"
+                  value={formData.classroom}
+                  onChange={handleChange}
+                  className={`w-full px-3 sm:px-4 py-2.5 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-colors text-sm sm:text-base ${
+                    errors.classroom ? "border-red-500" : "border-gray-300"
+                  }`}
+                >
+                  <option value="">Selecciona una clase</option>
+                  {classrooms?.map((classroom) => (
+                    <option key={classroom.id} value={classroom.id}>
+                      {classroom.nombre}
+                    </option>
+                  ))}
+                </select>
+              )}
               {errors.classroom && (
                 <p className="mt-1 text-sm text-red-600">{errors.classroom}</p>
               )}
@@ -144,7 +154,7 @@ export default function EditGroupModal({ group, onClose }) {
                 value={formData.descripcion}
                 onChange={handleChange}
                 rows={3}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+                className="w-full px-3 sm:px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-colors resize-none text-sm sm:text-base"
                 placeholder="Describe el grupo..."
               />
             </div>
@@ -163,18 +173,18 @@ export default function EditGroupModal({ group, onClose }) {
               </label>
             </div>
 
-            <div className="flex gap-3 pt-4">
+            <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 pt-4">
               <button
                 type="button"
                 onClick={onClose}
-                className="flex-1 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition"
+                className="flex-1 px-4 py-2.5 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-medium text-sm sm:text-base"
               >
                 Cancelar
               </button>
               <button
                 type="submit"
                 disabled={updateMutation.isPending}
-                className="flex-1 bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition disabled:opacity-50 flex items-center justify-center"
+                className="flex-1 bg-blue-500 text-white px-4 py-2.5 rounded-lg hover:bg-blue-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed font-medium text-sm sm:text-base flex items-center justify-center gap-2"
               >
                 {updateMutation.isPending ? (
                   <LoadingSpinner size="sm" />

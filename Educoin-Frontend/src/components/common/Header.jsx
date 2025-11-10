@@ -17,6 +17,7 @@ import { useAuthContext } from "../../context/AuthContext"
 import { formatCoins } from "../../utils/helpers"
 import { USER_ROLES } from "../../utils/constants"
 import { useWallet } from "../../hooks/useWallet"
+import NotificationsDropdown from '../notifications/NotificationsDropdown'
 
 const Header = ({ onMenuClick }) => {
   const { user, logout } = useAuthContext()
@@ -61,14 +62,8 @@ const Header = ({ onMenuClick }) => {
           </div>
         )}
 
-        {/* Notifications */}
-        <button 
-          type="button" 
-          className="relative p-2 rounded-xl hover:bg-gray-100 transition-all duration-200 text-gray-600 hover:text-orange-500 group"
-        >
-          <BellIcon className="h-6 w-6" />
-          <div className="absolute top-1.5 right-1.5 h-2 w-2 bg-orange-500 rounded-full ring-2 ring-white"></div>
-        </button>
+        {/* Notifications (open dropdown when pressing bell) */}
+        <NotificationsDropdown />
 
         {/* Profile dropdown */}
         <Menu as="div" className="relative">

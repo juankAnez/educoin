@@ -14,30 +14,7 @@ export default function ActivitiesPage() {
   const isStudent = user?.role === "estudiante"
 
   return (
-    <div className="space-y-8">
-      {/* Header */}
-      <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">
-            {isTeacher ? "Gestión de Actividades" : "Actividades Asignadas"}
-          </h1>
-          <p className="text-gray-600">
-            {isTeacher
-              ? "Crea, gestiona y califica las actividades de tus grupos."
-              : "Consulta tus actividades, entrega tus trabajos y revisa tus calificaciones."}
-          </p>
-        </div>
-
-        {/* Solo el docente puede crear actividades */}
-        {isTeacher && (
-          <button
-            onClick={() => setShowCreateModal(true)}
-            className="px-4 py-2 bg-orange-500 text-white rounded-lg shadow hover:bg-orange-600 transition"
-          >
-            + Nueva Actividad
-          </button>
-        )}
-      </div>
+    <div className="space-y-6 sm:space-y-8">
 
       {/* Listado de actividades */}
       <ActivitiesList />

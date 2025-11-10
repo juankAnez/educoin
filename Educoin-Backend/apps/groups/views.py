@@ -134,3 +134,24 @@ class GroupViewSet(viewsets.ModelViewSet):
             "wallet_creada": wallet_creada,
             "periodo_activo": periodo_activo.nombre if periodo_activo else None
         })
+
+    @action(detail=True, methods=['get'])
+    def estudiantes(self, request, pk=None):
+        """Obtener lista de estudiantes del grupo"""
+        group = self.get_object()
+        estudiantes = group.estudiantes.all()
+        
+        # Serializar los datos de estudiantes
+        estudiantes_data = []
+        for estudiante in estudiantes:
+            estudiantes_data.append({
+                'id': estudiante.id,
+                'first_name': estudiante.first_name,
+                'last_name': estudiante.last_name,
+                'email': estudiante.email,
+                'nombre': estudiante.first_name,  # Para compatibilidad
+                'apellido': estudiante.last_name,  # Para compatibilidad
+                'correo': estudiante.email,  # Para compatibilidad
+            })
+        
+        return Response(estudiantes_data)

@@ -15,6 +15,7 @@ import GroupDetailPage from "./pages/groups/GroupDetailPage"
 import ActivitiesPage from "./pages/activities/ActivitiesPage"
 import ActivityDetailPage from "./pages/activities/ActivityDetailPage"
 import AuctionsPage from "./pages/auctions/AuctionsPage"
+import AuctionDetailPage from "./pages/auctions/AuctionDetailPage"
 import ProfilePage from "./pages/profile/ProfilePage"
 import WalletPage from "./pages/wallet/WalletPage"
 
@@ -64,6 +65,7 @@ function App() {
           <Route path="activities" element={<ActivitiesPage />} />
           <Route path="activities/:id" element={<ActivityDetailPage />} />
           <Route path="auctions" element={<AuctionsPage />} />
+          <Route path="auctions/:id" element={<AuctionDetailPage />} />
           <Route path="profile" element={<ProfilePage />} />
           <Route path="wallet" element={<WalletPage />} />
         </Route>

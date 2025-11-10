@@ -15,6 +15,7 @@ import {
   ArrowRightOnRectangleIcon,
   UserGroupIcon,
   Cog6ToothIcon,
+  AcademicCapIcon,
 } from "@heroicons/react/24/outline"
 import { useAuthContext } from "../../context/AuthContext"
 import { USER_ROLES } from "../../utils/constants"
@@ -25,7 +26,7 @@ const Sidebar = ({ isOpen, onClose }) => {
 
   const teacherNavigation = [
     { name: "Panel Docente", href: "/dashboard", icon: HomeIcon },
-    { name: "Mis Clases", href: "/classrooms", icon: BookOpenIcon },
+    { name: "Mis Clases", href: "/classrooms", icon: AcademicCapIcon },
     { name: "Mis Grupos", href:"/groups", icon: UserGroupIcon},
     { name: "Mis Actividades", href: "/activities", icon: ClipboardDocumentListIcon },
     { name: "Subastas", href: "/auctions", icon: CurrencyEuroIcon },
@@ -75,24 +76,6 @@ const Sidebar = ({ isOpen, onClose }) => {
           </div>
           <div>
             <span className="text-xl font-bold text-orange-600">Educoin</span>
-          </div>
-        </div>
-      </div>
-
-      {/* User */}
-      <div className="px-6 py-4">
-        <div className="flex items-center space-x-3 p-3 bg-white rounded-xl border border-gray-100 shadow-sm">
-          <div className="h-12 w-12 rounded-xl bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center text-white font-semibold shadow-md">
-            {user?.first_name?.charAt(0)}
-            {user?.last_name?.charAt(0)}
-          </div>
-          <div className="flex-1 min-w-0">
-            <p className="text-sm font-semibold text-gray-900 truncate">
-              {user?.first_name} {user?.last_name}
-            </p>
-            <p className="text-xs text-gray-500 capitalize bg-gray-100 px-2 py-1 rounded-full inline-block mt-1">
-              {user?.role}
-            </p>
           </div>
         </div>
       </div>

@@ -1,4 +1,4 @@
-export const API_BASE_URL = "http://localhost:8000";
+export const API_BASE_URL = "http://192.168.1.4:8000";
 
 export const API_ENDPOINTS = {
   // ==================== AUTH ====================
@@ -44,7 +44,7 @@ export const API_ENDPOINTS = {
   GRADE_MULTIPLE: "/api/grades/calificar-multiple/",
   
   // ==================== COINS/WALLET ====================
-  // ✅ CORREGIDO: Usar guiones consistentemente
+  // CORREGIDO: Usar guiones consistentemente
   MY_WALLET: "/api/coins/wallets/mi-wallet/",
   WALLETS: "/api/coins/wallets/",
   WALLET_DETAIL: (id) => `/api/coins/wallets/${id}/`,
