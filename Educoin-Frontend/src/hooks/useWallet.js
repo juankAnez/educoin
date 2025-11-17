@@ -6,26 +6,25 @@ export const useWallet = () => {
     queryKey: ["wallet"],
     queryFn: async () => {
       try {
-        const res = await api.get("/api/coins/wallets/");
-        // Si devuelve array, tomar el primero
-        if (Array.isArray(res.data)) {
-          return res.data[0] || null;
+        const res = await api.get("/api/coins/wallets/mi_wallet/")
+        console.log("Wallet API Response:", res.data)
+        
+        // Si es un mensaje (para docentes) o no hay wallet
+        if (res.data.detail || !res.data.id) {
+          console.log("No hay wallet activa:", res.data.detail)
+          return null
         }
-        return res.data;
+        
+        return res.data
       } catch (error) {
+        console.error("Wallet API Error:", error)
         if (error.response?.status === 404) {
-          return null;
+          return null
         }
-        throw error;
+        throw error
       }
     },
     staleTime: 2 * 60 * 1000,
-    retry: (failureCount, error) => {
-      if (error.response?.status === 404) {
-        return false;
-      }
-      return failureCount < 2;
-    },
   })
 }
 
@@ -34,7 +33,15 @@ export const useAllWallets = () => {
     queryKey: ["all-wallets"],
     queryFn: async () => {
       const res = await api.get("/api/coins/wallets/")
-      return Array.isArray(res.data) ? res.data : res.data.results || []
+      console.log("All Wallets API Response:", res.data)
+      
+      // Manejar diferentes formatos de respuesta
+      if (Array.isArray(res.data)) {
+        return res.data
+      } else if (res.data.results) {
+        return res.data.results
+      }
+      return []
     },
     staleTime: 2 * 60 * 1000,
   })
@@ -44,8 +51,9 @@ export const usePeriods = (enabled = true) => {
   return useQuery({
     queryKey: ["periods"],
     queryFn: async () => {
-      const res = await api.get("/api/coins/periods/")
-      return Array.isArray(res.data) ? res.data : res.data.results || []
+      const res = await api.get("/api/coins/periods/mis_periodos/")
+      console.log("Periods API Response:", res.data)
+      return Array.isArray(res.data) ? res.data : []
     },
     enabled,
     retry: false,
@@ -58,7 +66,24 @@ export const useTransactions = () => {
     queryKey: ["transactions"],
     queryFn: async () => {
       const res = await api.get("/api/coins/transactions/")
-      return Array.isArray(res.data) ? res.data : res.data.results || []
+      console.log("Transactions API Response:", res.data)
+      
+      let transactions = []
+      if (Array.isArray(res.data)) {
+        transactions = res.data
+      } else if (res.data.results) {
+        transactions = res.data.results
+      }
+      
+      // Mapear campos del backend al frontend
+      return transactions.map(transaction => ({
+        id: transaction.id,
+        tipo: transaction.tipo,
+        monto: transaction.cantidad, // Backend usa 'cantidad', frontend usa 'monto'
+        descripcion: transaction.descripcion,
+        fecha: transaction.creado,
+        wallet: transaction.wallet
+      }))
     },
     staleTime: 2 * 60 * 1000,
   })

@@ -13,9 +13,7 @@ urlpatterns = [
     path('api/grades/', include('apps.grades.urls')), 
     path('api/coins/', include('apps.coins.urls')), 
     path('api/auctions/', include('apps.auctions.urls')), 
-    path('api/', include('apps.auctions.urls')),
     path('api/notifications/', include('apps.notifications.urls')),
-
 ]
 
 if settings.DEBUG:

@@ -387,7 +387,7 @@ const AuctionDetailPage = () => {
           {isTeacher && auction.bids && auction.bids.length > 0 && (
             <div className="border-t border-gray-200 pt-6">
               <h2 className="text-lg font-semibold text-gray-900 mb-4">
-                Pujas ({auction.bids.length})
+                Todas las Pujas ({auction.bids.length})
               </h2>
               <div className="space-y-3">
                 {auction.bids.map((bid, index) => (
@@ -405,9 +405,12 @@ const AuctionDetailPage = () => {
                       )}
                       <div>
                         <p className="font-medium text-gray-900">
-                          {bid.estudiante?.first_name} {bid.estudiante?.last_name}
+                          {bid.estudiante_nombre || `${bid.estudiante?.first_name} ${bid.estudiante?.last_name}`}
                         </p>
-                        <p className="text-xs text-gray-500">
+                        <p className="text-sm text-gray-500">
+                          {bid.estudiante_email || bid.estudiante?.email}
+                        </p>
+                        <p className="text-xs text-gray-400">
                           {formatDateTime(bid.creado)}
                         </p>
                       </div>

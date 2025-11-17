@@ -44,8 +44,8 @@ export const API_ENDPOINTS = {
   GRADE_MULTIPLE: "/api/grades/calificar-multiple/",
   
   // ==================== COINS/WALLET ====================
-  // CORREGIDO: Usar guiones consistentemente
-  MY_WALLET: "/api/coins/wallets/mi-wallet/",
+  // CORREGIDOS para coincidir con tu backend Django
+  MY_WALLET: "/api/coins/wallets/mi_wallet/",  // Cambiado de mi-wallet a mi_wallet
   WALLETS: "/api/coins/wallets/",
   WALLET_DETAIL: (id) => `/api/coins/wallets/${id}/`,
   WALLET_DEPOSIT: (id) => `/api/coins/wallets/${id}/depositar/`,
@@ -56,7 +56,7 @@ export const API_ENDPOINTS = {
   PERIODS: "/api/coins/periods/",
   PERIOD_DETAIL: (id) => `/api/coins/periods/${id}/`,
   PERIOD_ACTIVATE: (id) => `/api/coins/periods/${id}/activar/`,
-  MY_PERIODS: "/api/coins/periods/mis-periodos/",
+  MY_PERIODS: "/api/coins/periods/mis_periodos/",  // Cambiado de mis-periodos a mis_periodos
   
   // ==================== AUCTIONS ====================
   AUCTIONS: "/api/auctions/auctions/",

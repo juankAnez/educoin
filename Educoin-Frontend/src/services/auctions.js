@@ -34,6 +34,20 @@ export const auctionService = {
     return res.data
   },
 
+  // NUEVO: Aumentar puja existente
+  increaseBid: async (bidId, nuevaCantidad) => {
+    const res = await api.post(`/api/auctions/bids/${bidId}/aumentar_puja/`, {
+      nueva_cantidad: nuevaCantidad
+    })
+    return res.data
+  },
+
+  // NUEVO: Eliminar puja
+  deleteBid: async (bidId) => {
+    const res = await api.delete(`/api/auctions/bids/${bidId}/`)
+    return res.data
+  },
+
   getAuctionBids: async (auctionId) => {
     const res = await api.get(`/api/auctions/bids/por-subasta/${auctionId}/`)
     return res.data
@@ -42,5 +56,16 @@ export const auctionService = {
   closeAuction: async (id) => {
     const res = await api.post(`/api/auctions/auctions/${id}/close/`)
     return res.data
+  },
+
+  // NUEVO: Obtener estadísticas (puedes implementar este endpoint en tu backend)
+  getAuctionStats: async () => {
+    try {
+      const res = await api.get("/api/auctions/stats/")
+      return res.data
+    } catch (error) {
+      // Si el endpoint no existe, lanzar error para que se calcule localmente
+      throw new Error("Stats endpoint not available")
+    }
   }
 }

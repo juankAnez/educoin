@@ -43,7 +43,8 @@ class Bid(BaseModel):
     )
 
     class Meta:
-        unique_together = ('auction', 'estudiante')
+        # REMOVER unique_together para permitir aumentar pujas
+        # unique_together = ('auction', 'estudiante')
         ordering = ['-cantidad']
 
     def __str__(self):

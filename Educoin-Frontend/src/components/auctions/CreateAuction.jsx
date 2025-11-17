@@ -102,9 +102,9 @@ const CreateAuction = ({ auction, onClose }) => {
   const maxDateString = maxDate.toISOString().slice(0, 16)
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
+    <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6">
       {errors.general && (
-        <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+        <div className="bg-red-50 border border-red-200 rounded-lg p-3 sm:p-4">
           <p className="text-red-600 text-sm">{errors.general}</p>
         </div>
       )}
@@ -119,7 +119,7 @@ const CreateAuction = ({ auction, onClose }) => {
           name="titulo"
           value={formData.titulo}
           onChange={handleChange}
-          className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent ${
+          className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent text-sm sm:text-base ${
             errors.titulo ? "border-red-500" : "border-gray-300"
           }`}
           placeholder="Ej: Puntos extra en el próximo examen"
@@ -139,7 +139,7 @@ const CreateAuction = ({ auction, onClose }) => {
           rows={4}
           value={formData.descripcion}
           onChange={handleChange}
-          className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent ${
+          className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent text-sm sm:text-base ${
             errors.descripcion ? "border-red-500" : "border-gray-300"
           }`}
           placeholder="Describe detalladamente la recompensa que obtendrá el ganador..."
@@ -147,7 +147,7 @@ const CreateAuction = ({ auction, onClose }) => {
         {errors.descripcion && <p className="mt-1 text-sm text-red-600">{errors.descripcion}</p>}
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
         <div>
           <label htmlFor="grupo" className="block text-sm font-medium text-gray-700 mb-1">
             Grupo Destinatario *
@@ -158,7 +158,7 @@ const CreateAuction = ({ auction, onClose }) => {
             value={formData.grupo}
             onChange={handleChange}
             disabled={groupsLoading}
-            className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent ${
+            className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent text-sm sm:text-base ${
               errors.grupo ? "border-red-500" : "border-gray-300"
             } ${groupsLoading ? 'bg-gray-100 cursor-not-allowed' : ''}`}
           >
@@ -187,7 +187,7 @@ const CreateAuction = ({ auction, onClose }) => {
             name="fecha_fin"
             value={formData.fecha_fin}
             onChange={handleChange}
-            className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent ${
+            className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent text-sm sm:text-base ${
               errors.fecha_fin ? "border-red-500" : "border-gray-300"
             }`}
             min={minDateString}
@@ -201,9 +201,9 @@ const CreateAuction = ({ auction, onClose }) => {
       </div>
 
       {/* Información adicional */}
-      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-        <h4 className="font-medium text-blue-900 mb-2">Información importante</h4>
-        <ul className="text-sm text-blue-700 space-y-1">
+      <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 sm:p-4">
+        <h4 className="font-medium text-blue-900 text-sm sm:text-base mb-2">Información importante</h4>
+        <ul className="text-xs sm:text-sm text-blue-700 space-y-1">
           <li>• Los estudiantes pujarán con sus Educoins acumulados</li>
           <li>• Las Educoins se bloquean durante la subasta</li>
           <li>• Solo el ganador pagará las Educoins pujadas</li>
@@ -211,19 +211,19 @@ const CreateAuction = ({ auction, onClose }) => {
         </ul>
       </div>
 
-      <div className="flex space-x-3 pt-4">
+      <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-3 pt-2 sm:pt-4">
         <button 
           type="button" 
           onClick={onClose} 
           disabled={isLoading}
-          className="flex-1 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition disabled:opacity-50"
+          className="flex-1 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition disabled:opacity-50 text-sm sm:text-base"
         >
           Cancelar
         </button>
         <button
           type="submit"
           disabled={isLoading || groupsLoading || groups?.length === 0}
-          className="flex-1 bg-orange-500 text-white px-4 py-2 rounded-lg hover:bg-orange-600 transition disabled:opacity-50 flex items-center justify-center"
+          className="flex-1 bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition disabled:opacity-50 flex items-center justify-center text-sm sm:text-base"
         >
           {isLoading ? <LoadingSpinner size="sm" /> : isEditing ? "Actualizar Subasta" : "Crear Subasta"}
         </button>
