@@ -11,9 +11,16 @@ from django.contrib.auth import update_session_auth_hash, get_user_model
 from django.contrib.auth.tokens import PasswordResetTokenGenerator
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from django.utils.encoding import force_bytes, force_str
-from django.core.mail import send_mail
+from django.utils import timezone
 
 from .models import User
+from .token_models import EmailVerificationToken, PasswordResetAttempt, LoginFailureTracker
+from .email_utils import (
+    send_verification_email, 
+    send_welcome_email, 
+    send_password_reset_email,
+    send_account_deletion_confirmation_email
+)
 from .serializers import (
     UserRegistrationSerializer,
     UserLoginSerializer,
@@ -27,25 +34,134 @@ User = get_user_model()
 token_generator = PasswordResetTokenGenerator()
 
 
+def get_client_ip(request):
+    """Obtiene la IP del cliente"""
+    x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
+    if x_forwarded_for:
+        ip = x_forwarded_for.split(',')[0]
+    else:
+        ip = request.META.get('REMOTE_ADDR')
+    return ip
+
+
 # --------------------------
 # Registro
 # --------------------------
 @api_view(['POST'])
 @permission_classes([AllowAny])
 def api_register(request):
+    """
+    Registro manual - requiere verificación de email
+    """
     serializer = UserRegistrationSerializer(data=request.data)
     if serializer.is_valid():
+        # Crear usuario SIN activar
         user = serializer.save()
-        refresh = RefreshToken.for_user(user)
+        user.is_active = False  # Cuenta inactiva hasta verificar email
+        user.email_verified = False
+        user.save()
+        
+        # Crear y enviar token de verificación
+        verification_token = EmailVerificationToken.objects.create(user=user)
+        send_verification_email(user, verification_token)
+        
         return Response({
-            'message': 'Usuario creado exitosamente',
+            'message': 'Usuario registrado. Por favor verifica tu correo electrónico.',
+            'email': user.email,
+            'verification_required': True
+        }, status=status.HTTP_201_CREATED)
+    
+    return Response({
+        'message': 'Error en el registro', 
+        'errors': serializer.errors
+    }, status=status.HTTP_400_BAD_REQUEST)
+
+
+# --------------------------
+# Verificación de Email
+# --------------------------
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def verify_email(request, token):
+    """
+    Verifica el email del usuario usando el token
+    """
+    try:
+        verification_token = EmailVerificationToken.objects.get(token=token)
+        
+        if not verification_token.is_valid():
+            return Response({
+                'detail': 'El token de verificación ha expirado o ya fue usado.'
+            }, status=status.HTTP_400_BAD_REQUEST)
+        
+        # Activar usuario
+        user = verification_token.user
+        user.is_active = True
+        user.email_verified = True
+        user.save()
+        
+        # Marcar token como usado
+        verification_token.mark_as_used()
+        
+        # Enviar email de bienvenida
+        send_welcome_email(user, is_google_signup=False)
+        
+        # Generar tokens JWT
+        refresh = RefreshToken.for_user(user)
+        
+        return Response({
+            'message': '¡Email verificado exitosamente!',
             'user': UserProfileSerializer(user).data,
             'tokens': {
                 'access': str(refresh.access_token),
                 'refresh': str(refresh),
             }
-        }, status=status.HTTP_201_CREATED)
-    return Response({'message': 'Error en el registro', 'errors': serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
+        }, status=status.HTTP_200_OK)
+        
+    except EmailVerificationToken.DoesNotExist:
+        return Response({
+            'detail': 'Token de verificación inválido.'
+        }, status=status.HTTP_400_BAD_REQUEST)
+
+
+# --------------------------
+# Re-enviar email de verificación
+# --------------------------
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def resend_verification_email(request):
+    """
+    Re-envía el email de verificación
+    """
+    email = request.data.get('email')
+    
+    try:
+        user = User.objects.get(email=email)
+        
+        if user.email_verified:
+            return Response({
+                'detail': 'Este email ya está verificado.'
+            }, status=status.HTTP_400_BAD_REQUEST)
+        
+        # Invalidar tokens anteriores
+        EmailVerificationToken.objects.filter(
+            user=user, 
+            is_used=False
+        ).update(is_used=True)
+        
+        # Crear nuevo token
+        verification_token = EmailVerificationToken.objects.create(user=user)
+        send_verification_email(user, verification_token)
+        
+        return Response({
+            'message': 'Email de verificación reenviado exitosamente.'
+        }, status=status.HTTP_200_OK)
+        
+    except User.DoesNotExist:
+        # Por seguridad, no revelar si el email existe
+        return Response({
+            'message': 'Si el email existe, se ha enviado un nuevo código de verificación.'
+        }, status=status.HTTP_200_OK)
 
 
 # --------------------------
@@ -54,9 +170,25 @@ def api_register(request):
 @api_view(['POST'])
 @permission_classes([AllowAny])
 def api_login(request):
+    """
+    Login con tracking de fallos y sugerencia de reset
+    """
     serializer = UserLoginSerializer(data=request.data)
+    
     if serializer.is_valid():
         user = serializer.validated_data['user']
+        
+        # Verificar si el email está verificado
+        if not user.email_verified:
+            return Response({
+                'message': 'Por favor verifica tu correo electrónico antes de iniciar sesión.',
+                'email_not_verified': True,
+                'email': user.email
+            }, status=status.HTTP_403_FORBIDDEN)
+        
+        # Login exitoso - limpiar fallos
+        LoginFailureTracker.clear_failures(user.email)
+        
         refresh = RefreshToken.for_user(user)
         return Response({
             'message': 'Login exitoso',
@@ -66,7 +198,84 @@ def api_login(request):
                 'refresh': str(refresh),
             }
         }, status=status.HTTP_200_OK)
-    return Response({'message': 'Error en el login', 'errors': serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
+    
+    # Login fallido - registrar intento
+    email = request.data.get('email')
+    if email:
+        ip_address = get_client_ip(request)
+        LoginFailureTracker.objects.create(
+            email=email,
+            ip_address=ip_address
+        )
+        
+        # Verificar si sugerir reset
+        suggest_reset = LoginFailureTracker.should_suggest_reset(email)
+        
+        return Response({
+            'message': 'Credenciales inválidas',
+            'suggest_password_reset': suggest_reset,
+            'errors': serializer.errors
+        }, status=status.HTTP_400_BAD_REQUEST)
+    
+    return Response({
+        'message': 'Error en el login', 
+        'errors': serializer.errors
+    }, status=status.HTTP_400_BAD_REQUEST)
+
+
+# --------------------------
+# Google login
+# --------------------------
+class GoogleLoginAPIView(APIView):
+    permission_classes = [AllowAny]
+
+    def post(self, request):
+        token = request.data.get("id_token")
+        if not token:
+            return Response({"detail": "id_token requerido"}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            idinfo = id_token.verify_oauth2_token(
+                token,
+                google_requests.Request(),
+                settings.GOOGLE_CLIENT_ID
+            )
+        except ValueError as e:
+            return Response({"detail": f"Token inválido: {str(e)}"}, status=status.HTTP_400_BAD_REQUEST)
+
+        email = idinfo.get("email")
+        email_verified = idinfo.get("email_verified", False)
+        first_name = idinfo.get("given_name") or email.split("@")[0]
+        last_name = idinfo.get("family_name") or ""
+
+        if not email or not email_verified:
+            return Response({"detail": "Email no verificado por Google"}, status=status.HTTP_400_BAD_REQUEST)
+
+        user, created = User.objects.get_or_create(email=email, defaults={
+            "first_name": first_name,
+            "last_name": last_name,
+            "username": email.split("@")[0],
+            "is_active": True,
+            "email_verified": True,  # ✅ Google ya verificó el email
+        })
+        
+        if created:
+            user.set_unusable_password()
+            user.role = "estudiante"
+            user.save()
+            
+            # Enviar email de bienvenida para registro con Google
+            send_welcome_email(user, is_google_signup=True)
+
+        refresh = RefreshToken.for_user(user)
+        data = {
+            "user": UserProfileSerializer(user).data,
+            "tokens": {
+                "access": str(refresh.access_token),
+                "refresh": str(refresh),
+            }
+        }
+        return Response(data, status=status.HTTP_200_OK)
 
 
 # --------------------------
@@ -77,6 +286,7 @@ def api_login(request):
 def api_profile(request):
     serializer = UserProfileSerializer(request.user)
     return Response({'message': 'Perfil obtenido exitosamente', 'user': serializer.data})
+
 
 @api_view(['PATCH'])
 @permission_classes([IsAuthenticated])
@@ -97,6 +307,134 @@ def api_update_profile(request):
             "user": UserProfileSerializer(user).data
         })
     return Response(profile_serializer.errors, status=400)
+
+
+# --------------------------
+# Cambiar contraseña (logueado)
+# --------------------------
+class ChangePasswordView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def patch(self, request):
+        serializer = ChangePasswordSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        user = request.user
+        if not user.check_password(serializer.validated_data['old_password']):
+            return Response({"detail": "La contraseña actual es incorrecta"}, status=400)
+
+        user.set_password(serializer.validated_data['new_password'])
+        user.save()
+        update_session_auth_hash(request, user)
+
+        return Response({"detail": "Contraseña actualizada correctamente"})
+
+
+# --------------------------
+# Reset password (flujo con email)
+# --------------------------
+class PasswordResetRequestView(APIView):
+    permission_classes = [AllowAny]
+
+    def post(self, request):
+        email = request.data.get("email")
+        ip_address = get_client_ip(request)
+        
+        try:
+            user = User.objects.get(email=email)
+            uid = urlsafe_base64_encode(force_bytes(user.pk))
+            token = token_generator.make_token(user)
+            reset_link = f"{settings.FRONTEND_URL}/reset-password/{uid}/{token}/"
+            
+            # Registrar intento
+            PasswordResetAttempt.objects.create(
+                email=email,
+                ip_address=ip_address,
+                success=True
+            )
+            
+            send_password_reset_email(user, reset_link)
+            
+        except User.DoesNotExist:
+            # Registrar intento fallido
+            PasswordResetAttempt.objects.create(
+                email=email,
+                ip_address=ip_address,
+                success=False
+            )
+        
+        # Siempre retornar el mismo mensaje por seguridad
+        return Response({
+            "detail": "Si el email existe, se ha enviado un enlace de restablecimiento."
+        }, status=200)
+
+
+class PasswordResetConfirmView(APIView):
+    permission_classes = [AllowAny]
+
+    def post(self, request, uidb64, token):
+        try:
+            uid = force_str(urlsafe_base64_decode(uidb64))
+            user = User.objects.get(pk=uid)
+            
+            if not token_generator.check_token(user, token):
+                return Response({"detail": "Token inválido o expirado"}, status=400)
+
+            new_password = request.data.get("new_password")
+            if not new_password:
+                return Response({"detail": "La nueva contraseña es requerida"}, status=400)
+            
+            user.set_password(new_password)
+            user.save()
+            
+            # Limpiar fallos de login
+            LoginFailureTracker.clear_failures(user.email)
+            
+            return Response({"detail": "Contraseña restablecida correctamente"}, status=200)
+        except Exception as e:
+            return Response({"detail": "Error al procesar el token"}, status=400)
+
+
+# --------------------------
+# Eliminar cuenta
+# --------------------------
+@api_view(['DELETE'])
+@permission_classes([IsAuthenticated])
+def api_delete_account(request):
+    """
+    Permite al usuario eliminar su propia cuenta
+    """
+    user = request.user
+    
+    # Verificar contraseña para confirmar
+    password = request.data.get('password')
+    if not password:
+        return Response({
+            'detail': 'La contraseña es requerida para confirmar la eliminación'
+        }, status=status.HTTP_400_BAD_REQUEST)
+    
+    if not user.check_password(password):
+        return Response({
+            'detail': 'Contraseña incorrecta'
+        }, status=status.HTTP_400_BAD_REQUEST)
+    
+    # No permitir eliminar admin si es el único
+    if user.role == 'admin' and User.objects.filter(role='admin').count() <= 1:
+        return Response({
+            'detail': 'No puedes eliminar la última cuenta de administrador'
+        }, status=status.HTTP_400_BAD_REQUEST)
+    
+    # Enviar email de confirmación antes de eliminar
+    user_email = user.email
+    send_account_deletion_confirmation_email(user)
+    
+    # Eliminar usuario
+    user.delete()
+    
+    return Response({
+        'message': 'Cuenta eliminada exitosamente',
+        'email': user_email
+    }, status=status.HTTP_200_OK)
 
 
 # --------------------------
@@ -170,119 +508,3 @@ def api_delete_user(request, user_id):
         }, status=status.HTTP_200_OK)
     except User.DoesNotExist:
         return Response({"detail": "Usuario no encontrado"}, status=status.HTTP_404_NOT_FOUND)
-
-
-# --------------------------
-# Google login
-# --------------------------
-class GoogleLoginAPIView(APIView):
-    permission_classes = [AllowAny]
-
-    def post(self, request):
-        token = request.data.get("id_token")
-        if not token:
-            return Response({"detail": "id_token requerido"}, status=status.HTTP_400_BAD_REQUEST)
-
-        try:
-            idinfo = id_token.verify_oauth2_token(
-                token,
-                google_requests.Request(),
-                settings.GOOGLE_CLIENT_ID
-            )
-            print("IDINFO DEBUG:", idinfo)
-
-        except ValueError as e:
-            return Response({"detail": f"Token inválido: {str(e)}"}, status=status.HTTP_400_BAD_REQUEST)
-
-        email = idinfo.get("email")
-        email_verified = idinfo.get("email_verified", False)
-        first_name = idinfo.get("given_name") or email.split("@")[0]
-        last_name = idinfo.get("family_name") or ""
-
-        if not email or not email_verified:
-            return Response({"detail": "Email no verificado por Google"}, status=status.HTTP_400_BAD_REQUEST)
-
-        user, created = User.objects.get_or_create(email=email, defaults={
-            "first_name": first_name,
-            "last_name": last_name,
-            "username": email.split("@")[0],
-        })
-        if created:
-            user.set_unusable_password()
-            user.role = "estudiante"
-            user.save()
-
-        refresh = RefreshToken.for_user(user)
-        data = {
-            "user": UserProfileSerializer(user).data,
-            "tokens": {
-                "access": str(refresh.access_token),
-                "refresh": str(refresh),
-            }
-        }
-        return Response(data, status=status.HTTP_200_OK)
-
-
-# --------------------------
-# Cambiar contraseña (logueado)
-# --------------------------
-class ChangePasswordView(APIView):
-    permission_classes = [IsAuthenticated]
-
-    def patch(self, request):
-        serializer = ChangePasswordSerializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-
-        user = request.user
-        if not user.check_password(serializer.validated_data['old_password']):
-            return Response({"detail": "La contraseña actual es incorrecta"}, status=400)
-
-        user.set_password(serializer.validated_data['new_password'])
-        user.save()
-        update_session_auth_hash(request, user)
-
-        return Response({"detail": "Contraseña actualizada correctamente"})
-
-
-# --------------------------
-# Reset password (flujo con email)
-# --------------------------
-class PasswordResetRequestView(APIView):
-    permission_classes = [AllowAny]
-
-    def post(self, request):
-        email = request.data.get("email")
-        try:
-            user = User.objects.get(email=email)
-            uid = urlsafe_base64_encode(force_bytes(user.pk))
-            token = token_generator.make_token(user)
-            reset_link = f"http://localhost:5173/reset-password/{uid}/{token}/"
-            print("Reset link:", reset_link)
-
-            send_mail(
-                subject="Recupera tu contraseña",
-                message=f"Usa este enlace para restablecer tu contraseña: {reset_link}",
-                from_email="no-reply@educoin.com",
-                recipient_list=[email],
-            )
-        except User.DoesNotExist:
-            pass
-        return Response({"detail": "Si el email existe, se ha enviado un enlace"}, status=200)
-
-
-class PasswordResetConfirmView(APIView):
-    permission_classes = [AllowAny]
-
-    def post(self, request, uidb64, token):
-        try:
-            uid = force_str(urlsafe_base64_decode(uidb64))
-            user = User.objects.get(pk=uid)
-            if not token_generator.check_token(user, token):
-                return Response({"detail": "Token inválido"}, status=400)
-
-            new_password = request.data.get("new_password")
-            user.set_password(new_password)
-            user.save()
-            return Response({"detail": "Contraseña restablecida correctamente"}, status=200)
-        except Exception:
-            return Response({"detail": "Error al procesar el token"}, status=400)

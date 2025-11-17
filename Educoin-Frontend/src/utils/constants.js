@@ -7,9 +7,18 @@ export const API_ENDPOINTS = {
   PROFILE: "/api/users/profile/",
   PROFILE_UPDATE: "/api/users/profile/update/",
   GOOGLE_LOGIN: "/api/users/google/",
+  
+  // Verificación de email
+  VERIFY_EMAIL: (token) => `/api/users/verify-email/${token}/`,
+  RESEND_VERIFICATION: "/api/users/resend-verification/",
+  
+  // Contraseñas
   CHANGE_PASSWORD: "/api/users/change-password/",
   PASSWORD_RESET: "/api/users/password-reset/",
   PASSWORD_RESET_CONFIRM: (uidb64, token) => `/api/users/password-reset-confirm/${uidb64}/${token}/`,
+  
+  // Cuenta
+  DELETE_ACCOUNT: "/api/users/delete-account/",
   
   // Admin
   USER_LIST: "/api/users/list/",

@@ -13,6 +13,7 @@ class User(AbstractUser, BaseModel):
     email = models.EmailField(unique=True)
     role = models.CharField(max_length=12, choices=ROLE_CHOICES, default='estudiante')
     avatar = models.ImageField(upload_to='avatars/', blank=True, null=True)
+    email_verified = models.BooleanField(default=False)
 
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = ['username']  
