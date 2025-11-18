@@ -1,14 +1,15 @@
 from pathlib import Path
 from datetime import timedelta
-from decouple import Config, RepositoryEnv
+from decouple import config, Csv
 import os
 
 # ─────────────────────────────────────────────
 # BASE DIR & ENV
 # ─────────────────────────────────────────────
 BASE_DIR = Path(__file__).resolve().parent.parent
-ENV_FILE = BASE_DIR.parent / '.env'
-config = Config(RepositoryEnv(str(ENV_FILE)))
+
+# Configuración que funciona tanto con archivo .env como con variables de entorno
+# En Railway, las variables se leen directamente del sistema
 
 # ─────────────────────────────────────────────
 # Configuración principal
