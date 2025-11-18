@@ -46,7 +46,7 @@ export default function SubmissionCard({ submission, onSave }) {
         <form onSubmit={handleSubmit} className="mt-4 space-y-3">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
-              <label className="block text-xs sm:text-sm text-gray-700 mb-1">Calificación (0-5)</label>
+              <label className="block text-xs sm:text-sm text-gray-700 mb-1">Calificación: </label>
               <input
                 type="number"
                 value={calificacion}
