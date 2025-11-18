@@ -19,6 +19,10 @@ class Auction(BaseModel):
     
     estado = models.CharField(max_length=10, choices=ESTADOS, default="active")
     fecha_fin = models.DateTimeField()
+    valor_minimo = models.PositiveIntegerField(
+    default=1,
+    help_text="Valor mínimo para pujar en esta subasta"
+    )
 
     class Meta:
         ordering = ['-creado']

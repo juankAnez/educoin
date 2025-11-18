@@ -17,12 +17,12 @@ import { Link } from "react-router-dom"
 import { useAuthContext } from "../../context/AuthContext"
 import { formatCoins } from "../../utils/helpers"
 import { USER_ROLES } from "../../utils/constants"
-import { useWallet } from "../../hooks/useWallet"
+import { useTotalBalance } from "../../hooks/useWallet"
 import NotificationsDropdown from '../notifications/NotificationsDropdown'
 
 const Header = ({ onMenuClick }) => {
   const { user, logout } = useAuthContext()
-  const { data: walletData, isLoading: walletLoading } = useWallet()
+  const { data: totalBalance, isLoading: balanceLoading } = useTotalBalance()
   const isStudent = user?.role === USER_ROLES.STUDENT
   const isTeacher = user?.role === USER_ROLES.TEACHER
   const isAdmin = user?.role === USER_ROLES.ADMIN
@@ -53,12 +53,12 @@ const Header = ({ onMenuClick }) => {
           </span>
         </div>
 
-        {/* Saldo del estudiante */}
-        {isStudent && walletData && (
+        {/* Saldo del estudiante - MOSTRAR SUMA TOTAL */}
+        {isStudent && !balanceLoading && (
           <div className="flex items-center gap-x-1.5 sm:gap-x-2 px-3 sm:px-4 py-1.5 sm:py-2 bg-gradient-to-r from-orange-500 to-orange-600 rounded-full shadow-lg shadow-orange-500/25">
             <CurrencyEuroIcon className="h-3 w-3 sm:h-4 sm:w-4 xl:h-5 xl:w-5 text-white" />
             <span className="text-xs sm:text-sm xl:text-base font-bold text-white whitespace-nowrap">
-              {formatCoins(walletData.saldo || 0)} EC
+              {formatCoins(totalBalance || 0)} EC
             </span>
           </div>
         )}
@@ -115,11 +115,11 @@ const Header = ({ onMenuClick }) => {
                       {user?.first_name} {user?.last_name}
                     </p>
                     <p className="text-xs text-gray-500 capitalize truncate">{user?.role}</p>
-                    {isStudent && walletData && (
+                    {isStudent && !balanceLoading && (
                       <div className="flex items-center gap-x-1 mt-1">
                         <CurrencyEuroIcon className="h-3 w-3 text-orange-500 flex-shrink-0" />
                         <span className="text-xs font-medium text-orange-600 truncate">
-                          {formatCoins(walletData.saldo || 0)} EC
+                          {formatCoins(totalBalance || 0)} EC
                         </span>
                       </div>
                     )}

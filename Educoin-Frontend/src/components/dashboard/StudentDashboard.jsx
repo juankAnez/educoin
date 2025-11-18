@@ -12,18 +12,18 @@ import { useActivities } from "../../hooks/useActivities"
 import { useGroups } from "../../hooks/useGroups"
 import { useAuthContext } from "../../context/AuthContext"
 import LoadingSpinner from "../common/LoadingSpinner"
-import { useWallet } from "../../hooks/useWallet"
+import { useTotalBalance } from "../../hooks/useWallet"
 
 export default function StudentDashboard() {
   const { user } = useAuthContext()
   const { data: activities, isLoading: activitiesLoading } = useActivities()
   const { data: groups, isLoading: groupsLoading } = useGroups()
-  const { data: walletData, isLoading: walletLoading } = useWallet()
+  const { data: totalBalance, isLoading: balanceLoading } = useTotalBalance()
   
   const pendingActivities = activities?.filter(a => !a.user_submission) || []
   const completedActivities = activities?.filter(a => a.user_submission) || []
 
-  if (activitiesLoading || groupsLoading || walletLoading) {
+  if (activitiesLoading || groupsLoading || balanceLoading) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
         <LoadingSpinner size="lg" />
@@ -45,7 +45,7 @@ export default function StudentDashboard() {
             </p>
           </div>
           <div className="mt-4 md:mt-0 bg-orange-500/30 backdrop-blur-sm rounded-xl px-4 py-3 border border-orange-400/50 min-w-[140px]">
-            <p className="text-lg sm:text-xl font-bold text-white text-center">{walletData?.saldo || 0}</p>
+            <p className="text-lg sm:text-xl font-bold text-white text-center">{totalBalance || 0}</p>
             <p className="text-orange-100 text-sm text-center">Tus Educoins</p>
           </div>
         </div>
@@ -102,7 +102,7 @@ export default function StudentDashboard() {
             </div>
             <div>
               <p className="text-lg sm:text-2xl font-bold text-orange-600">
-                {walletData?.saldo || 0}
+                {totalBalance || 0}
               </p>
               <p className="text-xs text-gray-600">Educoins</p>
             </div>

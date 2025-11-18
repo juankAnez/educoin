@@ -1,6 +1,9 @@
 from rest_framework import viewsets, permissions, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
+from django.db.models import Q
+from django.utils import timezone
+
 from .models import Notification
 from .serializers import NotificationSerializer, NotificationCreateSerializer
 
@@ -17,6 +20,14 @@ class NotificationViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         user = self.request.user
         return Notification.objects.filter(usuario=user).select_related('usuario')
+
+    def get_serializer_class(self):
+        """
+        Usar diferente serializer para crear notificaciones
+        """
+        if self.action == 'create':
+            return NotificationCreateSerializer
+        return NotificationSerializer
 
     @action(detail=False, methods=['get'], url_path='no-leidas')
     def no_leidas(self, request):
@@ -71,4 +82,60 @@ class NotificationViewSet(viewsets.ModelViewSet):
             'no_leidas': no_leidas,
             'leidas': leidas,
             'por_tipo': por_tipo
+        })
+
+    @action(detail=False, methods=['post'], url_path='enviar-estudiantes')
+    def enviar_a_estudiantes(self, request):
+        """
+        Permite a docentes enviar notificaciones a sus estudiantes
+        """
+        from apps.classrooms.models import Classroom
+        
+        user = request.user
+        
+        # Verificar que sea docente
+        if user.role != 'docente':
+            return Response({
+                'error': 'Solo los docentes pueden enviar notificaciones a estudiantes'
+            }, status=status.HTTP_403_FORBIDDEN)
+        
+        # Obtener estudiantes del docente
+        classrooms = Classroom.objects.filter(docente=user)
+        estudiantes = []
+        for classroom in classrooms:
+            estudiantes.extend(classroom.estudiantes.all())
+        
+        if not estudiantes:
+            return Response({
+                'error': 'No tienes estudiantes asignados'
+            }, status=status.HTTP_400_BAD_REQUEST)
+        
+        # Crear notificaciones para cada estudiante
+        titulo = request.data.get('titulo')
+        mensaje = request.data.get('mensaje')
+        tipo = request.data.get('tipo', 'anuncio')
+        
+        if not titulo or not mensaje:
+            return Response({
+                'error': 'Título y mensaje son requeridos'
+            }, status=status.HTTP_400_BAD_REQUEST)
+        
+        notificaciones = [
+            Notification(
+                usuario=estudiante,
+                tipo=tipo,
+                titulo=titulo,
+                mensaje=mensaje,
+                metadata={
+                    'enviado_por': f'{user.first_name} {user.last_name}',
+                    'docente_email': user.email
+                }
+            )
+            for estudiante in estudiantes
+        ]
+        
+        Notification.objects.bulk_create(notificaciones)
+        
+        return Response({
+            'message': f'Notificación enviada a {len(estudiantes)} estudiantes'
         })

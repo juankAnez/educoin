@@ -68,7 +68,8 @@ def api_register(request):
         return Response({
             'message': 'Usuario registrado. Por favor verifica tu correo electrónico.',
             'email': user.email,
-            'verification_required': True
+            'verification_required': True,
+            'user_id': user.id
         }, status=status.HTTP_201_CREATED)
     
     return Response({
@@ -316,19 +317,24 @@ class ChangePasswordView(APIView):
     permission_classes = [IsAuthenticated]
 
     def patch(self, request):
-        serializer = ChangePasswordSerializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
+        serializer = ChangePasswordSerializer(data=request.data, context={'request': request})
+        
+        if not serializer.is_valid():
+            return Response({
+                "detail": "Error en los datos",
+                "errors": serializer.errors
+            }, status=status.HTTP_400_BAD_REQUEST)
 
         user = request.user
-        if not user.check_password(serializer.validated_data['old_password']):
-            return Response({"detail": "La contraseña actual es incorrecta"}, status=400)
-
         user.set_password(serializer.validated_data['new_password'])
         user.save()
+        
+        # Actualizar la sesión para evitar logout
         update_session_auth_hash(request, user)
 
-        return Response({"detail": "Contraseña actualizada correctamente"})
-
+        return Response({
+            "detail": "Contraseña actualizada correctamente"
+        }, status=status.HTTP_200_OK)
 
 # --------------------------
 # Reset password (flujo con email)

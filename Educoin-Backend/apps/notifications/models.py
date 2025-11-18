@@ -14,6 +14,11 @@ class Notification(BaseModel):
         ('subasta_ganada', 'Subasta Ganada'),
         ('anuncio', 'Anuncio'),
         ('general', 'General'),
+        ('email_verificado', 'Email Verificado'),
+        ('password_changed', 'Contraseña Cambiada'),
+        ('password_reset', 'Contraseña Restablecida'),
+        ('login_failed', 'Intento de Login Fallido'),
+        ('account_security', 'Alerta de Seguridad'),
     ]
 
     usuario = models.ForeignKey(

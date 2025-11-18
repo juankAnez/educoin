@@ -1,5 +1,5 @@
 import { useState } from "react"
-import { useWallet, useAllWallets, usePeriods, useTransactions } from "../../hooks/useWallet"
+import { useWallet, useAllWallets, usePeriods, useTransactions, useTotalBalance } from "../../hooks/useWallet"
 import { useAuthContext } from "../../context/AuthContext"
 import {
   CurrencyEuroIcon,
@@ -32,16 +32,11 @@ export default function WalletPage() {
   const { data: mainWallet, isLoading: mainLoading, error: mainError } = useWallet()
   const { data: allWallets, isLoading: walletsLoading, error: walletsError } = useAllWallets()
   const { data: transactions, isLoading: transactionsLoading, error: transactionsError } = useTransactions()
+  const { data: totalBalance } = useTotalBalance()
   
   const [showBalance, setShowBalance] = useState(true)
   const isTeacher = user?.role === "docente"
   const { data: periods } = usePeriods(isTeacher)
-
-  // Debug logs
-  console.log("Main Wallet:", mainWallet)
-  console.log("All Wallets:", allWallets)
-  console.log("Transactions:", transactions)
-  console.log("User Role:", user?.role)
 
   if (mainLoading) {
     return (
@@ -62,8 +57,6 @@ export default function WalletPage() {
         spendCount: 0
       }
     }
-
-    console.log("Calculando stats para transacciones:", transactions)
 
     // Backend Django solo tiene: earn, spend, reset
     const totalGanado = transactions
@@ -194,13 +187,11 @@ export default function WalletPage() {
             <div className="min-w-0">
               <p className="text-orange-100 text-sm sm:text-base">Balance Total</p>
               <h2 className="text-2xl sm:text-4xl lg:text-5xl font-bold truncate">
-                {showBalance ? formatEC(mainWallet?.saldo || 0) : "••••••"}
+                {showBalance ? formatEC(totalBalance || 0) : "••••••"}
               </h2>
-              {mainWallet?.periodo_nombre && (
-                <p className="text-orange-200 text-sm mt-1">
-                  {mainWallet.periodo_nombre}
-                </p>
-              )}
+              <p className="text-orange-200 text-sm mt-1">
+                Suma de todas tus billeteras
+              </p>
             </div>
           </div>
         </div>
@@ -228,36 +219,17 @@ export default function WalletPage() {
           </div>
         </div>
 
-        {/* Saldo disponible y bloqueado */}
-        {showBalance && (
-          <div className="grid grid-cols-2 gap-3 sm:gap-4 mt-4 pt-4 border-t border-orange-400/30 relative z-10">
-            <div className="text-center bg-white/10 rounded-lg p-2 backdrop-blur-sm">
-              <p className="text-xs text-orange-200 mb-1">Disponible</p>
-              <p className="text-lg sm:text-xl font-bold text-white">
-                {formatCompactEC(saldoDisponible)}
-              </p>
-            </div>
-            <div className="text-center bg-white/10 rounded-lg p-2 backdrop-blur-sm">
+        {/* Solo Bloqueado - Eliminado "Disponible" */}
+        {showBalance && mainWallet?.bloqueado > 0 && (
+          <div className="flex justify-center mt-4 pt-4 border-t border-orange-400/30 relative z-10">
+            <div className="text-center bg-white/10 rounded-lg p-3 sm:p-4 backdrop-blur-sm min-w-[120px]">
               <p className="text-xs text-orange-200 mb-1">Bloqueado</p>
-              <p className="text-lg sm:text-xl font-bold text-white">
+              <p className="text-lg sm:text-xl lg:text-2xl font-bold text-white">
                 {formatCompactEC(mainWallet?.bloqueado || 0)}
               </p>
             </div>
           </div>
         )}
-      </div>
-
-      {/* Información de debug temporal */}
-      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-        <p className="text-blue-800 text-sm">
-          <strong>Información de Debug:</strong><br/>
-          Wallet Activa: {mainWallet ? "Sí" : "No"}<br/>
-          Balance: {formatEC(mainWallet?.saldo || 0)}<br/>
-          Disponible: {formatEC(saldoDisponible)}<br/>
-          Bloqueado: {formatEC(mainWallet?.bloqueado || 0)}<br/>
-          Transacciones: {transactions?.length || 0}<br/>
-          Rol Usuario: {user?.role}
-        </p>
       </div>
 
       {/* Grid de información principal */}
@@ -482,22 +454,16 @@ export default function WalletPage() {
         )}
       </div>
 
-      {/* Información adicional para móviles */}
+      {/* Información adicional para móviles - Solo Bloqueado */}
       <div className="lg:hidden bg-orange-50 border border-orange-200 rounded-xl p-4">
         <div className="flex items-center gap-2 text-orange-800 mb-2">
           <WalletIcon className="h-4 w-4 flex-shrink-0" />
           <span className="text-sm font-medium">Resumen de tu billetera</span>
         </div>
-        <div className="grid grid-cols-2 gap-4 text-xs">
-          <div>
-            <span className="text-orange-600">Disponible: </span>
-            <span className="font-medium text-orange-800">
-              {showBalance ? formatCompactEC(saldoDisponible) : "••••"}
-            </span>
-          </div>
-          <div>
-            <span className="text-orange-600">Bloqueado: </span>
-            <span className="font-medium text-orange-800">
+        <div className="flex justify-center">
+          <div className="text-center">
+            <span className="text-orange-600 text-sm">Bloqueado: </span>
+            <span className="font-medium text-orange-800 text-sm">
               {showBalance ? formatCompactEC(mainWallet?.bloqueado || 0) : "••••"}
             </span>
           </div>

@@ -103,15 +103,30 @@ export const authService = {
     }
   },
 
-  async changePassword(oldPassword, newPassword) {
+  async changePassword(oldPassword, newPassword, confirmPassword) {
     try {
       const response = await api.patch(API_ENDPOINTS.CHANGE_PASSWORD, {
         old_password: oldPassword,
-        new_password: newPassword
+        new_password: newPassword,
+        confirm_password: confirmPassword
       });
       return response.data;
     } catch (error) {
-      throw new Error(error.response?.data?.detail || "Error al cambiar contraseña");
+      const errorDetail = error.response?.data?.detail;
+      const errors = error.response?.data?.errors;
+      
+      if (errors) {
+        // Manejar errores de validación del serializer
+        const errorMessages = [];
+        if (errors.old_password) errorMessages.push(errors.old_password[0]);
+        if (errors.new_password) errorMessages.push(errors.new_password[0]);
+        if (errors.confirm_password) errorMessages.push(errors.confirm_password[0]);
+        if (errors.non_field_errors) errorMessages.push(errors.non_field_errors[0]);
+        
+        throw new Error(errorMessages.join(', ') || 'Error al cambiar contraseña');
+      }
+      
+      throw new Error(errorDetail || 'Error al cambiar contraseña');
     }
   },
 

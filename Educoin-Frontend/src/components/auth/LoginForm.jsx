@@ -2,17 +2,22 @@
 
 import React, { useState, useEffect } from "react"
 import { useForm } from "react-hook-form"
-import { EyeIcon, EyeSlashIcon, ArrowLeftIcon } from "@heroicons/react/24/outline"
+import { useNavigate } from "react-router-dom"
+import { EyeIcon, EyeSlashIcon, ArrowLeftIcon, ExclamationTriangleIcon } from "@heroicons/react/24/outline"
 import { GoogleLogin, useGoogleLogin } from "@react-oauth/google"
 import { useAuthContext } from "../../context/AuthContext"
 import { googleAuthService } from "../../services/googleAuth"
+import { authService } from "../../services/auth"
 import { toast } from "react-hot-toast"
 import LoadingSpinner from "../common/LoadingSpinner"
 
 export default function LoginForm({ onSwitchToRegister, googleButtonEvent, compact }) {
+  const navigate = useNavigate()
   const { login } = useAuthContext()
   const [showPassword, setShowPassword] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
+  const [showResetSuggestion, setShowResetSuggestion] = useState(false)
+  const [failedEmail, setFailedEmail] = useState("")
 
   const {
     register,
@@ -22,14 +27,35 @@ export default function LoginForm({ onSwitchToRegister, googleButtonEvent, compa
 
   const onSubmit = async (data) => {
     setIsLoading(true)
+    setShowResetSuggestion(false)
+    
     try {
       await login({ email: data.email, password: data.password })
       toast.success("¡Bienvenido de nuevo!")
     } catch (err) {
-      toast.error(err.response?.data?.message || "Error al iniciar sesión")
-    } finally {
+      // 🆕 Verificar si el backend sugiere reset
+      if (err.suggestReset) {
+        setShowResetSuggestion(true)
+        setFailedEmail(data.email)
+        toast.error("Credenciales incorrectas. ¿Olvidaste tu contraseña?")
+      } else if (err.emailNotVerified) {
+        // Email no verificado
+        toast.error("Por favor verifica tu correo electrónico")
+        navigate("/email-sent", { 
+          state: { email: err.email },
+          replace: true 
+        })
+      } else {
+        toast.error(err.message || "Error al iniciar sesión")
+      }
       setIsLoading(false)
     }
+  }
+
+  const handlePasswordReset = () => {
+    navigate("/forgot-password", { 
+      state: { email: failedEmail }
+    })
   }
 
   // Google login
@@ -69,6 +95,30 @@ export default function LoginForm({ onSwitchToRegister, googleButtonEvent, compa
           Accede a tu cuenta para continuar aprendiendo
         </p>
       </div>
+
+      {/* 🆕 Sugerencia de reset */}
+      {showResetSuggestion && (
+        <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 animate-fadeIn">
+          <div className="flex items-start gap-3">
+            <ExclamationTriangleIcon className="h-5 w-5 text-amber-600 flex-shrink-0 mt-0.5" />
+            <div className="flex-1">
+              <p className="text-sm font-medium text-amber-900 mb-2">
+                ¿Olvidaste tu contraseña?
+              </p>
+              <p className="text-xs text-amber-700 mb-3">
+                Has intentado iniciar sesión sin éxito. Puedes restablecer tu contraseña si no la recuerdas.
+              </p>
+              <button
+                type="button"
+                onClick={handlePasswordReset}
+                className="text-sm bg-amber-600 text-white px-4 py-2 rounded-lg hover:bg-amber-700 transition font-medium"
+              >
+                Restablecer contraseña
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       <div className="space-y-3 sm:space-y-4">
         <div>
@@ -120,6 +170,17 @@ export default function LoginForm({ onSwitchToRegister, googleButtonEvent, compa
           {errors.password && (
             <p className="text-red-500 text-xs sm:text-sm mt-1">{errors.password.message}</p>
           )}
+          
+          {/* Link olvidaste contraseña */}
+          <div className="mt-2 text-right">
+            <button
+              type="button"
+              onClick={() => navigate("/forgot-password")}
+              className="text-xs sm:text-sm text-orange-600 hover:text-orange-700 font-medium transition"
+            >
+              ¿Olvidaste tu contraseña?
+            </button>
+          </div>
         </div>
       </div>
 

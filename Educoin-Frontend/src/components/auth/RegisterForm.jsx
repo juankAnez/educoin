@@ -2,15 +2,18 @@
 
 import React, { useState, useEffect } from "react"
 import { useForm } from "react-hook-form"
+import { useNavigate } from "react-router-dom"
 import { EyeIcon, EyeSlashIcon } from "@heroicons/react/24/outline"
 import { GoogleLogin, useGoogleLogin } from "@react-oauth/google"
 import { useAuthContext } from "../../context/AuthContext"
 import { googleAuthService } from "../../services/googleAuth"
+import { authService } from "../../services/auth"
 import { toast } from "react-hot-toast"
 import LoadingSpinner from "../common/LoadingSpinner"
 
 export default function RegisterForm({ onSwitchToLogin, googleButtonEvent, compact }) {
-  const { register: registerUser, login } = useAuthContext()
+  const navigate = useNavigate()
+  const { login } = useAuthContext()
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirm, setShowConfirm] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
@@ -35,11 +38,19 @@ export default function RegisterForm({ onSwitchToLogin, googleButtonEvent, compa
         password_confirm: data.password_confirm,
         role: "estudiante",
       }
-      await registerUser(payload)
-      toast.success("¡Cuenta creada exitosamente!")
-      await login({ email: payload.email, password: payload.password })
+      
+      // 🆕 Llamar al servicio de registro (NO al registerUser del contexto)
+      const response = await authService.register(payload)
+      
+      toast.success("¡Cuenta creada! Revisa tu email")
+      
+      // 🆕 Redirigir a la página de "Email Enviado"
+      navigate("/email-sent", { 
+        state: { email: payload.email },
+        replace: true 
+      })
     } catch (err) {
-      toast.error(err.response?.data?.message || "Error al crear la cuenta")
+      toast.error(err.message || "Error al crear la cuenta")
       setIsLoading(false)
     }
   }

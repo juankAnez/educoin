@@ -1,12 +1,17 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import { LockClosedIcon, TrashIcon, PencilIcon } from "@heroicons/react/24/outline"
 import { useAuthContext } from "../../context/AuthContext"
 import EditProfileModal from "../../components/profile/EditProfileModal"
+import ChangePasswordModal from "../../components/profile/ChangePasswordModal"
+import DeleteAccountModal from "../../components/profile/DeleteAccountModal"
 
 export default function ProfilePage() {
   const { user } = useAuthContext()
-  const [isEditing, setIsEditing] = useState(false)
+  const [isEditingProfile, setIsEditingProfile] = useState(false)
+  const [isChangingPassword, setIsChangingPassword] = useState(false)
+  const [isDeletingAccount, setIsDeletingAccount] = useState(false)
   const [currentDate, setCurrentDate] = useState("")
 
   useEffect(() => {
@@ -34,9 +39,10 @@ export default function ProfilePage() {
             <p className="text-blue-100 mt-1">{currentDate}</p>
           </div>
           <button
-            onClick={() => setIsEditing(true)}
-            className="mt-4 sm:mt-0 bg-white text-blue-600 px-6 py-2.5 rounded-xl hover:bg-blue-50 transition-all duration-200 font-semibold shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
+            onClick={() => setIsEditingProfile(true)}
+            className="mt-4 sm:mt-0 bg-white text-blue-600 px-6 py-2.5 rounded-xl hover:bg-blue-50 transition-all duration-200 font-semibold shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 flex items-center gap-2"
           >
+            <PencilIcon className="h-5 w-5" />
             Editar Perfil
           </button>
         </div>
@@ -82,7 +88,11 @@ export default function ProfilePage() {
                     <p className="text-sm font-medium text-gray-500 mb-1">Correo Electrónico</p>
                     <div className="bg-gray-50 p-3 rounded-lg border border-gray-200">
                       <p className="text-gray-900">{user.email}</p>
-                      <p className="text-xs text-gray-500 mt-1">1 mes atrás</p>
+                      {user.email_verified && (
+                        <span className="inline-block mt-1 text-xs bg-green-100 text-green-700 px-2 py-1 rounded">
+                          ✓ Verificado
+                        </span>
+                      )}
                     </div>
                   </div>
 
@@ -101,7 +111,7 @@ export default function ProfilePage() {
               {/* Account Information */}
               <div className="space-y-4">
                 <h3 className="text-lg font-semibold text-gray-900 border-b border-gray-200 pb-2">
-                  Información extra de la cuenta
+                  Información de la cuenta
                 </h3>
                 
                 <div className="space-y-3">
@@ -144,9 +154,61 @@ export default function ProfilePage() {
         </div>
       </div>
 
-      {/* Edit Modal */}
-      {isEditing && (
-        <EditProfileModal user={user} onClose={() => setIsEditing(false)} />
+      {/* Security Section */}
+      <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-6">
+        <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+          <LockClosedIcon className="h-5 w-5 text-blue-600" />
+          Seguridad
+        </h3>
+        
+        <div className="space-y-3">
+          {/* Cambiar contraseña */}
+          <button
+            onClick={() => setIsChangingPassword(true)}
+            className="w-full flex items-center justify-between p-4 border-2 border-blue-200 rounded-lg hover:bg-blue-50 transition group"
+          >
+            <div className="flex items-center gap-3">
+              <LockClosedIcon className="h-5 w-5 text-blue-600 group-hover:text-blue-700" />
+              <div className="text-left">
+                <p className="font-medium text-gray-900">Cambiar Contraseña</p>
+                <p className="text-sm text-gray-600">Actualiza tu contraseña por seguridad</p>
+              </div>
+            </div>
+            <svg className="w-5 h-5 text-gray-400 group-hover:text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+            </svg>
+          </button>
+
+          {/* Eliminar cuenta */}
+          <button
+            onClick={() => setIsDeletingAccount(true)}
+            className="w-full flex items-center justify-between p-4 border-2 border-red-200 rounded-lg hover:bg-red-50 transition group"
+          >
+            <div className="flex items-center gap-3">
+              <TrashIcon className="h-5 w-5 text-red-600 group-hover:text-red-700" />
+              <div className="text-left">
+                <p className="font-medium text-gray-900">Eliminar Cuenta</p>
+                <p className="text-sm text-gray-600">Elimina permanentemente tu cuenta y datos</p>
+              </div>
+            </div>
+            <svg className="w-5 h-5 text-gray-400 group-hover:text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      {/* Modals */}
+      {isEditingProfile && (
+        <EditProfileModal user={user} onClose={() => setIsEditingProfile(false)} />
+      )}
+
+      {isChangingPassword && (
+        <ChangePasswordModal onClose={() => setIsChangingPassword(false)} />
+      )}
+
+      {isDeletingAccount && (
+        <DeleteAccountModal user={user} onClose={() => setIsDeletingAccount(false)} />
       )}
     </div>
   )

@@ -88,3 +88,15 @@ export const useTransactions = () => {
     staleTime: 2 * 60 * 1000,
   })
 }
+
+export const useTotalBalance = () => {
+  const { data: allWallets, isLoading, error } = useAllWallets()
+  
+  const totalBalance = allWallets?.reduce((sum, wallet) => sum + (wallet.saldo || 0), 0) || 0
+  
+  return {
+    data: totalBalance,
+    isLoading,
+    error
+  }
+}
