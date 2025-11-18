@@ -1,10 +1,10 @@
 from pathlib import Path
 from datetime import timedelta
 from decouple import Config, RepositoryEnv
+import os
 
 # ─────────────────────────────────────────────
-# BASE_DIR ahora apunta a Educoin/EducoinBackend
-# y subimos un nivel para leer .env desde Educoin/
+# BASE DIR & ENV
 # ─────────────────────────────────────────────
 BASE_DIR = Path(__file__).resolve().parent.parent
 ENV_FILE = BASE_DIR.parent / '.env'
@@ -16,7 +16,8 @@ config = Config(RepositoryEnv(str(ENV_FILE)))
 SECRET_KEY = config('SECRET_KEY')
 DEBUG = config('DEBUG', default=False, cast=bool)
 
-ALLOWED_HOSTS = ['localhost', '127.0.0.1', '192.168.1.4']
+# ALLOWED_HOSTS dinámico
+ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='localhost,127.0.0.1').split(',')
 
 # ─────────────────────────────────────────────
 # Apps instaladas
@@ -29,21 +30,14 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.sites',
     'django.contrib.staticfiles',
-    #"dj_rest_auth",
-    #"dj_rest_auth.registration",
     'allauth',
     'allauth.account',
     'allauth.socialaccount',
     'allauth.socialaccount.providers.google',
-
-    'corsheaders',  # para CORS
-
-    # Django REST Framework
+    'corsheaders',
     'rest_framework',
     'rest_framework_simplejwt',
     'rest_framework_simplejwt.token_blacklist',
-
-    # Apps del proyecto
     'apps.users',
     'apps.classrooms',
     'apps.groups',
@@ -53,36 +47,35 @@ INSTALLED_APPS = [
     'apps.auctions',
     'apps.common',
     'apps.notifications',
-    #'apps.reports',
 ]
 
-SITE_ID = 1 # Necesario para django.contrib.sites
+SITE_ID = 1
 
 # ─────────────────────────────────────────────
 # Middlewares
 # ─────────────────────────────────────────────
 MIDDLEWARE = [
-    'corsheaders.middleware.CorsMiddleware',  # para CORS
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',  # ✅ Para archivos estáticos
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    'allauth.account.middleware.AccountMiddleware',  # django-allauth
+    'allauth.account.middleware.AccountMiddleware',
 ]
 
 # ─────────────────────────────────────────────
 # CORS
 # ─────────────────────────────────────────────
-CORS_ALLOWED_ORIGINS = [
-    "http://localhost:5173",  # Vite
-    "http://127.0.0.1:5173",
-    "http://192.168.1.4:5173"
-]
-
+CORS_ALLOWED_ORIGINS = config(
+    'CORS_ALLOWED_ORIGINS',
+    default='http://localhost:5173,http://127.0.0.1:5173'
+).split(',')
 CORS_ALLOW_CREDENTIALS = True
+
 # ─────────────────────────────────────────────
 # URLs y plantillas
 # ─────────────────────────────────────────────
@@ -126,18 +119,10 @@ DATABASES = {
 # Validación de contraseñas
 # ─────────────────────────────────────────────
 AUTH_PASSWORD_VALIDATORS = [
-    {
-        'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
-    },
-    {
-        'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
-    },
-    {
-        'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
-    },
-    {
-        'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
-    },
+    {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator'},
+    {'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator'},
+    {'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator'},
+    {'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator'},
 ]
 
 # ─────────────────────────────────────────────
@@ -151,7 +136,12 @@ USE_TZ = True
 # ─────────────────────────────────────────────
 # Archivos estáticos
 # ─────────────────────────────────────────────
-STATIC_URL = 'static/'
+STATIC_URL = '/static/'
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+
+MEDIA_URL = '/media/'
+MEDIA_ROOT = BASE_DIR / 'media'
 
 # ─────────────────────────────────────────────
 # Configuración de usuarios y REST
@@ -183,33 +173,25 @@ SIMPLE_JWT = {
     "AUTH_TOKEN_CLASSES": ("rest_framework_simplejwt.tokens.AccessToken",),
 }
 
-# Configuración de autenticación (incluye django-allauth)
 AUTHENTICATION_BACKENDS = [
     "django.contrib.auth.backends.ModelBackend",
-    "allauth.account.auth_backends.AuthenticationBackend",  # django-allauth
+    "allauth.account.auth_backends.AuthenticationBackend",
 ]
 
 # Allauth settings
-ACCOUNT_LOGIN_METHODS = {"email"}  # solo login por email
+ACCOUNT_LOGIN_METHODS = {"email"}
 ACCOUNT_SIGNUP_FIELDS = ["email*", "password1*", "password2*"]
-ACCOUNT_EMAIL_VERIFICATION = 'optional'  # Cambia a 'mandatory' en producción
-LOGIN_REDIRECT_URL = "/" # Redirige después de iniciar sesión
-LOGOUT_REDIRECT_URL = "/" # Redirige después de cerrar sesión
+ACCOUNT_EMAIL_VERIFICATION = 'optional'
+LOGIN_REDIRECT_URL = "/"
+LOGOUT_REDIRECT_URL = "/"
 
-# Mails en dev se muestran en consola
-EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
-
-# Variables de Google - en .env
+# Google OAuth
 GOOGLE_CLIENT_ID = config('GOOGLE_CLIENT_ID')
 GOOGLE_CLIENT_SECRET = config('GOOGLE_CLIENT_SECRET')
-
-MEDIA_URL = '/media/'
-MEDIA_ROOT = BASE_DIR / 'media'
 
 # ─────────────────────────────────────────────
 # EMAIL CONFIGURATION
 # ─────────────────────────────────────────────
-# Siempre usar SMTP para envíos reales (incluso en desarrollo)
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = config('EMAIL_HOST', default='smtp.gmail.com')
 EMAIL_PORT = config('EMAIL_PORT', default=587, cast=int)
@@ -218,9 +200,20 @@ EMAIL_HOST_USER = config('EMAIL_HOST_USER')
 EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD')
 DEFAULT_FROM_EMAIL = config('DEFAULT_FROM_EMAIL', default='noreply@educoin.com')
 
-# Frontend URL para links en emails
 FRONTEND_URL = config('FRONTEND_URL', default='http://localhost:5173')
-
-# Email settings
 EMAIL_VERIFICATION_REQUIRED = True
-PASSWORD_RESET_TIMEOUT = 3600  # 1 hora en segundos
+PASSWORD_RESET_TIMEOUT = 3600
+
+# ─────────────────────────────────────────────
+# CONFIGURACIÓN DE SEGURIDAD PARA PRODUCCIÓN
+# ─────────────────────────────────────────────
+if not DEBUG:
+    SECURE_SSL_REDIRECT = True
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
+    SECURE_BROWSER_XSS_FILTER = True
+    SECURE_CONTENT_TYPE_NOSNIFF = True
+    X_FRAME_OPTIONS = 'DENY'
+    SECURE_HSTS_SECONDS = 31536000
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+    SECURE_HSTS_PRELOAD = True
