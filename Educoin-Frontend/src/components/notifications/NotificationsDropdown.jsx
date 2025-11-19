@@ -33,14 +33,31 @@ const NotificationsDropdown = () => {
     queryKey: ['notifications'],
     queryFn: async () => {
       try {
+        console.log('🔔 Fetching notifications...')
         const res = await api.get('/api/notifications/')
-        return Array.isArray(res.data) ? res.data : []
+        console.log('📥 Notifications response:', res.data)
+        
+        // Manejar tanto arrays como objetos con results
+        let notifications = []
+        if (Array.isArray(res.data)) {
+          notifications = res.data
+        } else if (res.data.results && Array.isArray(res.data.results)) {
+          notifications = res.data.results
+        } else if (res.data.notificaciones && Array.isArray(res.data.notificaciones)) {
+          notifications = res.data.notificaciones
+        }
+        
+        console.log('✅ Processed notifications:', notifications.length)
+        return notifications
       } catch (error) {
-        console.error('Error fetching notifications:', error)
+        console.error('❌ Error fetching notifications:', error)
+        console.error('Error details:', error.response?.data)
         return []
       }
     },
-    refetchInterval: 15000,
+    refetchInterval: 30000, // Refetch cada 30 segundos
+    retry: 3,
+    staleTime: 10000, // 10 segundos
   })
 
   const notifications = notificationsData || []
@@ -52,6 +69,16 @@ const NotificationsDropdown = () => {
 
   const unreadCount = notifications.filter(n => !n.leida).length
 
+  // Log para debugging
+  useEffect(() => {
+    console.log('🔔 Current notifications state:', {
+      total: notifications.length,
+      unread: unreadCount,
+      filtered: filteredNotifications.length,
+      viewMode
+    })
+  }, [notifications, unreadCount, filteredNotifications, viewMode])
+
   // Mutaciones
   const markAsReadMutation = useMutation({
     mutationFn: async (id) => {
@@ -60,7 +87,8 @@ const NotificationsDropdown = () => {
     onSuccess: () => {
       queryClient.invalidateQueries(['notifications'])
     },
-    onError: () => {
+    onError: (error) => {
+      console.error('Error marking as read:', error)
       toast.error('Error al marcar como leída')
     }
   })
@@ -145,6 +173,8 @@ const NotificationsDropdown = () => {
         return <CheckBadgeIcon className={`${baseClasses} text-green-600`} />
       case 'anuncio':
         return <ExclamationTriangleIcon className={`${baseClasses} text-yellow-600`} />
+      case 'account_security':
+        return <ExclamationTriangleIcon className={`${baseClasses} text-red-600`} />
       default:
         return <BellIcon className={`${baseClasses} text-gray-600`} />
     }
@@ -164,6 +194,8 @@ const NotificationsDropdown = () => {
         return 'bg-green-100 border-green-200'
       case 'anuncio':
         return 'bg-yellow-100 border-yellow-200'
+      case 'account_security':
+        return 'bg-red-100 border-red-200'
       default:
         return 'bg-gray-100 border-gray-200'
     }
@@ -233,7 +265,6 @@ const NotificationsDropdown = () => {
     return new Date(b.creado) - new Date(a.creado)
   })
 
-  // Mejorado: Responsive dropdown sizing optimizado para móviles
   const getDropdownStyles = () => {
     if (typeof window === 'undefined') return { 
       width: 'calc(100vw - 2rem)', 
@@ -243,7 +274,6 @@ const NotificationsDropdown = () => {
     
     const width = window.innerWidth
     
-    // Mobile (320px - 767px) - Mejorado
     if (width < 768) {
       return {
         width: 'calc(100vw - 1.5rem)',
@@ -252,7 +282,6 @@ const NotificationsDropdown = () => {
       }
     }
     
-    // Tablet (768px - 1023px)
     if (width < 1024) {
       return {
         width: '28rem',
@@ -261,7 +290,6 @@ const NotificationsDropdown = () => {
       }
     }
     
-    // Laptop (1024px - 1439px)
     if (width < 1440) {
       return {
         width: '32rem',
@@ -270,7 +298,6 @@ const NotificationsDropdown = () => {
       }
     }
     
-    // Desktop (1440px+)
     return {
       width: '36rem',
       maxWidth: 'none',
@@ -282,9 +309,12 @@ const NotificationsDropdown = () => {
 
   return (
     <div className="relative" ref={dropdownRef}>
-      {/* Bell Button - Mejorado para móviles */}
+      {/* Bell Button */}
       <button
-        onClick={() => setIsOpen(!isOpen)}
+        onClick={() => {
+          console.log('🔔 Opening notifications, count:', notifications.length)
+          setIsOpen(!isOpen)
+        }}
         className={`relative p-2 rounded-lg transition-all duration-200 touch-manipulation ${
           isOpen 
             ? 'bg-orange-100 text-orange-600' 
@@ -304,7 +334,7 @@ const NotificationsDropdown = () => {
         )}
       </button>
 
-      {/* Dropdown - Mejorado para móviles */}
+      {/* Dropdown */}
       {isOpen && (
         <div 
           className={`fixed sm:absolute ${dropdownStyles.position} mt-2 shadow-xl border border-gray-200 z-50 max-h-[80vh] flex flex-col transform transition-all duration-200 bg-white rounded-xl overflow-hidden`}
@@ -313,7 +343,7 @@ const NotificationsDropdown = () => {
             maxWidth: dropdownStyles.maxWidth
           }}
         >
-          {/* Header - Mejorado para móviles */}
+          {/* Header */}
           <div className="flex items-center justify-between p-4 border-b border-gray-200 bg-gradient-to-r from-orange-50 to-white">
             <div className="flex-1 min-w-0">
               <h3 className="font-semibold text-gray-900 text-base">Notificaciones</h3>
@@ -330,7 +360,6 @@ const NotificationsDropdown = () => {
             </div>
             
             <div className="flex items-center gap-1 flex-shrink-0">
-              {/* Mobile actions button */}
               <div className="sm:hidden">
                 <button
                   onClick={() => setShowActions(!showActions)}
@@ -341,7 +370,6 @@ const NotificationsDropdown = () => {
                 </button>
               </div>
 
-              {/* Desktop actions */}
               <div className="hidden sm:flex items-center gap-1">
                 <button
                   onClick={() => setViewMode(viewMode === 'all' ? 'unread' : 'all')}
@@ -361,7 +389,7 @@ const NotificationsDropdown = () => {
             </div>
           </div>
 
-          {/* Actions Bar - Mejorado para móviles */}
+          {/* Actions Bar */}
           {(unreadCount > 0 || notifications.some(n => n.leida)) && (
             <div className={`${showActions ? 'flex' : 'hidden'} sm:flex items-center justify-between p-3 border-b border-gray-100 bg-gray-50/50`}>
               <div className="flex items-center gap-2 flex-wrap">
@@ -376,7 +404,6 @@ const NotificationsDropdown = () => {
                   </button>
                 )}
                 
-                {/* Mobile view mode toggle */}
                 <div className="sm:hidden">
                   <button
                     onClick={() => setViewMode(viewMode === 'all' ? 'unread' : 'all')}
@@ -402,7 +429,7 @@ const NotificationsDropdown = () => {
             </div>
           )}
 
-          {/* Notifications List - Mejorado para móviles */}
+          {/* Notifications List */}
           <div className="overflow-y-auto flex-1">
             {isLoading ? (
               <div className="flex flex-col items-center justify-center py-8 px-4">
@@ -453,7 +480,7 @@ const NotificationsDropdown = () => {
                         {getNotificationIcon(notification.tipo)}
                       </div>
 
-                      {/* Content - Mejorado para móviles */}
+                      {/* Content */}
                       <div className="flex-1 min-w-0">
                         <div className="flex items-start justify-between gap-2 mb-1">
                           <p className={`text-sm font-medium line-clamp-2 break-words ${
@@ -470,7 +497,7 @@ const NotificationsDropdown = () => {
                           {notification.mensaje}
                         </p>
                         
-                        {/* Metadata - Mejorado para móviles */}
+                        {/* Metadata */}
                         {notification.metadata && (
                           <div className="flex flex-wrap gap-1 mb-2">
                             {notification.metadata.nota && (
@@ -489,7 +516,7 @@ const NotificationsDropdown = () => {
                         <div className="flex items-center text-xs text-gray-500">
                           <ClockIcon className="h-3 w-3 mr-1 flex-shrink-0" />
                           <span className="truncate">
-                            {notification.tiempo_transcurrido || formatRelativeTime(notification.creado) || formatDateTime(notification.creado)}
+                            {notification.tiempo_transcurrido || formatRelativeTime(notification.creado)}
                           </span>
                         </div>
                       </div>
@@ -521,7 +548,7 @@ const NotificationsDropdown = () => {
                       </button>
                     </div>
 
-                    {/* Mobile Action Buttons - Mejorado para touch */}
+                    {/* Mobile Action Buttons */}
                     <div className="sm:hidden flex items-center gap-2 mt-3 pt-3 border-t border-gray-100">
                       {!notification.leida && (
                         <button
@@ -552,7 +579,7 @@ const NotificationsDropdown = () => {
             )}
           </div>
 
-          {/* Footer - Mejorado para móviles */}
+          {/* Footer */}
           {sortedNotifications.length > 0 && (
             <div className="p-4 border-t border-gray-200 bg-gray-50">
               <div className="flex items-center justify-between">
