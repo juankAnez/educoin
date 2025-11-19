@@ -1,3 +1,4 @@
+import logging
 from rest_framework.views import APIView
 from rest_framework import status
 from google.auth.transport import requests as google_requests
@@ -13,6 +14,7 @@ from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from django.utils.encoding import force_bytes, force_str
 from django.utils import timezone
 from threading import Thread
+
 from .models import User
 from .token_models import EmailVerificationToken, PasswordResetAttempt, LoginFailureTracker
 from .email_utils import (
@@ -29,6 +31,9 @@ from .serializers import (
     ChangePasswordSerializer
 )
 from .permissions import IsAdmin
+
+# Configurar logger
+logger = logging.getLogger(__name__)
 
 User = get_user_model()
 token_generator = PasswordResetTokenGenerator()
@@ -64,12 +69,20 @@ def api_register(request):
         # Crear y enviar token de verificación
         verification_token = EmailVerificationToken.objects.create(user=user)
         
-        # Enviar email en segundo plano usando Thread
-        email_thread = Thread(
-            target=send_verification_email, 
-            args=(user, verification_token)
-        )
-        email_thread.start()
+        # Enviar email en segundo plano usando Thread con manejo de errores
+        try:
+            email_thread = Thread(
+                target=send_verification_email, 
+                args=(user, verification_token)
+            )
+            email_thread.start()
+            logger.info(f"📧 Thread de email iniciado para: {user.email}")
+            logger.info(f"👤 Usuario ID: {user.id}")
+            logger.info(f"🔗 Token: {verification_token.token}")
+        except Exception as e:
+            logger.error(f"❌ Error iniciando thread de email: {str(e)}")
+            logger.error(f"📧 Email afectado: {user.email}")
+            # No fallar el registro aunque falle el thread del email
         
         return Response({
             'message': 'Usuario registrado. Por favor verifica tu correo electrónico.',
@@ -94,9 +107,11 @@ def verify_email(request, token):
     Verifica el email del usuario usando el token
     """
     try:
+        logger.info(f"🔍 Intentando verificar email con token: {token}")
         verification_token = EmailVerificationToken.objects.get(token=token)
         
         if not verification_token.is_valid():
+            logger.warning(f"⚠️ Token inválido o expirado: {token}")
             return Response({
                 'detail': 'El token de verificación ha expirado o ya fue usado.'
             }, status=status.HTTP_400_BAD_REQUEST)
@@ -110,11 +125,21 @@ def verify_email(request, token):
         # Marcar token como usado
         verification_token.mark_as_used()
         
-        # Enviar email de bienvenida
-        send_welcome_email(user, is_google_signup=False)
+        # Enviar email de bienvenida en segundo plano
+        try:
+            welcome_thread = Thread(
+                target=send_welcome_email,
+                args=(user, False)  # is_google_signup=False
+            )
+            welcome_thread.start()
+            logger.info(f"🎉 Thread de bienvenida iniciado para: {user.email}")
+        except Exception as e:
+            logger.error(f"❌ Error iniciando thread de bienvenida: {str(e)}")
         
         # Generar tokens JWT
         refresh = RefreshToken.for_user(user)
+        
+        logger.info(f"✅ Email verificado exitosamente para: {user.email}")
         
         return Response({
             'message': '¡Email verificado exitosamente!',
@@ -126,9 +151,15 @@ def verify_email(request, token):
         }, status=status.HTTP_200_OK)
         
     except EmailVerificationToken.DoesNotExist:
+        logger.warning(f"❌ Token no encontrado: {token}")
         return Response({
             'detail': 'Token de verificación inválido.'
         }, status=status.HTTP_400_BAD_REQUEST)
+    except Exception as e:
+        logger.error(f"💥 Error inesperado en verificación: {str(e)}")
+        return Response({
+            'detail': 'Error interno del servidor durante la verificación.'
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 # --------------------------
@@ -141,40 +172,57 @@ def resend_verification_email(request):
     Re-envía el email de verificación
     """
     email = request.data.get('email')
+    logger.info(f"🔄 Solicitando reenvío de verificación para: {email}")
     
     try:
         user = User.objects.get(email=email)
         
         if user.email_verified:
+            logger.info(f"ℹ️ Email ya verificado: {email}")
             return Response({
                 'detail': 'Este email ya está verificado.'
             }, status=status.HTTP_400_BAD_REQUEST)
         
         # Invalidar tokens anteriores
-        EmailVerificationToken.objects.filter(
+        tokens_invalidados = EmailVerificationToken.objects.filter(
             user=user, 
             is_used=False
         ).update(is_used=True)
+        logger.info(f"🗑️ Tokens invalidados: {tokens_invalidados}")
         
         # Crear nuevo token
         verification_token = EmailVerificationToken.objects.create(user=user)
         
-        # Enviar email en segundo plano usando Thread
-        email_thread = Thread(
-            target=send_verification_email, 
-            args=(user, verification_token)
-        )
-        email_thread.start()
+        # Enviar email en segundo plano usando Thread con manejo de errores
+        try:
+            email_thread = Thread(
+                target=send_verification_email, 
+                args=(user, verification_token)
+            )
+            email_thread.start()
+            logger.info(f"📧 Thread de reenvío iniciado para: {user.email}")
+            logger.info(f"🔗 Nuevo token: {verification_token.token}")
+        except Exception as e:
+            logger.error(f"❌ Error iniciando thread de reenvío: {str(e)}")
+            # Continuar aunque falle el thread del email
+        
+        logger.info(f"✅ Reenvío de verificación procesado para: {email}")
         
         return Response({
             'message': 'Email de verificación reenviado exitosamente.'
         }, status=status.HTTP_200_OK)
         
     except User.DoesNotExist:
+        logger.info(f"📭 Email no encontrado (por seguridad): {email}")
         # Por seguridad, no revelar si el email existe
         return Response({
             'message': 'Si el email existe, se ha enviado un nuevo código de verificación.'
         }, status=status.HTTP_200_OK)
+    except Exception as e:
+        logger.error(f"💥 Error inesperado en reenvío: {str(e)}")
+        return Response({
+            'detail': 'Error interno del servidor.'
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 # --------------------------
@@ -193,6 +241,7 @@ def api_login(request):
         
         # Verificar si el email está verificado
         if not user.email_verified:
+            logger.warning(f"⚠️ Intento de login con email no verificado: {user.email}")
             return Response({
                 'message': 'Por favor verifica tu correo electrónico antes de iniciar sesión.',
                 'email_not_verified': True,
@@ -203,6 +252,9 @@ def api_login(request):
         LoginFailureTracker.clear_failures(user.email)
         
         refresh = RefreshToken.for_user(user)
+        
+        logger.info(f"✅ Login exitoso para: {user.email}")
+        
         return Response({
             'message': 'Login exitoso',
             'user': UserProfileSerializer(user).data,
@@ -224,12 +276,15 @@ def api_login(request):
         # Verificar si sugerir reset
         suggest_reset = LoginFailureTracker.should_suggest_reset(email)
         
+        logger.warning(f"❌ Login fallido para: {email} desde IP: {ip_address}")
+        
         return Response({
             'message': 'Credenciales inválidas',
             'suggest_password_reset': suggest_reset,
             'errors': serializer.errors
         }, status=status.HTTP_400_BAD_REQUEST)
     
+    logger.warning("❌ Login fallido - datos inválidos")
     return Response({
         'message': 'Error en el login', 
         'errors': serializer.errors
@@ -245,50 +300,72 @@ class GoogleLoginAPIView(APIView):
     def post(self, request):
         token = request.data.get("id_token")
         if not token:
+            logger.warning("❌ Google login sin id_token")
             return Response({"detail": "id_token requerido"}, status=status.HTTP_400_BAD_REQUEST)
 
         try:
+            logger.info("🔍 Verificando token de Google...")
             idinfo = id_token.verify_oauth2_token(
                 token,
                 google_requests.Request(),
                 settings.GOOGLE_CLIENT_ID
             )
-        except ValueError as e:
-            return Response({"detail": f"Token inválido: {str(e)}"}, status=status.HTTP_400_BAD_REQUEST)
-
-        email = idinfo.get("email")
-        email_verified = idinfo.get("email_verified", False)
-        first_name = idinfo.get("given_name") or email.split("@")[0]
-        last_name = idinfo.get("family_name") or ""
-
-        if not email or not email_verified:
-            return Response({"detail": "Email no verificado por Google"}, status=status.HTTP_400_BAD_REQUEST)
-
-        user, created = User.objects.get_or_create(email=email, defaults={
-            "first_name": first_name,
-            "last_name": last_name,
-            "username": email.split("@")[0],
-            "is_active": True,
-            "email_verified": True,  # ✅ Google ya verificó el email
-        })
-        
-        if created:
-            user.set_unusable_password()
-            user.role = "estudiante"
-            user.save()
             
-            # Enviar email de bienvenida para registro con Google
-            send_welcome_email(user, is_google_signup=True)
+            email = idinfo.get("email")
+            email_verified = idinfo.get("email_verified", False)
+            first_name = idinfo.get("given_name") or email.split("@")[0]
+            last_name = idinfo.get("family_name") or ""
 
-        refresh = RefreshToken.for_user(user)
-        data = {
-            "user": UserProfileSerializer(user).data,
-            "tokens": {
-                "access": str(refresh.access_token),
-                "refresh": str(refresh),
+            if not email or not email_verified:
+                logger.warning(f"❌ Email de Google no verificado: {email}")
+                return Response({"detail": "Email no verificado por Google"}, status=status.HTTP_400_BAD_REQUEST)
+
+            user, created = User.objects.get_or_create(email=email, defaults={
+                "first_name": first_name,
+                "last_name": last_name,
+                "username": email.split("@")[0],
+                "is_active": True,
+                "email_verified": True,  # ✅ Google ya verificó el email
+            })
+            
+            if created:
+                user.set_unusable_password()
+                user.role = "estudiante"
+                user.save()
+                
+                # Enviar email de bienvenida para registro con Google en segundo plano
+                try:
+                    welcome_thread = Thread(
+                        target=send_welcome_email,
+                        args=(user, True)  # is_google_signup=True
+                    )
+                    welcome_thread.start()
+                    logger.info(f"🎉 Thread de bienvenida Google iniciado para: {user.email}")
+                except Exception as e:
+                    logger.error(f"❌ Error iniciando thread de bienvenida Google: {str(e)}")
+                
+                logger.info(f"👤 Nuevo usuario Google creado: {email}")
+            else:
+                logger.info(f"🔑 Usuario Google existente: {email}")
+
+            refresh = RefreshToken.for_user(user)
+            data = {
+                "user": UserProfileSerializer(user).data,
+                "tokens": {
+                    "access": str(refresh.access_token),
+                    "refresh": str(refresh),
+                }
             }
-        }
-        return Response(data, status=status.HTTP_200_OK)
+            
+            logger.info(f"✅ Login Google exitoso: {email}")
+            return Response(data, status=status.HTTP_200_OK)
+            
+        except ValueError as e:
+            logger.error(f"❌ Token de Google inválido: {str(e)}")
+            return Response({"detail": f"Token inválido: {str(e)}"}, status=status.HTTP_400_BAD_REQUEST)
+        except Exception as e:
+            logger.error(f"💥 Error inesperado en login Google: {str(e)}")
+            return Response({"detail": "Error interno del servidor"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 # --------------------------
@@ -297,6 +374,7 @@ class GoogleLoginAPIView(APIView):
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def api_profile(request):
+    logger.info(f"📊 Obteniendo perfil para: {request.user.email}")
     serializer = UserProfileSerializer(request.user)
     return Response({'message': 'Perfil obtenido exitosamente', 'user': serializer.data})
 
@@ -305,6 +383,7 @@ def api_profile(request):
 @permission_classes([IsAuthenticated])
 def api_update_profile(request):
     user = request.user
+    logger.info(f"✏️ Actualizando perfil para: {user.email}")
 
     # actualizar nombre, apellido, etc.
     user.first_name = request.data.get("first_name", user.first_name)
@@ -315,10 +394,13 @@ def api_update_profile(request):
     profile_serializer = ProfileSerializer(user.profile, data=request.data, partial=True)
     if profile_serializer.is_valid():
         profile_serializer.save()
+        logger.info(f"✅ Perfil actualizado para: {user.email}")
         return Response({
             "message": "Perfil actualizado exitosamente",
             "user": UserProfileSerializer(user).data
         })
+    
+    logger.warning(f"❌ Error actualizando perfil para: {user.email}")
     return Response(profile_serializer.errors, status=400)
 
 
@@ -329,24 +411,30 @@ class ChangePasswordView(APIView):
     permission_classes = [IsAuthenticated]
 
     def patch(self, request):
+        user = request.user
+        logger.info(f"🔐 Solicitando cambio de contraseña para: {user.email}")
+        
         serializer = ChangePasswordSerializer(data=request.data, context={'request': request})
         
         if not serializer.is_valid():
+            logger.warning(f"❌ Datos inválidos para cambio de contraseña: {user.email}")
             return Response({
                 "detail": "Error en los datos",
                 "errors": serializer.errors
             }, status=status.HTTP_400_BAD_REQUEST)
 
-        user = request.user
         user.set_password(serializer.validated_data['new_password'])
         user.save()
         
         # Actualizar la sesión para evitar logout
         update_session_auth_hash(request, user)
 
+        logger.info(f"✅ Contraseña cambiada exitosamente para: {user.email}")
+        
         return Response({
             "detail": "Contraseña actualizada correctamente"
         }, status=status.HTTP_200_OK)
+
 
 # --------------------------
 # Reset password (flujo con email)
@@ -357,6 +445,8 @@ class PasswordResetRequestView(APIView):
     def post(self, request):
         email = request.data.get("email")
         ip_address = get_client_ip(request)
+        
+        logger.info(f"🔐 Solicitando reset de contraseña para: {email} desde IP: {ip_address}")
         
         try:
             user = User.objects.get(email=email)
@@ -371,7 +461,18 @@ class PasswordResetRequestView(APIView):
                 success=True
             )
             
-            send_password_reset_email(user, reset_link)
+            # Enviar email de reset en segundo plano
+            try:
+                reset_thread = Thread(
+                    target=send_password_reset_email,
+                    args=(user, reset_link)
+                )
+                reset_thread.start()
+                logger.info(f"📧 Thread de reset de contraseña iniciado para: {user.email}")
+            except Exception as e:
+                logger.error(f"❌ Error iniciando thread de reset: {str(e)}")
+            
+            logger.info(f"✅ Solicitud de reset procesada para: {email}")
             
         except User.DoesNotExist:
             # Registrar intento fallido
@@ -380,6 +481,7 @@ class PasswordResetRequestView(APIView):
                 ip_address=ip_address,
                 success=False
             )
+            logger.info(f"📭 Email no encontrado para reset: {email}")
         
         # Siempre retornar el mismo mensaje por seguridad
         return Response({
@@ -391,15 +493,19 @@ class PasswordResetConfirmView(APIView):
     permission_classes = [AllowAny]
 
     def post(self, request, uidb64, token):
+        logger.info(f"🔐 Confirmando reset de contraseña con UID: {uidb64}")
+        
         try:
             uid = force_str(urlsafe_base64_decode(uidb64))
             user = User.objects.get(pk=uid)
             
             if not token_generator.check_token(user, token):
+                logger.warning(f"❌ Token inválido para reset: {uidb64}")
                 return Response({"detail": "Token inválido o expirado"}, status=400)
 
             new_password = request.data.get("new_password")
             if not new_password:
+                logger.warning("❌ Nueva contraseña no proporcionada")
                 return Response({"detail": "La nueva contraseña es requerida"}, status=400)
             
             user.set_password(new_password)
@@ -408,8 +514,11 @@ class PasswordResetConfirmView(APIView):
             # Limpiar fallos de login
             LoginFailureTracker.clear_failures(user.email)
             
+            logger.info(f"✅ Contraseña restablecida exitosamente para: {user.email}")
+            
             return Response({"detail": "Contraseña restablecida correctamente"}, status=200)
         except Exception as e:
+            logger.error(f"💥 Error procesando reset de contraseña: {str(e)}")
             return Response({"detail": "Error al procesar el token"}, status=400)
 
 
@@ -423,31 +532,45 @@ def api_delete_account(request):
     Permite al usuario eliminar su propia cuenta
     """
     user = request.user
+    logger.info(f"🗑️ Solicitando eliminación de cuenta para: {user.email}")
     
     # Verificar contraseña para confirmar
     password = request.data.get('password')
     if not password:
+        logger.warning(f"❌ Eliminación de cuenta sin contraseña: {user.email}")
         return Response({
             'detail': 'La contraseña es requerida para confirmar la eliminación'
         }, status=status.HTTP_400_BAD_REQUEST)
     
     if not user.check_password(password):
+        logger.warning(f"❌ Contraseña incorrecta para eliminación: {user.email}")
         return Response({
             'detail': 'Contraseña incorrecta'
         }, status=status.HTTP_400_BAD_REQUEST)
     
     # No permitir eliminar admin si es el único
     if user.role == 'admin' and User.objects.filter(role='admin').count() <= 1:
+        logger.warning(f"❌ Intento de eliminar último admin: {user.email}")
         return Response({
             'detail': 'No puedes eliminar la última cuenta de administrador'
         }, status=status.HTTP_400_BAD_REQUEST)
     
     # Enviar email de confirmación antes de eliminar
     user_email = user.email
-    send_account_deletion_confirmation_email(user)
+    try:
+        deletion_thread = Thread(
+            target=send_account_deletion_confirmation_email,
+            args=(user,)
+        )
+        deletion_thread.start()
+        logger.info(f"📧 Thread de confirmación de eliminación iniciado para: {user.email}")
+    except Exception as e:
+        logger.error(f"❌ Error iniciando thread de eliminación: {str(e)}")
     
     # Eliminar usuario
     user.delete()
+    
+    logger.info(f"✅ Cuenta eliminada exitosamente: {user_email}")
     
     return Response({
         'message': 'Cuenta eliminada exitosamente',
@@ -464,6 +587,7 @@ def api_list_users(request):
     """
     Lista todos los usuarios del sistema (solo admin)
     """
+    logger.info(f"📋 Listando usuarios - solicitado por: {request.user.email}")
     users = User.objects.all().order_by('-date_joined')
     serializer = UserProfileSerializer(users, many=True)
     return Response(serializer.data, status=status.HTTP_200_OK)
@@ -478,9 +602,12 @@ def api_update_user(request, user_id):
     """
     Actualizar datos de un usuario (solo admin)
     """
+    logger.info(f"✏️ Actualizando usuario {user_id} - admin: {request.user.email}")
+    
     try:
         user = User.objects.get(id=user_id)
     except User.DoesNotExist:
+        logger.warning(f"❌ Usuario no encontrado para actualizar: {user_id}")
         return Response({"detail": "Usuario no encontrado"}, status=status.HTTP_404_NOT_FOUND)
 
     # Actualizar campos básicos del usuario
@@ -498,6 +625,8 @@ def api_update_user(request, user_id):
         if profile_serializer.is_valid():
             profile_serializer.save()
 
+    logger.info(f"✅ Usuario actualizado exitosamente: {user.email}")
+    
     return Response({
         "message": "Usuario actualizado exitosamente",
         "user": UserProfileSerializer(user).data
@@ -513,16 +642,24 @@ def api_delete_user(request, user_id):
     """
     Eliminar un usuario (solo admin)
     """
+    logger.info(f"🗑️ Eliminando usuario {user_id} - admin: {request.user.email}")
+    
     try:
         user = User.objects.get(id=user_id)
         if user.role == 'admin' and User.objects.filter(role='admin').count() <= 1:
+            logger.warning(f"❌ Intento de eliminar último admin: {user.email}")
             return Response({
                 "detail": "No se puede eliminar el último administrador"
             }, status=status.HTTP_400_BAD_REQUEST)
         
+        user_email = user.email
         user.delete()
+        
+        logger.info(f"✅ Usuario eliminado exitosamente: {user_email}")
+        
         return Response({
             "message": "Usuario eliminado exitosamente"
         }, status=status.HTTP_200_OK)
     except User.DoesNotExist:
+        logger.warning(f"❌ Usuario no encontrado para eliminar: {user_id}")
         return Response({"detail": "Usuario no encontrado"}, status=status.HTTP_404_NOT_FOUND)
