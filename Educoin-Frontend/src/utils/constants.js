@@ -1,4 +1,4 @@
-export const API_BASE_URL = "http://192.168.1.4:8000";
+export const API_BASE_URL = "https://educoin-production.up.railway.app";
 
 export const API_ENDPOINTS = {
   // ==================== AUTH ====================
