@@ -44,7 +44,7 @@ const Sidebar = ({ isOpen, onClose }) => {
 
   const adminNavigation = [
     { name: "Dashboard Admin", href: "/dashboard", icon: HomeIcon },
-    { name: "Admin Django", href: "http://localhost:8000/admin/", icon: Cog6ToothIcon },
+    { name: "Admin Django", href: "https://educoin-production.up.railway.app/admin/", icon: Cog6ToothIcon },
   ]
 
   const navigation =
