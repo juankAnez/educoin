@@ -69,20 +69,27 @@ def api_register(request):
         # Crear y enviar token de verificación
         verification_token = EmailVerificationToken.objects.create(user=user)
         
-        # Enviar email en segundo plano usando Thread con manejo de errores
+        # TEMPORAL: Envío SÍNCRONO para ver errores
         try:
-            email_thread = Thread(
-                target=send_verification_email, 
-                args=(user, verification_token)
-            )
-            email_thread.start()
-            logger.info(f"📧 Thread de email iniciado para: {user.email}")
-            logger.info(f"👤 Usuario ID: {user.id}")
-            logger.info(f"🔗 Token: {verification_token.token}")
+            # COMENTADO: Thread para envío asíncrono
+            # email_thread = Thread(
+            #     target=send_verification_email, 
+            #     args=(user, verification_token)
+            # )
+            # email_thread.start()
+            # logger.info(f"📧 Thread de email iniciado para: {user.email}")
+            
+            # ENVÍO SÍNCRONO PARA VER ERRORES
+            logger.info("🔄 INICIANDO ENVÍO SÍNCRONO DE EMAIL...")
+            send_verification_email(user, verification_token)
+            logger.info(f"✅ Email enviado SÍNCRONAMENTE a: {user.email}")
+            
         except Exception as e:
-            logger.error(f"❌ Error iniciando thread de email: {str(e)}")
-            logger.error(f"📧 Email afectado: {user.email}")
-            # No fallar el registro aunque falle el thread del email
+            logger.error(f"❌ Error CRÍTICO enviando email: {str(e)}")
+            logger.error(f"🔧 Tipo de error: {type(e).__name__}")
+            import traceback
+            logger.error(f"📝 Traceback completo: {traceback.format_exc()}")
+            # Continuar con el registro aunque falle el email
         
         return Response({
             'message': 'Usuario registrado. Por favor verifica tu correo electrónico.',
@@ -193,18 +200,27 @@ def resend_verification_email(request):
         # Crear nuevo token
         verification_token = EmailVerificationToken.objects.create(user=user)
         
-        # Enviar email en segundo plano usando Thread con manejo de errores
+        # TEMPORAL: Envío SÍNCRONO para ver errores
         try:
-            email_thread = Thread(
-                target=send_verification_email, 
-                args=(user, verification_token)
-            )
-            email_thread.start()
-            logger.info(f"📧 Thread de reenvío iniciado para: {user.email}")
-            logger.info(f"🔗 Nuevo token: {verification_token.token}")
+            # COMENTADO: Thread para envío asíncrono
+            # email_thread = Thread(
+            #     target=send_verification_email, 
+            #     args=(user, verification_token)
+            # )
+            # email_thread.start()
+            # logger.info(f"📧 Thread de reenvío iniciado para: {user.email}")
+            
+            # ENVÍO SÍNCRONO PARA VER ERRORES
+            logger.info("🔄 INICIANDO RENVÍO SÍNCRONO DE EMAIL...")
+            send_verification_email(user, verification_token)
+            logger.info(f"✅ Reenvío SÍNCRONO a: {user.email}")
+            
         except Exception as e:
-            logger.error(f"❌ Error iniciando thread de reenvío: {str(e)}")
-            # Continuar aunque falle el thread del email
+            logger.error(f"❌ Error CRÍTICO en reenvío de email: {str(e)}")
+            logger.error(f"🔧 Tipo de error: {type(e).__name__}")
+            import traceback
+            logger.error(f"📝 Traceback completo: {traceback.format_exc()}")
+            # Continuar aunque falle el email
         
         logger.info(f"✅ Reenvío de verificación procesado para: {email}")
         
