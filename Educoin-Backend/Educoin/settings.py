@@ -3,7 +3,10 @@ from datetime import timedelta
 from decouple import config, Csv
 import os
 import pymysql
+
+# Configurar pymysql como driver de MySQL
 pymysql.install_as_MySQLdb()
+
 # ─────────────────────────────────────────────
 # BASE DIR & ENV
 # ─────────────────────────────────────────────
@@ -19,7 +22,25 @@ SECRET_KEY = config('SECRET_KEY')
 DEBUG = config('DEBUG', default=False, cast=bool)
 
 # ALLOWED_HOSTS dinámico
-ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='localhost,127.0.0.1').split(',')
+ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='localhost,127.0.0.1,.railway.app').split(',')
+
+# ─────────────────────────────────────────────
+# CSRF & SESSION CONFIGURATION
+# ─────────────────────────────────────────────
+CSRF_TRUSTED_ORIGINS = [
+    'https://educoin-production.up.railway.app',
+    'https://*.railway.app',
+]
+
+CSRF_COOKIE_SECURE = True
+CSRF_COOKIE_SAMESITE = 'Lax'
+CSRF_USE_SESSIONS = False
+
+SESSION_COOKIE_SECURE = True
+SESSION_COOKIE_SAMESITE = 'Lax'
+
+# Para el admin de Django
+CSRF_COOKIE_HTTPONLY = False
 
 # ─────────────────────────────────────────────
 # Apps instaladas
@@ -74,9 +95,25 @@ MIDDLEWARE = [
 # ─────────────────────────────────────────────
 CORS_ALLOWED_ORIGINS = config(
     'CORS_ALLOWED_ORIGINS',
-    default='http://localhost:5173,http://127.0.0.1:5173'
+    default='http://localhost:5173,http://127.0.0.1:5173,https://educoin.netlify.app'
 ).split(',')
+
 CORS_ALLOW_CREDENTIALS = True
+
+# Para el admin de Django
+CORS_ALLOW_HEADERS = [
+    'accept',
+    'accept-encoding',
+    'authorization',
+    'content-type',
+    'dnt',
+    'origin',
+    'user-agent',
+    'x-csrftoken',
+    'x-requested-with',
+]
+
+CORS_EXPOSE_HEADERS = ['Content-Type', 'X-CSRFToken']
 
 # ─────────────────────────────────────────────
 # URLs y plantillas
