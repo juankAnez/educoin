@@ -18,10 +18,10 @@ from threading import Thread
 from .models import User
 from .token_models import EmailVerificationToken, PasswordResetAttempt, LoginFailureTracker
 from .email_utils import (
-    send_verification_email, 
-    send_welcome_email, 
-    send_password_reset_email,
-    send_account_deletion_confirmation_email
+    send_verification_email_api,  # 🆕 Importar función API
+    send_welcome_email_api,       # 🆕 Importar función API  
+    send_password_reset_email_api, # 🆕 Importar función API
+    send_account_deletion_confirmation_email_api, # 🆕 Importar función API
 )
 from .serializers import (
     UserRegistrationSerializer,
@@ -69,26 +69,17 @@ def api_register(request):
         # Crear y enviar token de verificación
         verification_token = EmailVerificationToken.objects.create(user=user)
         
-        # TEMPORAL: Envío SÍNCRONO para ver errores
+        # 🆕 USAR SENDGRID API EN LUGAR DE SMTP
         try:
-            # COMENTADO: Thread para envío asíncrono
-            # email_thread = Thread(
-            #     target=send_verification_email, 
-            #     args=(user, verification_token)
-            # )
-            # email_thread.start()
-            # logger.info(f"📧 Thread de email iniciado para: {user.email}")
-            
-            # ENVÍO SÍNCRONO PARA VER ERRORES
-            logger.info("🔄 INICIANDO ENVÍO SÍNCRONO DE EMAIL...")
-            send_verification_email(user, verification_token)
-            logger.info(f"✅ Email enviado SÍNCRONAMENTE a: {user.email}")
-            
+            logger.info("🔄 ENVIANDO EMAIL VÍA SENDGRID API...")
+            success = send_verification_email_api(user, verification_token)
+            if success:
+                logger.info(f"✅ Email enviado exitosamente via API a: {user.email}")
+            else:
+                logger.error(f"❌ Falló el envío de email via API a: {user.email}")
+                
         except Exception as e:
-            logger.error(f"❌ Error CRÍTICO enviando email: {str(e)}")
-            logger.error(f"🔧 Tipo de error: {type(e).__name__}")
-            import traceback
-            logger.error(f"📝 Traceback completo: {traceback.format_exc()}")
+            logger.error(f"💥 Error crítico con SendGrid API: {str(e)}")
             # Continuar con el registro aunque falle el email
         
         return Response({
@@ -132,16 +123,16 @@ def verify_email(request, token):
         # Marcar token como usado
         verification_token.mark_as_used()
         
-        # Enviar email de bienvenida en segundo plano
+        # 🆕 Enviar email de bienvenida usando API
         try:
-            welcome_thread = Thread(
-                target=send_welcome_email,
-                args=(user, False)  # is_google_signup=False
-            )
-            welcome_thread.start()
-            logger.info(f"🎉 Thread de bienvenida iniciado para: {user.email}")
+            logger.info("🔄 ENVIANDO BIENVENIDA VÍA SENDGRID API...")
+            success = send_welcome_email_api(user, is_google_signup=False)
+            if success:
+                logger.info(f"✅ Email de bienvenida enviado via API a: {user.email}")
+            else:
+                logger.error(f"❌ Falló el envío de bienvenida via API a: {user.email}")
         except Exception as e:
-            logger.error(f"❌ Error iniciando thread de bienvenida: {str(e)}")
+            logger.error(f"💥 Error con bienvenida SendGrid API: {str(e)}")
         
         # Generar tokens JWT
         refresh = RefreshToken.for_user(user)
@@ -200,27 +191,16 @@ def resend_verification_email(request):
         # Crear nuevo token
         verification_token = EmailVerificationToken.objects.create(user=user)
         
-        # TEMPORAL: Envío SÍNCRONO para ver errores
+        # 🆕 USAR SENDGRID API EN LUGAR DE SMTP
         try:
-            # COMENTADO: Thread para envío asíncrono
-            # email_thread = Thread(
-            #     target=send_verification_email, 
-            #     args=(user, verification_token)
-            # )
-            # email_thread.start()
-            # logger.info(f"📧 Thread de reenvío iniciado para: {user.email}")
-            
-            # ENVÍO SÍNCRONO PARA VER ERRORES
-            logger.info("🔄 INICIANDO RENVÍO SÍNCRONO DE EMAIL...")
-            send_verification_email(user, verification_token)
-            logger.info(f"✅ Reenvío SÍNCRONO a: {user.email}")
-            
+            logger.info("🔄 REENVIANDO EMAIL VÍA SENDGRID API...")
+            success = send_verification_email_api(user, verification_token)
+            if success:
+                logger.info(f"✅ Reenvío exitoso via API a: {user.email}")
+            else:
+                logger.error(f"❌ Falló el reenvío via API a: {user.email}")
         except Exception as e:
-            logger.error(f"❌ Error CRÍTICO en reenvío de email: {str(e)}")
-            logger.error(f"🔧 Tipo de error: {type(e).__name__}")
-            import traceback
-            logger.error(f"📝 Traceback completo: {traceback.format_exc()}")
-            # Continuar aunque falle el email
+            logger.error(f"💥 Error crítico con reenvío SendGrid API: {str(e)}")
         
         logger.info(f"✅ Reenvío de verificación procesado para: {email}")
         
@@ -349,16 +329,16 @@ class GoogleLoginAPIView(APIView):
                 user.role = "estudiante"
                 user.save()
                 
-                # Enviar email de bienvenida para registro con Google en segundo plano
+                # 🆕 Enviar email de bienvenida usando API
                 try:
-                    welcome_thread = Thread(
-                        target=send_welcome_email,
-                        args=(user, True)  # is_google_signup=True
-                    )
-                    welcome_thread.start()
-                    logger.info(f"🎉 Thread de bienvenida Google iniciado para: {user.email}")
+                    logger.info("🔄 ENVIANDO BIENVENIDA GOOGLE VÍA SENDGRID API...")
+                    success = send_welcome_email_api(user, is_google_signup=True)
+                    if success:
+                        logger.info(f"✅ Bienvenida Google enviada via API a: {user.email}")
+                    else:
+                        logger.error(f"❌ Falló bienvenida Google via API a: {user.email}")
                 except Exception as e:
-                    logger.error(f"❌ Error iniciando thread de bienvenida Google: {str(e)}")
+                    logger.error(f"💥 Error con bienvenida Google SendGrid API: {str(e)}")
                 
                 logger.info(f"👤 Nuevo usuario Google creado: {email}")
             else:
@@ -477,16 +457,16 @@ class PasswordResetRequestView(APIView):
                 success=True
             )
             
-            # Enviar email de reset en segundo plano
+            # 🆕 Enviar email de reset usando API
             try:
-                reset_thread = Thread(
-                    target=send_password_reset_email,
-                    args=(user, reset_link)
-                )
-                reset_thread.start()
-                logger.info(f"📧 Thread de reset de contraseña iniciado para: {user.email}")
+                logger.info("🔄 ENVIANDO RESET VÍA SENDGRID API...")
+                success = send_password_reset_email_api(user, reset_link)
+                if success:
+                    logger.info(f"✅ Email de reset enviado via API a: {user.email}")
+                else:
+                    logger.error(f"❌ Falló el envío de reset via API a: {user.email}")
             except Exception as e:
-                logger.error(f"❌ Error iniciando thread de reset: {str(e)}")
+                logger.error(f"💥 Error con reset SendGrid API: {str(e)}")
             
             logger.info(f"✅ Solicitud de reset procesada para: {email}")
             
@@ -571,17 +551,17 @@ def api_delete_account(request):
             'detail': 'No puedes eliminar la última cuenta de administrador'
         }, status=status.HTTP_400_BAD_REQUEST)
     
-    # Enviar email de confirmación antes de eliminar
+    # 🆕 Enviar email de confirmación usando API
     user_email = user.email
     try:
-        deletion_thread = Thread(
-            target=send_account_deletion_confirmation_email,
-            args=(user,)
-        )
-        deletion_thread.start()
-        logger.info(f"📧 Thread de confirmación de eliminación iniciado para: {user.email}")
+        logger.info("🔄 ENVIANDO CONFIRMACIÓN ELIMINACIÓN VÍA SENDGRID API...")
+        success = send_account_deletion_confirmation_email_api(user)
+        if success:
+            logger.info(f"✅ Confirmación eliminación enviada via API a: {user.email}")
+        else:
+            logger.error(f"❌ Falló confirmación eliminación via API a: {user.email}")
     except Exception as e:
-        logger.error(f"❌ Error iniciando thread de eliminación: {str(e)}")
+        logger.error(f"💥 Error con confirmación eliminación SendGrid API: {str(e)}")
     
     # Eliminar usuario
     user.delete()
