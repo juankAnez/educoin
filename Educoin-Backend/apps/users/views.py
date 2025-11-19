@@ -12,7 +12,7 @@ from django.contrib.auth.tokens import PasswordResetTokenGenerator
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from django.utils.encoding import force_bytes, force_str
 from django.utils import timezone
-
+from threading import Thread
 from .models import User
 from .token_models import EmailVerificationToken, PasswordResetAttempt, LoginFailureTracker
 from .email_utils import (
@@ -63,7 +63,13 @@ def api_register(request):
         
         # Crear y enviar token de verificación
         verification_token = EmailVerificationToken.objects.create(user=user)
-        send_verification_email(user, verification_token)
+        
+        # Enviar email en segundo plano usando Thread
+        email_thread = Thread(
+            target=send_verification_email, 
+            args=(user, verification_token)
+        )
+        email_thread.start()
         
         return Response({
             'message': 'Usuario registrado. Por favor verifica tu correo electrónico.',
@@ -152,7 +158,13 @@ def resend_verification_email(request):
         
         # Crear nuevo token
         verification_token = EmailVerificationToken.objects.create(user=user)
-        send_verification_email(user, verification_token)
+        
+        # Enviar email en segundo plano usando Thread
+        email_thread = Thread(
+            target=send_verification_email, 
+            args=(user, verification_token)
+        )
+        email_thread.start()
         
         return Response({
             'message': 'Email de verificación reenviado exitosamente.'
