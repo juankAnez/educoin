@@ -1,1 +1,1 @@
-web: python manage.py migrate && python create_superuser.py && python manage.py collectstatic --noinput && gunicorn Educoin.wsgi:application
+web: bash railway_setup.sh && gunicorn Educoin.wsgi:application
