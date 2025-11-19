@@ -2,7 +2,8 @@ from pathlib import Path
 from datetime import timedelta
 from decouple import config, Csv
 import os
-
+import pymysql
+pymysql.install_as_MySQLdb()
 # ─────────────────────────────────────────────
 # BASE DIR & ENV
 # ─────────────────────────────────────────────
@@ -104,7 +105,7 @@ WSGI_APPLICATION = 'Educoin.wsgi.application'
 # ─────────────────────────────────────────────
 DATABASES = {
     'default': {
-        'ENGINE': 'mysql.connector.django',
+        'ENGINE': 'django.db.backends.mysql',
         'NAME': config('DB_NAME'),
         'USER': config('DB_USER'),
         'PASSWORD': config('DB_PASSWORD'),
@@ -112,7 +113,6 @@ DATABASES = {
         'PORT': config('DB_PORT', default='3306'),
         'OPTIONS': {
             'charset': 'utf8mb4',
-            'use_pure': True,
         }
     }
 }

@@ -18,7 +18,7 @@ try:
         User.objects.create_superuser(
             email='ivanjmm01@gmail.com',
             username='ivnmtz09',
-            password='3226800403iM.'  # Cambia esto por tu password real
+            password='3226800403iM.'
         )
         print("✅ Superusuario creado exitosamente!")
     else:
